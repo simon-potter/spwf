@@ -358,7 +358,7 @@ Create `.claude-plugin/marketplace.json`:
 | `new-task` | `jira-to-openspec` (structure only) | `true` | Read, Write | No Jira fetch — asks user for idea description interactively. Same output format as `issue-to-task`. |
 | `grill-me` | `grill-me` (direct copy, minor wording) | `true` | Read, Grep, Glob | Accepts a file path as `$ARGUMENTS` — defaults to the most recent file in `todo/` if no argument given. Source version is purely conversational; this version reads a file first. |
 | `doc-lint` | `doc-lint` (direct copy) | `true` | Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion | No changes from source. Packaged here for distribution. |
-| `agent-optimise` | *(new — synthesises `claude-validate` + `agent-architect`)* | `true` | Read, Glob, Grep, Bash | Audits CLAUDE.md scope/length, agent descriptions for trigger quality, skill frontmatter for correctness, settings.json for conflicts. Produces a prioritised fix list. |
+| `agent-optimise` | *(new — synthesises `claude-validate` + `agent-architect`)* | `true` | Read, Glob, Grep, Bash | Audits both project `.claude/` and personal `~/.claude/` — always both, no flag needed. Covers CLAUDE.md scope/length, agent descriptions, skill frontmatter, settings.json conflicts. Produces a prioritised fix list across the full combined surface. |
 | `learn-from-mistakes` | `commits-to-knowledge` (renamed) | `true` | Read, Glob, Grep, Bash, Edit, Write | No functional changes. Rename only — "commits-to-knowledge" is the right internal name; "learn-from-mistakes" is the user-facing command name. |
 
 #### 3c. Ideation file format (shared output of `issue-to-task` and `new-task`)
@@ -505,7 +505,7 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
 4. **Private vs public repo** — affects GitHub source resolution for others.
 5. ~~**OpenSpec tooling assumption**~~ — **Resolved:** OpenSpec is a documented prerequisite. The marketplace README has a Prerequisites section. `task-to-spec` checks for the `openspec/` directory and halts with a clear message if it's missing — it does not auto-initialise.
 6. ~~**`pr-reviewer` argument**~~ — **Resolved:** Requires a PR reference as `$ARGUMENTS` — no default. Does not create PRs. Halts with usage hint if no argument given.
-7. **`agent-optimise` scope** — does this audit just the current project's `.claude/` directory, or also `~/.claude/`? Both? Configurable?
+7. ~~**`agent-optimise` scope**~~ — **Resolved:** Always audits both project `.claude/` and personal `~/.claude/` — agent bloat accumulates across both and needs to be seen together.
 
 ---
 
