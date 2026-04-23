@@ -270,8 +270,8 @@ Create `.claude-plugin/marketplace.json`:
 | Skill | Source | `allowed-tools` | Key open decision |
 |---|---|---|---|
 | `task-to-spec` | `ideation-to-openspec` (renamed, logic preserved) | Read, Write, Bash (openspec CLI) | Where does the ideation file live — always `todo/`? |
-| `plan` | *(new)* | Read, Write | What is the canonical plan format — `tasks.md`? TaskCreate tool calls? |
-| `build` | *(new)* | Read, Edit, Write, Bash | How does the skill locate "the current task" from the plan? |
+| `plan` | Seeded from agent-skills | Read, Write | Reads and validates OpenSpec `tasks.md` at `openspec/changes/{change-id}/tasks.md`; surfaces the task list for review before /build starts |
+| `build` | Seeded from agent-skills | Read, Edit, Write, Bash | Locates current task as first unchecked item in OpenSpec `tasks.md`; implements it; checks it off on completion |
 | `test-creator` | *(new)* | Read, Write, Bash, Grep, Glob | What counts as sufficient test coverage — line %? behaviour scenarios? |
 | `pr-reviewer` | `code-review-excellence` (extended with PR context) | Read, Bash (gh pr *) | Does this always review the current branch's open PR, or accept a PR number as argument? |
 | `simplify` | *(new)* | Read, Edit, Grep, Glob | Scope — whole file, changed lines, or named function? |
@@ -442,7 +442,7 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
 ## Decision Log (open items before starting)
 
 1. **Ideation file location** — always `todo/`? Or project-configurable? This affects both capture skills and the grill-me argument default.
-2. **Plan format** — `tasks.md` checklist, Claude Code TaskCreate tool calls, or something else? The `/build` skill's ability to find "the current task" depends on this.
+2. ~~**Plan format**~~ — **Resolved:** The plan is the OpenSpec `tasks.md` at `openspec/changes/{change-id}/tasks.md`, produced by `task-to-spec`. `/plan` reads and validates it; `/build` finds the first unchecked item in it.
 3. **Marketplace name** — `simon-marketplace` is working but generic. It's embedded in every install command, so it should be stable.
 4. **Private vs public repo** — affects GitHub source resolution for others.
 5. **OpenSpec tooling assumption** — `task-to-spec` calls the `openspec` CLI. Is this installed on all target machines, or does it need to be bundled/documented as a prerequisite?
