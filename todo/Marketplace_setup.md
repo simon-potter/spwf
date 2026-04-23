@@ -499,7 +499,7 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
 
 ## Decision Log (open items before starting)
 
-1. **Ideation file location** — always `todo/`? Or project-configurable? This affects both capture skills and the grill-me argument default.
+1. ~~**Ideation file location**~~ — **Resolved:** Always `todo/` at project root — existing convention, hardcoded, no configuration.
 2. ~~**Plan format**~~ — **Resolved:** The plan is the OpenSpec `tasks.md` at `openspec/changes/{change-id}/tasks.md`, produced by `task-to-spec`. `/plan` reads and validates it; `/build` finds the first unchecked item in it.
 3. **Marketplace name** — `simon-marketplace` is working but generic. It's embedded in every install command, so it should be stable.
 4. **Private vs public repo** — affects GitHub source resolution for others.
