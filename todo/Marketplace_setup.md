@@ -16,107 +16,41 @@
 
 ## Workflow Coverage Map
 
-The canonical seven-phase reference structure mapped against Simon's planned skills and injected agent-skills. All steps are now covered — four by first-party Simon skills, four filled by `workflow-reference` (curated from `addyosmani/agent-skills`). Flagged steps are Simon-specific additions outside the canonical seven.
+All workflow steps are covered. Skills live in either `workflow-core` (all seven phases) or `workflow-tools` (extended phases). Where a phase skill is based on or seeded from `addyosmani/agent-skills` content, that is noted in the Attribution column — the skill still lives in `workflow-core`, not a separate plugin.
 
-| Step | Command | Simon's skills (`workflow-core` / `workflow-tools`) | agent-skills (`workflow-reference`) | Status |
+| Step | Command | Skill (plugin) | Attribution | Status |
 |---|---|---|---|---|
-| **[NEW] Capture idea** | `/capture` | `issue-to-task`, `new-task` | `idea-refine` (augments) | Covered |
-| **[NEW] Challenge idea** | `/challenge` | `grill-me` | — | Covered |
-| Define what to build | `/spec` | `task-to-spec` | `spec-driven-development` (augments) | Covered |
-| Plan how to build it | `/plan` | — | `planning-and-task-breakdown` (fills gap) | Covered via workflow-reference |
-| Build incrementally | `/build` | `opsx:*` (10 skills), `test-creator` | `incremental-implementation`, `source-driven-development`, `security-and-hardening`, `debugging-and-error-recovery` (augment) | Covered |
-| Prove it works | `/test` | — | `test-driven-development` (fills gap), `browser-testing-with-devtools` (augments) | Covered via workflow-reference |
-| Review before merge | `/review` | `pr-reviewer` | `code-review-and-quality`, `security-and-hardening` (augment) | Covered |
-| Simplify the code | `/code-simplify` | — | `code-simplification` (fills gap) | Covered via workflow-reference |
-| Ship to production | `/ship` | — | `git-workflow-and-versioning` (fills gap — PR creation) | Covered via workflow-reference |
-| **[NEW] Learn from shipping** | `/retrospect` | `learn-from-mistakes` | — | Covered |
-| **[NEW] Maintain quality** | `/maintain` | `doc-lint`, `agent-optimise` | `documentation-and-adrs`, `context-engineering` (augment) | Covered |
+| **[NEW] Capture idea** | `/capture` | `issue-to-task`, `new-task` (workflow-tools) | Original | Covered |
+| **[NEW] Challenge idea** | `/challenge` | `grill-me` (workflow-tools) | Original | Covered |
+| Define what to build | `/spec` | `task-to-spec` (workflow-core) | Original | Covered |
+| Plan how to build it | `/plan` | `plan` (workflow-core) | Seeded from `planning-and-task-breakdown` (agent-skills, MIT) | Covered |
+| Build incrementally | `/build` | `build` (workflow-core) + `opsx:*` (10 skills) + `test-creator` (workflow-core) | `build` seeded from `incremental-implementation` (agent-skills, MIT) | Covered |
+| Prove it works | `/test` | `test` (workflow-core) | Seeded from `test-driven-development` (agent-skills, MIT) | Covered |
+| Review before merge | `/review` | `pr-reviewer` (workflow-core) | Original, extends `code-review-excellence` | Covered |
+| Simplify the code | `/code-simplify` | `simplify` (workflow-core) | Seeded from `code-simplification` (agent-skills, MIT) | Covered |
+| Ship to production | `/ship` | `ship` (workflow-core) | Seeded from `git-workflow-and-versioning` (agent-skills, MIT) — PR creation only, CI/CD owns deploy | Covered |
+| **[NEW] Learn from shipping** | `/retrospect` | `learn-from-mistakes` (workflow-tools) | Original | Covered |
+| **[NEW] Maintain quality** | `/maintain` | `doc-lint`, `agent-optimise` (workflow-tools) | Original | Covered |
 
-**Summary:** All steps covered. 4 canonical steps filled by first-party Simon skills · 4 canonical steps filled by `workflow-reference` (agent-skills injection) · 3 new steps added for Simon-specific phases.
+**Summary:** All steps covered across two plugins. 5 workflow-core skills are original first-party · 5 workflow-core skills are seeded from agent-skills (MIT, attributed per SKILL.md) · all workflow-tools skills are original.
+
+**Attribution policy:** Any skill seeded from `addyosmani/agent-skills` carries a comment in its SKILL.md frontmatter: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`. Simon's additions and adaptations accumulate on top.
 
 ---
 
-## agent-skills Injection Analysis
+## agent-skills Attribution
 
-The [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) repo publishes 20 skills. This section maps each against the coverage gaps and existing steps to determine which can be pulled into the marketplace as-is or near-as-is.
+Five `workflow-core` phase skills are seeded from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT licensed). They are adapted and extended as Simon's own versions of those phases — not copied verbatim and not in a separate plugin.
 
-### Gap fillers — install directly to cover empty canonical steps
-
-| agent-skills skill | Fills gap at | Why |
+| workflow-core skill | Seeded from | What Simon adds |
 |---|---|---|
-| `planning-and-task-breakdown` | `/plan` | "Breaks work into ordered tasks from a spec" — exact match for the empty plan step |
-| `test-driven-development` | `/test` | "Drives development with tests / proves code works" — fills the run-defined-tests gap |
-| `code-simplification` | `/code-simplify` | "Simplifies code for clarity without changing behaviour" — direct match |
-| `git-workflow-and-versioning` | `/ship` | "Structures git workflow: committing, branching, PR organisation" — covers the PR creation need |
+| `plan` | `planning-and-task-breakdown` | Opinionated output format tied to the ideation file and OpenSpec |
+| `build` | `incremental-implementation` | Awareness of opsx skills as the implementation vehicle |
+| `test` | `test-driven-development` | Distinction between test-creator (writing) and test (running) |
+| `simplify` | `code-simplification` | Scoping rules specific to the codebase patterns |
+| `ship` | `git-workflow-and-versioning` | PR-only scope — no deployment steps, CI/CD owns that |
 
-All four can be pulled in as-is. `shipping-and-launch` was considered for `/ship` but it describes a full production launch checklist rather than PR creation — see augmentation table below.
-
-### Augmentations — add depth to already-covered steps
-
-| agent-skills skill | Augments | How it adds value |
-|---|---|---|
-| `idea-refine` | `/capture` | Structured divergent/convergent thinking to sharpen a new task before writing the ideation file; complements `new-task` |
-| `spec-driven-development` | `/spec` | Alternative spec-writing approach for when there is no Jira ticket or ideation file; complements `task-to-spec` |
-| `incremental-implementation` | `/build` | Slice discipline for multi-file changes; reinforces the opsx workflow with a process guardrail |
-| `code-review-and-quality` | `/review` | Multi-axis review checklist; augments `pr-reviewer` with a structured quality framework |
-| `browser-testing-with-devtools` | `/test` | Browser-specific test execution via Chrome DevTools MCP; adds a runtime verification layer |
-| `security-and-hardening` | `/build` + `/review` | Hardens code during implementation and catches vulnerabilities at review; cross-phase value |
-| `debugging-and-error-recovery` | `/build` | Systematic root-cause process when a build slice breaks; useful during incremental work |
-| `documentation-and-adrs` | `/maintain` | Generates ADRs and records decisions; complements `doc-lint` which enforces standards on existing docs |
-| `context-engineering` | `/maintain` | Optimises agent context setup and rules files; complements `agent-optimise` |
-| `source-driven-development` | `/build` | Grounds implementation in official docs; reduces hallucinated APIs during build |
-
-### Low priority / specialised — include later or on demand
-
-| agent-skills skill | Notes |
-|---|---|
-| `api-and-interface-design` | Useful for API-heavy projects; not universally needed in every workflow run |
-| `frontend-ui-engineering` | Project-specific; include when the repo is a frontend |
-| `performance-optimization` | Reactive skill (use when perf is a concern); not part of baseline workflow |
-| `deprecation-and-migration` | Situational; add when a migration is actively in progress |
-| `ci-cd-and-automation` | Pipeline setup skill; overlaps with the CI/CD-owns-deploy assumption in `/ship` — include in `infra-tools` plugin later |
-| `shipping-and-launch` | Full production launch checklist; too broad for the PR-creation scope of `/ship` — candidate for a future `release-management` plugin |
-| `using-agent-skills` | Meta/onboarding skill for the agent-skills repo itself; not relevant here |
-
-### Recommended addition to marketplace.json
-
-A third plugin — `workflow-reference` — to house the injected agent-skills content, keeping it clearly separated from Simon's first-party skills:
-
-```json
-{
-  "name": "workflow-reference",
-  "source": "./plugins/workflow-reference",
-  "description": "Curated agent-skills from addyosmani/agent-skills: gap fillers and augmentations for the core workflow",
-  "version": "0.1.0"
-}
-```
-
-Plugin structure:
-
-```
-plugins/workflow-reference/
-├── .claude-plugin/
-│   └── plugin.json
-└── skills/
-    ├── planning-and-task-breakdown/   # fills /plan
-    ├── test-driven-development/       # fills /test
-    ├── code-simplification/           # fills /code-simplify
-    ├── git-workflow-and-versioning/   # fills /ship (PR creation)
-    ├── idea-refine/                   # augments /capture
-    ├── spec-driven-development/       # augments /spec
-    ├── incremental-implementation/    # augments /build
-    ├── code-review-and-quality/       # augments /review
-    ├── browser-testing-with-devtools/ # augments /test
-    ├── security-and-hardening/        # augments /build + /review
-    ├── debugging-and-error-recovery/  # augments /build
-    ├── documentation-and-adrs/        # augments /maintain
-    ├── context-engineering/           # augments /maintain
-    └── source-driven-development/     # augments /build
-```
-
-These 14 skills can be copied verbatim from `addyosmani/agent-skills` (MIT licensed). Attribution comment in the plugin README.
-
-**Revised summary after injection:** All canonical steps covered · 3 new steps covered · 6 agent-skills held back for later or specialised plugins.
+Skills not used from agent-skills (and why): `shipping-and-launch` (too broad, covers full prod launch), `ci-cd-and-automation` (conflicts with CI/CD-owns-deploy principle), `api-and-interface-design` / `frontend-ui-engineering` / `performance-optimization` / `deprecation-and-migration` (situational, future plugins), `using-agent-skills` (meta, irrelevant).
 
 ---
 
@@ -131,15 +65,15 @@ Capture ─► Challenge ─► Spec ─► Plan ─► Build ─► Test ─►
 
 ### Core seven phases (aligned to agent-skills)
 
-| Phase | Simon's first-party skill | workflow-reference skill | Principle |
+| Phase | Skill (workflow-core) | Origin | Principle |
 |---|---|---|---|
-| 1 `/spec` | `task-to-spec` | `spec-driven-development` (augments) | Spec before code — freeze the outcome, not the implementation |
-| 2 `/plan` | — | `planning-and-task-breakdown` (fills) | Small, atomic tasks — break the spec into independently testable slices |
-| 3 `/build` | `opsx:*`, `test-creator` | `incremental-implementation`, `source-driven-development`, `security-and-hardening`, `debugging-and-error-recovery` (augment) | One slice at a time — implement with tunnel vision on the current slice |
-| 4 `/test` | — | `test-driven-development` (fills), `browser-testing-with-devtools` (augments) | Tests are proof — a feature is not done until a test confirms it |
-| 5 `/review` | `pr-reviewer` | `code-review-and-quality`, `security-and-hardening` (augment) | Improve code health — catch regressions and drift before merge |
-| 6 `/code-simplify` | — | `code-simplification` (fills) | Clarity over cleverness — remove every line not earning its place |
-| 7 `/ship` | — | `git-workflow-and-versioning` (fills — PR creation) | Faster is safer — CI/CD handles deploy, Simon creates the PR |
+| 1 `/spec` | `task-to-spec` | Original | Spec before code — freeze the outcome, not the implementation |
+| 2 `/plan` | `plan` | Seeded from agent-skills | Small, atomic tasks — break the spec into independently testable slices |
+| 3 `/build` | `build` + `opsx:*` + `test-creator` | `build` seeded from agent-skills; others original | One slice at a time — implement with tunnel vision on the current slice |
+| 4 `/test` | `test` | Seeded from agent-skills | Tests are proof — running defined tests proves the slice is complete |
+| 5 `/review` | `pr-reviewer` | Original | Improve code health — catch regressions and drift before merge |
+| 6 `/code-simplify` | `simplify` | Seeded from agent-skills | Clarity over cleverness — remove every line not earning its place |
+| 7 `/ship` | `ship` | Seeded from agent-skills | PR creation only — CI/CD owns the actual deploy |
 
 ### Extended phases (Simon-specific, no agent-skills equivalent)
 
@@ -192,27 +126,29 @@ plugin-marketplace-simon/
 │
 ├── plugins/
 │   │
-│   ├── workflow-core/                # Seven-phase structural backbone
+│   ├── workflow-core/                # Seven-phase skills (original + agent-skills-seeded, see Attribution section)
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
 │   │   ├── skills/
-│   │   │   ├── task-to-spec/         # Phase 1 — maps to /spec
+│   │   │   ├── task-to-spec/         # Phase 1 /spec — original
 │   │   │   │   └── SKILL.md
-│   │   │   ├── plan/                 # Phase 2
+│   │   │   ├── plan/                 # Phase 2 /plan — seeded from agent-skills
 │   │   │   │   └── SKILL.md
-│   │   │   ├── build/                # Phase 3
+│   │   │   ├── build/                # Phase 3 /build — seeded from agent-skills
 │   │   │   │   └── SKILL.md
-│   │   │   ├── test-creator/         # Phase 4 — retrofit test writing
+│   │   │   ├── test-creator/         # Phase 3 /build — original (writes tests)
 │   │   │   │   └── SKILL.md
-│   │   │   ├── pr-reviewer/          # Phase 5 — extends code-review-excellence
+│   │   │   ├── test/                 # Phase 4 /test — seeded from agent-skills (runs tests)
 │   │   │   │   └── SKILL.md
-│   │   │   ├── simplify/             # Phase 6
+│   │   │   ├── pr-reviewer/          # Phase 5 /review — original
 │   │   │   │   └── SKILL.md
-│   │   │   └── ship/                 # Phase 7
+│   │   │   ├── simplify/             # Phase 6 /code-simplify — seeded from agent-skills
+│   │   │   │   └── SKILL.md
+│   │   │   └── ship/                 # Phase 7 /ship — seeded from agent-skills (PR only)
 │   │   │       └── SKILL.md
 │   │   └── README.md
 │   │
-│   ├── workflow-tools/               # Extended skills: capture, challenge, quality, retrospective
+│   ├── workflow-tools/               # Extended skills: capture, challenge, quality, retrospective (all original)
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
 │   │   ├── skills/
@@ -229,26 +165,6 @@ plugin-marketplace-simon/
 │   │   │   └── learn-from-mistakes/  # Post-ship: commits → documentation
 │   │   │       └── SKILL.md
 │   │   └── README.md
-│   │
-│   ├── workflow-reference/           # Curated agent-skills (MIT, copied verbatim from addyosmani/agent-skills)
-│   │   ├── .claude-plugin/
-│   │   │   └── plugin.json
-│   │   ├── skills/
-│   │   │   ├── planning-and-task-breakdown/   # fills /plan
-│   │   │   ├── test-driven-development/       # fills /test
-│   │   │   ├── code-simplification/           # fills /code-simplify
-│   │   │   ├── git-workflow-and-versioning/   # fills /ship (PR creation)
-│   │   │   ├── idea-refine/                   # augments /capture
-│   │   │   ├── spec-driven-development/       # augments /spec
-│   │   │   ├── incremental-implementation/    # augments /build
-│   │   │   ├── code-review-and-quality/       # augments /review
-│   │   │   ├── browser-testing-with-devtools/ # augments /test
-│   │   │   ├── security-and-hardening/        # augments /build + /review
-│   │   │   ├── debugging-and-error-recovery/  # augments /build
-│   │   │   ├── documentation-and-adrs/        # augments /maintain
-│   │   │   ├── context-engineering/           # augments /maintain
-│   │   │   └── source-driven-development/     # augments /build
-│   │   └── README.md                          # attribution: MIT licence, source repo linked
 │   │
 │   ├── workflow-agents/              # Subagents paired to each phase
 │   │   ├── .claude-plugin/
@@ -272,10 +188,9 @@ plugin-marketplace-simon/
 └── README.md                         # Installation guide
 ```
 
-**Why three skill plugins:**
-- `workflow-core` is Simon's first-party phase gates — `task-to-spec`, `pr-reviewer`, `test-creator`, and the opsx build skills. The invokable workflow commands.
-- `workflow-tools` is Simon's extended tooling — pre/post phases and cross-cutting quality skills (`grill-me`, `doc-lint`, `agent-optimise`, etc.). First-party, personal, not for general distribution.
-- `workflow-reference` is curated third-party content copied verbatim from `addyosmani/agent-skills` (MIT licensed). It fills the four canonical gaps (`/plan`, `/test`, `/code-simplify`, `/ship`) and augments covered steps. Kept separate so attribution is clear and updates can be applied independently.
+**Why two skill plugins:**
+- `workflow-core` owns all seven canonical phases. Some skills are original (task-to-spec, pr-reviewer, test-creator), others are seeded from agent-skills and extended (plan, build, test, simplify, ship). All live here — one plugin, one namespace, one install.
+- `workflow-tools` owns the extended phases and cross-cutting skills. All original. Personal tooling not intended for general distribution.
 
 ---
 
@@ -308,19 +223,13 @@ Create `.claude-plugin/marketplace.json`:
     {
       "name": "workflow-core",
       "source": "./plugins/workflow-core",
-      "description": "Simon's first-party phase skills: task-to-spec, pr-reviewer, test-creator, opsx build skills",
+      "description": "Seven-phase workflow skills: task-to-spec, plan, build, test-creator, test, pr-reviewer, simplify, ship",
       "version": "0.1.0"
     },
     {
       "name": "workflow-tools",
       "source": "./plugins/workflow-tools",
       "description": "Extended workflow skills: issue-to-task, new-task, grill-me, doc-lint, agent-optimise, learn-from-mistakes",
-      "version": "0.1.0"
-    },
-    {
-      "name": "workflow-reference",
-      "source": "./plugins/workflow-reference",
-      "description": "Curated agent-skills from addyosmani/agent-skills (MIT): fills /plan /test /code-simplify /ship gaps and augments all phases",
       "version": "0.1.0"
     },
     {
@@ -367,40 +276,6 @@ Create `.claude-plugin/marketplace.json`:
 | `pr-reviewer` | `code-review-excellence` (extended with PR context) | Read, Bash (gh pr *) | Does this always review the current branch's open PR, or accept a PR number as argument? |
 | `simplify` | *(new)* | Read, Edit, Grep, Glob | Scope — whole file, changed lines, or named function? |
 | `ship` | *(new)* | Read, Bash | What constitutes a "successful ship" for this context — health check, smoke test, monitoring check? |
-
----
-
-### Phase 2.5 — `workflow-reference` Plugin
-
-This plugin requires no authoring — copy skills verbatim from `addyosmani/agent-skills` (MIT licensed).
-
-```bash
-mkdir -p plugins/workflow-reference/.claude-plugin
-mkdir -p plugins/workflow-reference/skills
-
-# Clone and copy the 14 selected skills
-for skill in planning-and-task-breakdown test-driven-development code-simplification \
-  git-workflow-and-versioning idea-refine spec-driven-development incremental-implementation \
-  code-review-and-quality browser-testing-with-devtools security-and-hardening \
-  debugging-and-error-recovery documentation-and-adrs context-engineering source-driven-development; do
-  gh api "repos/addyosmani/agent-skills/contents/skills/$skill" --jq '.[].name' | \
-    xargs -I{} gh api "repos/addyosmani/agent-skills/contents/skills/$skill/{}" \
-    --jq '.content' | base64 -d > "plugins/workflow-reference/skills/$skill/SKILL.md"
-done
-```
-
-Plugin manifest:
-
-```json
-{
-  "name": "workflow-reference",
-  "description": "Curated skills from addyosmani/agent-skills (MIT). Fills /plan /test /code-simplify /ship gaps and augments all other phases.",
-  "version": "0.1.0",
-  "author": { "name": "Simon Potter" }
-}
-```
-
-The `README.md` for this plugin must include attribution: source repo URL, MIT licence declaration, and the version of agent-skills copied from.
 
 ---
 
@@ -515,23 +390,22 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
 ### Phase 6 — Local Testing
 
 1. Load marketplace locally from repo root: `/plugin marketplace add ./`
-2. Install all four plugins:
+2. Install all three plugins:
    ```
    /plugin install workflow-core@simon-marketplace
    /plugin install workflow-tools@simon-marketplace
-   /plugin install workflow-reference@simon-marketplace
    /plugin install workflow-agents@simon-marketplace
    ```
 3. Walk through the full extended lifecycle with a toy task:
    - `/workflow-tools:new-task` → create ideation file
    - `/workflow-tools:grill-me todo/{file}.md` → challenge it
    - `/workflow-core:task-to-spec todo/{file}.md` → generate OpenSpec
-   - `/workflow-reference:planning-and-task-breakdown` → break into tasks
+   - `/workflow-core:plan` → break into tasks
    - opsx skills + `/workflow-core:test-creator` → implement slice + write tests
-   - `/workflow-reference:test-driven-development` → run and verify tests
+   - `/workflow-core:test` → run and verify tests
    - `/workflow-core:pr-reviewer` → review the branch
-   - `/workflow-reference:code-simplification` → clean up
-   - `/workflow-reference:git-workflow-and-versioning` → create PR
+   - `/workflow-core:simplify` → clean up
+   - `/workflow-core:ship` → create PR
    - `/workflow-tools:learn-from-mistakes` → extract learnings
 4. Confirm agents appear in `/agents` with correct trigger descriptions.
 5. `/reload-plugins` after any edits — no restart needed.
@@ -547,7 +421,6 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
    /plugin marketplace add simonpotter/plugin-marketplace-simon
    /plugin install workflow-core@simon-marketplace
    /plugin install workflow-tools@simon-marketplace
-   /plugin install workflow-reference@simon-marketplace
    /plugin install workflow-agents@simon-marketplace
    ```
 4. Update command on any machine: `/plugin marketplace update simon-marketplace`
@@ -583,13 +456,11 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
 The marketplace is "working" when:
 
 - [ ] `marketplace.json` validates and is readable by Claude Code
-- [ ] `workflow-core` skills install and are invocable via `/workflow-core:<name>` (`task-to-spec`, `pr-reviewer`, `test-creator`)
-- [ ] `workflow-tools` skills install and are invocable via `/workflow-tools:<name>` (`issue-to-task`, `new-task`, `grill-me`, `doc-lint`, `agent-optimise`, `learn-from-mistakes`)
-- [ ] All 14 `workflow-reference` skills install and are invocable via `/workflow-reference:<name>`
-- [ ] The four gap-filling skills are reachable at their canonical phase: `planning-and-task-breakdown` at `/plan`, `test-driven-development` at `/test`, `code-simplification` at `/code-simplify`, `git-workflow-and-versioning` at `/ship`
+- [ ] All `workflow-core` skills install and are invocable via `/workflow-core:<name>` (`task-to-spec`, `plan`, `build`, `test-creator`, `test`, `pr-reviewer`, `simplify`, `ship`)
+- [ ] All `workflow-tools` skills install and are invocable via `/workflow-tools:<name>` (`issue-to-task`, `new-task`, `grill-me`, `doc-lint`, `agent-optimise`, `learn-from-mistakes`)
 - [ ] All eight agents appear in `/agents` with correct trigger descriptions
 - [ ] The full extended lifecycle (new-task → learn-from-mistakes) works end-to-end on a toy project
-- [ ] A fresh machine can install everything with five commands (marketplace add + four plugin installs)
+- [ ] A fresh machine can install everything with four commands (marketplace add + three plugin installs)
 - [ ] `/plugin marketplace update simon-marketplace` picks up changes after a push
 - [ ] Personal skills in `~/.claude` that are superseded by marketplace versions are confirmed redundant and archived
 
@@ -609,6 +480,6 @@ The marketplace is "working" when:
 
 **Install** — `/plugin marketplace add <github-user/repo>` or `/plugin marketplace add ./local-path`
 
-**Skill invocation** — `/workflow-core:task-to-spec` · `/workflow-tools:grill-me <file>` · `/workflow-reference:planning-and-task-breakdown`
+**Skill invocation** — `/workflow-core:task-to-spec` · `/workflow-core:plan` · `/workflow-tools:grill-me <file>`
 
 **Reload after edits** — `/reload-plugins`
