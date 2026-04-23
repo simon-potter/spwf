@@ -14,6 +14,64 @@
 
 ---
 
+## Prerequisites
+
+These must be in place before any workflow skill will function correctly. The marketplace README leads with this section.
+
+### 1. Claude Code
+
+Install and authenticate Claude Code.
+
+```bash
+npm install -g @anthropic-ai/claude-code
+claude login
+```
+
+### 2. OpenSpec CLI
+
+The entire spec→plan→build chain depends on OpenSpec. `task-to-spec` writes into it, `plan` and `build` read from it.
+
+```bash
+npm install -g openspec
+```
+
+Verify: `openspec --version`
+
+Every project using this workflow must be initialised before running `/workflow-core:task-to-spec`:
+
+```bash
+cd your-project
+openspec init
+```
+
+This creates the `openspec/` directory that all downstream skills expect. If it is missing, `task-to-spec` will halt with:
+
+```
+OpenSpec not initialised. Run: openspec init
+```
+
+Documentation: [openspec.dev](https://openspec.dev)
+
+### 3. GitHub CLI (for `/review` and `/ship`)
+
+`pr-reviewer` and `ship` use `gh` to read PR data and create PRs.
+
+```bash
+# macOS
+brew install gh
+# or: https://cli.github.com
+
+gh auth login
+```
+
+### 4. Atlassian MCP (for `issue-to-task` only)
+
+Required only if using `/workflow-tools:issue-to-task` to pull from Jira. Not needed for any other skill.
+
+Configure the Atlassian MCP server in your Claude Code settings — see [MCP setup docs](https://code.claude.com/docs/en/mcp).
+
+---
+
 ## Workflow Coverage Map
 
 All workflow steps are covered. Skills live in either `workflow-core` (all seven phases) or `workflow-tools` (extended phases). Where a phase skill is based on or seeded from `addyosmani/agent-skills` content, that is noted in the Attribution column — the skill still lives in `workflow-core`, not a separate plugin.
@@ -269,7 +327,7 @@ Create `.claude-plugin/marketplace.json`:
 
 | Skill | Source | `allowed-tools` | Key open decision |
 |---|---|---|---|
-| `task-to-spec` | `ideation-to-openspec` (renamed, logic preserved) | Read, Write, Bash (openspec CLI) | Where does the ideation file live — always `todo/`? |
+| `task-to-spec` | `ideation-to-openspec` (renamed, logic preserved) | Read, Write, Bash (openspec CLI) | Opens by checking `openspec/` exists — halts with install instructions if not. Ideation file location: always `todo/`? |
 | `plan` | Seeded from agent-skills | Read, Write | Reads and validates OpenSpec `tasks.md` at `openspec/changes/{change-id}/tasks.md`; surfaces the task list for review before /build starts |
 | `build` | Seeded from agent-skills | Read, Edit, Write, Bash | Locates current task as first unchecked item in OpenSpec `tasks.md`; implements it; checks it off on completion |
 | `test-creator` | *(new)* | Read, Write, Bash, Grep, Glob | What counts as sufficient test coverage — line %? behaviour scenarios? |
@@ -445,7 +503,7 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
 2. ~~**Plan format**~~ — **Resolved:** The plan is the OpenSpec `tasks.md` at `openspec/changes/{change-id}/tasks.md`, produced by `task-to-spec`. `/plan` reads and validates it; `/build` finds the first unchecked item in it.
 3. **Marketplace name** — `simon-marketplace` is working but generic. It's embedded in every install command, so it should be stable.
 4. **Private vs public repo** — affects GitHub source resolution for others.
-5. **OpenSpec tooling assumption** — `task-to-spec` calls the `openspec` CLI. Is this installed on all target machines, or does it need to be bundled/documented as a prerequisite?
+5. ~~**OpenSpec tooling assumption**~~ — **Resolved:** OpenSpec is a documented prerequisite. The marketplace README has a Prerequisites section. `task-to-spec` checks for the `openspec/` directory and halts with a clear message if it's missing — it does not auto-initialise.
 6. **`pr-reviewer` argument** — does it always review the current branch's open PR, or accept a PR number? `$ARGUMENTS` can handle both but the default matters.
 7. **`agent-optimise` scope** — does this audit just the current project's `.claude/` directory, or also `~/.claude/`? Both? Configurable?
 
