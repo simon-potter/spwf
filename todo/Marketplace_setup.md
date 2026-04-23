@@ -257,7 +257,7 @@ plugin-marketplace-simon/
 ### Phase 0 — Repo Initialisation
 
 - [ ] Write `README.md` at repo root: what this marketplace is, who it is for, the single install command pair.
-- [ ] Decide final marketplace name — `simon-marketplace` is the current working name. It appears in all install commands so should be stable.
+- [x] ~~Decide final marketplace name~~ — `simon-marketplace`. Hosted under the `Academy-Plus` GitHub org (`Academy-Plus/plugin-marketplace-simon`). Experimental repo shared with the company.
 - [ ] Confirm private vs public repo (affects whether GitHub source references work for others).
 
 ---
@@ -476,7 +476,7 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
 2. Tag `v0.1.0` once local testing passes.
 3. Install command on a new machine:
    ```
-   /plugin marketplace add simonpotter/plugin-marketplace-simon
+   /plugin marketplace add Academy-Plus/plugin-marketplace-simon
    /plugin install workflow-core@simon-marketplace
    /plugin install workflow-tools@simon-marketplace
    /plugin install workflow-agents@simon-marketplace
@@ -501,8 +501,8 @@ Skills that are **new** (no existing source): `plan`, `build`, `simplify`, `ship
 
 1. ~~**Ideation file location**~~ — **Resolved:** Always `todo/` at project root — existing convention, hardcoded, no configuration.
 2. ~~**Plan format**~~ — **Resolved:** The plan is the OpenSpec `tasks.md` at `openspec/changes/{change-id}/tasks.md`, produced by `task-to-spec`. `/plan` reads and validates it; `/build` finds the first unchecked item in it.
-3. **Marketplace name** — `simon-marketplace` is working but generic. It's embedded in every install command, so it should be stable.
-4. **Private vs public repo** — affects GitHub source resolution for others.
+3. ~~**Marketplace name**~~ — **Resolved:** `simon-marketplace`. Hosted under the `Academy-Plus` GitHub org (`Academy-Plus/plugin-marketplace-simon`). Experimental repo shared with the company. Name is stable — embedded in all install commands.
+4. ~~**Private vs public repo**~~ — **Resolved:** Private repo under `Academy-Plus` org. Team members with org access can install via the standard `/plugin marketplace add` command. May be opened later if the workflow is worth sharing externally.
 5. ~~**OpenSpec tooling assumption**~~ — **Resolved:** OpenSpec is a documented prerequisite. The marketplace README has a Prerequisites section. `task-to-spec` checks for the `openspec/` directory and halts with a clear message if it's missing — it does not auto-initialise.
 6. ~~**`pr-reviewer` argument**~~ — **Resolved:** Requires a PR reference as `$ARGUMENTS` — no default. Does not create PRs. Halts with usage hint if no argument given.
 7. ~~**`agent-optimise` scope**~~ — **Resolved:** Always audits both project `.claude/` and personal `~/.claude/` — agent bloat accumulates across both and needs to be seen together.
