@@ -36,6 +36,90 @@ The canonical seven-phase reference structure mapped against Simon's planned ski
 
 ---
 
+## agent-skills Injection Analysis
+
+The [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) repo publishes 20 skills. This section maps each against the coverage gaps and existing steps to determine which can be pulled into the marketplace as-is or near-as-is.
+
+### Gap fillers — install directly to cover empty canonical steps
+
+| agent-skills skill | Fills gap at | Why |
+|---|---|---|
+| `planning-and-task-breakdown` | `/plan` | "Breaks work into ordered tasks from a spec" — exact match for the empty plan step |
+| `test-driven-development` | `/test` | "Drives development with tests / proves code works" — fills the run-defined-tests gap |
+| `code-simplification` | `/code-simplify` | "Simplifies code for clarity without changing behaviour" — direct match |
+| `git-workflow-and-versioning` | `/ship` | "Structures git workflow: committing, branching, PR organisation" — covers the PR creation need |
+
+All four can be pulled in as-is. `shipping-and-launch` was considered for `/ship` but it describes a full production launch checklist rather than PR creation — see augmentation table below.
+
+### Augmentations — add depth to already-covered steps
+
+| agent-skills skill | Augments | How it adds value |
+|---|---|---|
+| `idea-refine` | `/capture` | Structured divergent/convergent thinking to sharpen a new task before writing the ideation file; complements `new-task` |
+| `spec-driven-development` | `/spec` | Alternative spec-writing approach for when there is no Jira ticket or ideation file; complements `task-to-spec` |
+| `incremental-implementation` | `/build` | Slice discipline for multi-file changes; reinforces the opsx workflow with a process guardrail |
+| `code-review-and-quality` | `/review` | Multi-axis review checklist; augments `pr-reviewer` with a structured quality framework |
+| `browser-testing-with-devtools` | `/test` | Browser-specific test execution via Chrome DevTools MCP; adds a runtime verification layer |
+| `security-and-hardening` | `/build` + `/review` | Hardens code during implementation and catches vulnerabilities at review; cross-phase value |
+| `debugging-and-error-recovery` | `/build` | Systematic root-cause process when a build slice breaks; useful during incremental work |
+| `documentation-and-adrs` | `/maintain` | Generates ADRs and records decisions; complements `doc-lint` which enforces standards on existing docs |
+| `context-engineering` | `/maintain` | Optimises agent context setup and rules files; complements `agent-optimise` |
+| `source-driven-development` | `/build` | Grounds implementation in official docs; reduces hallucinated APIs during build |
+
+### Low priority / specialised — include later or on demand
+
+| agent-skills skill | Notes |
+|---|---|
+| `api-and-interface-design` | Useful for API-heavy projects; not universally needed in every workflow run |
+| `frontend-ui-engineering` | Project-specific; include when the repo is a frontend |
+| `performance-optimization` | Reactive skill (use when perf is a concern); not part of baseline workflow |
+| `deprecation-and-migration` | Situational; add when a migration is actively in progress |
+| `ci-cd-and-automation` | Pipeline setup skill; overlaps with the CI/CD-owns-deploy assumption in `/ship` — include in `infra-tools` plugin later |
+| `shipping-and-launch` | Full production launch checklist; too broad for the PR-creation scope of `/ship` — candidate for a future `release-management` plugin |
+| `using-agent-skills` | Meta/onboarding skill for the agent-skills repo itself; not relevant here |
+
+### Recommended addition to marketplace.json
+
+A third plugin — `workflow-reference` — to house the injected agent-skills content, keeping it clearly separated from Simon's first-party skills:
+
+```json
+{
+  "name": "workflow-reference",
+  "source": "./plugins/workflow-reference",
+  "description": "Curated agent-skills from addyosmani/agent-skills: gap fillers and augmentations for the core workflow",
+  "version": "0.1.0"
+}
+```
+
+Plugin structure:
+
+```
+plugins/workflow-reference/
+├── .claude-plugin/
+│   └── plugin.json
+└── skills/
+    ├── planning-and-task-breakdown/   # fills /plan
+    ├── test-driven-development/       # fills /test
+    ├── code-simplification/           # fills /code-simplify
+    ├── git-workflow-and-versioning/   # fills /ship (PR creation)
+    ├── idea-refine/                   # augments /capture
+    ├── spec-driven-development/       # augments /spec
+    ├── incremental-implementation/    # augments /build
+    ├── code-review-and-quality/       # augments /review
+    ├── browser-testing-with-devtools/ # augments /test
+    ├── security-and-hardening/        # augments /build + /review
+    ├── debugging-and-error-recovery/  # augments /build
+    ├── documentation-and-adrs/        # augments /maintain
+    ├── context-engineering/           # augments /maintain
+    └── source-driven-development/     # augments /build
+```
+
+These 14 skills can be copied verbatim from `addyosmani/agent-skills` (MIT licensed). Attribution comment in the plugin README.
+
+**Revised summary after injection:** All canonical steps covered · 3 new steps covered · 6 agent-skills held back for later or specialised plugins.
+
+---
+
 ## The Extended Workflow
 
 Simon's workflow extends the seven-phase agent-skills reference by adding a **capture stage** before spec, a **challenge gate** between capture and spec, and a **retrospective stage** after ship. The core seven phases are preserved but supplemented rather than replaced.
