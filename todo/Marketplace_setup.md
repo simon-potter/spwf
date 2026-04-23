@@ -14,6 +14,28 @@
 
 ---
 
+## Workflow Coverage Map
+
+The canonical seven-phase reference structure mapped against Simon's planned skills. Empty canonical steps need new skills written. Flagged steps are additions required to house unallocated skills.
+
+| Step | Canonical command | Simon's skills | Status |
+|---|---|---|---|
+| **[NEW] Capture idea** | `/capture` | `issue-to-task`, `new-task` | No canonical equivalent — added to house pre-spec capture |
+| **[NEW] Challenge idea** | `/challenge` | `grill-me` | No canonical equivalent — gate between capture and spec |
+| Define what to build | `/spec` | `task-to-spec` | Covered |
+| Plan how to build it | `/plan` | *(none)* | **Needs a skill** |
+| Build incrementally | `/build` | *(none)* | **Needs a skill** |
+| Prove it works | `/test` | `test-creator` | Covered (retrofit flavour) |
+| Review before merge | `/review` | `pr-reviewer` | Covered |
+| Simplify the code | `/code-simplify` | *(none)* | **Needs a skill** |
+| Ship to production | `/ship` | *(none)* | **Needs a skill** |
+| **[NEW] Learn from shipping** | `/retrospect` | `learn-from-mistakes` | No canonical equivalent — post-ship retrospective |
+| **[NEW] Maintain quality** | `/maintain` | `doc-lint`, `agent-optimise` | No canonical equivalent — cross-cutting, no fixed sequence position |
+
+**Summary:** 3 canonical steps covered · 4 canonical steps need new skills written (`/plan`, `/build`, `/code-simplify`, `/ship`) · 3 new steps added to house the 6 unallocated skills.
+
+---
+
 ## The Extended Workflow
 
 Simon's workflow extends the seven-phase agent-skills reference by adding a **capture stage** before spec, a **challenge gate** between capture and spec, and a **retrospective stage** after ship. The core seven phases are preserved but supplemented rather than replaced.
