@@ -24,15 +24,15 @@ The canonical seven-phase reference structure mapped against Simon's planned ski
 | **[NEW] Challenge idea** | `/challenge` | `grill-me` | No canonical equivalent — gate between capture and spec |
 | Define what to build | `/spec` | `task-to-spec` | Covered |
 | Plan how to build it | `/plan` | *(none)* | **Needs a skill** |
-| Build incrementally | `/build` | *(none)* | **Needs a skill** |
-| Prove it works | `/test` | `test-creator` | Covered (retrofit flavour) |
+| Build incrementally | `/build` | `opsx:apply`, `opsx:archive`, `opsx:bulk-archive`, `opsx:continue`, `opsx:explore`, `opsx:ff`, `opsx:new`, `opsx:onboard`, `opsx:sync`, `opsx:verify`, `test-creator` | Covered via OpenSpec skills + test creation |
+| Prove it works | `/test` | *(none — running defined tests)* | **Needs a skill** |
 | Review before merge | `/review` | `pr-reviewer` | Covered |
 | Simplify the code | `/code-simplify` | *(none)* | **Needs a skill** |
-| Ship to production | `/ship` | *(none)* | **Needs a skill** |
+| Ship to production | `/ship` | *(none — PR creation, CI/CD handles the rest)* | **Needs a PR creation skill** |
 | **[NEW] Learn from shipping** | `/retrospect` | `learn-from-mistakes` | No canonical equivalent — post-ship retrospective |
 | **[NEW] Maintain quality** | `/maintain` | `doc-lint`, `agent-optimise` | No canonical equivalent — cross-cutting, no fixed sequence position |
 
-**Summary:** 3 canonical steps covered · 4 canonical steps need new skills written (`/plan`, `/build`, `/code-simplify`, `/ship`) · 3 new steps added to house the 6 unallocated skills.
+**Summary:** 4 canonical steps covered · 4 canonical steps need new skills written (`/plan`, `/test`, `/code-simplify`, `/ship`) · 3 new steps added to house unallocated skills.
 
 ---
 
