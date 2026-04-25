@@ -24,6 +24,29 @@ Simon's extended engineering workflow, packaged as three installable Claude Code
 | **PR Review** | `/workflow-core:pr-review <PR>` | `gh pr view`, `gh pr diff` | Structured review before merge; catches regressions and drift | Review report with verdict |
 | **Retrospective** | `/workflow-tools:retrospective` | `learn-from-mistakes` → change spec audit → `doc-lint` | Extract learnings from commits; align spec artefacts with what was built; broad doc drift check | Updated learnings, aligned spec, doc quality report |
 
+## Quality tools
+
+A second class of skills sits outside the main workflow. These are cross-cutting maintenance tools — run them between sessions, on a cadence, or when something feels off. They don't produce code; they keep the workspace itself in good shape.
+
+| Skill | Invoke | When to use |
+|---|---|---|
+| `claudemd-curator` | `/workflow-tools:claudemd-curator` | CLAUDE.md or AGENTS.md has grown, drifted, or is being ignored. Audits all instruction files, mines session transcripts for violated/dead rules, classifies content into L0–L4 layers, checks AGENTS.md sync state, then proposes a numbered diff — waits for approval before touching anything. Monthly or after `/init`. |
+| `workflow-lint` | `/workflow-tools:workflow-lint` | Golden path feels out of sync — skill names changed, agents don't cover a phase, a cross-reference is broken. Sweeps the full plugin tree for coherence issues. |
+| `agent-optimise` | `/workflow-tools:agent-optimise` | Agent descriptions or tool lists have drifted. Audits both plugin-scoped and user-scoped agents. |
+| `doc-lint` | `/workflow-tools:doc-lint` | Documentation has accumulated drift — stale READMEs, broken links, misaligned specs. |
+
+### `claudemd-curator` in depth
+
+The curator runs a five-phase pipeline:
+
+1. **Inventory** — reads every instruction file (project + global), counts lines, notes git-tracking status.
+2. **Behavioural audit** — mines `~/.claude/projects/*.jsonl` transcripts; spawns Sonnet subagents to surface violated rules, candidate additions, and dead rules.
+3. **Layer classification** — assigns every CLAUDE.md line to L0 (identity/map), L1 (Karpathy discipline), L2 (product-mode decision posture), L3 (pointers), or L4 (housekeeping), or marks it for removal.
+4. **Sync verification** — checks AGENTS.md ↔ CLAUDE.md relationship: `OK_SYMLINK`, `OK_SHIM`, `DUAL` (drift risk), or `CLAUDE_ONLY`/`AGENTS_ONLY`.
+5. **Propose, don't apply** — produces a numbered proposal and waits for explicit approval before editing anything.
+
+Requires `jq` for transcript mining (see Prerequisites).
+
 ---
 
 ## Install
@@ -91,6 +114,15 @@ gh auth login
 
 Required only if pulling from Jira. Not needed for any other skill. Configure the Atlassian MCP server in your Claude Code settings.
 
+### 5. `jq` (for `claudemd-curator` only)
+
+Required for transcript mining in the behavioural audit phase.
+
+```bash
+brew install jq   # macOS
+apt-get install jq  # Debian/Ubuntu
+```
+
 ---
 
 ## What's included
@@ -109,17 +141,37 @@ Required only if pulling from Jira. Not needed for any other skill. Configure th
 | `simplify` | `/workflow-core:simplify` | 6 — Simplify |
 | `pr-create` | `/workflow-core:pr-create` | 7 — PR Create |
 
-### `workflow-tools` — Extended phases
+### `workflow-tools` — Extended phases and quality tools
 
 | Skill | Invoke | Phase |
 |---|---|---|
-| `issue-to-task` | `/workflow-tools:issue-to-task` | Pre — Capture (Jira) |
-| `new-task` | `/workflow-tools:new-task` | Pre — Capture (scratch) |
+| `capture` | `/workflow-tools:capture [source]` | Pre — Capture (orchestrator) |
+| `debug` | `/workflow-tools:debug [ticket or description]` | Pre — Capture for bugs |
+| `issue-to-task` | `/workflow-tools:issue-to-task` | Pre — Capture from Jira (atomic) |
+| `new-task` | `/workflow-tools:new-task` | Pre — Capture from scratch (atomic) |
 | `challenge` | `/workflow-tools:challenge [file]` | Gate — Challenge |
-| `doc-lint` | `/workflow-tools:doc-lint` | Cross-cutting |
-| `agent-optimise` | `/workflow-tools:agent-optimise` | Cross-cutting |
-| `learn-from-mistakes` | `/workflow-tools:learn-from-mistakes` | Post — Retrospective |
+| `retrospective` | `/workflow-tools:retrospective` | Post — Retrospective (orchestrator) |
+| `learn-from-mistakes` | `/workflow-tools:learn-from-mistakes` | Post — Retrospective (atomic) |
+| `claudemd-curator` | `/workflow-tools:claudemd-curator` | Quality — instruction file audit and sync |
+| `workflow-lint` | `/workflow-tools:workflow-lint` | Quality — golden path coherence audit |
+| `agent-optimise` | `/workflow-tools:agent-optimise` | Quality — agent/skill audit |
+| `doc-lint` | `/workflow-tools:doc-lint` | Quality — documentation drift check |
 
 ### `workflow-agents` — Specialist subagents
 
-Eight agents auto-assigned to workflow phases. Appear in `/agents` after install.
+Twelve agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
+
+| Agent | Phase | Model |
+|---|---|---|
+| `capturer` | Pre — Capture | Haiku |
+| `debugger` | Pre — Debug | Sonnet |
+| `challenger` | Gate — Challenge | Sonnet |
+| `specifier` | Spec | Sonnet |
+| `approver` | Approve plan | Haiku |
+| `builder` | Build | Sonnet |
+| `tester` | Build — TDD execution | Sonnet |
+| `tdd-expert` | Build — TDD advisory | Sonnet |
+| `reviewer` | PR Review | Haiku |
+| `simplifier` | Simplify | Haiku |
+| `pr-creator` | PR Create | Haiku |
+| `retrospector` | Post — Retrospective | Sonnet |

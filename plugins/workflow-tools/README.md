@@ -24,6 +24,7 @@ All skills set `disable-model-invocation: true`.
 | `doc-lint` | `/workflow-tools:doc-lint` | Cross-cutting — documentation drift and quality check |
 | `agent-optimise` | `/workflow-tools:agent-optimise` | Cross-cutting — agent/skill audit across both scopes |
 | `workflow-lint` | `/workflow-tools:workflow-lint` | Cross-cutting — coherence audit of the full golden path |
+| `claudemd-curator` | `/workflow-tools:claudemd-curator` | Cross-cutting — audit, refactor, and sync CLAUDE.md and AGENTS.md |
 
 ## Ideation file format
 
