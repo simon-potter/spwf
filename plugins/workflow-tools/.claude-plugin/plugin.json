@@ -1,0 +1,6 @@
+{
+  "name": "workflow-tools",
+  "description": "Extended workflow skills: pre-phase capture, challenge gate, cross-cutting quality tools, and post-ship retrospective",
+  "version": "0.1.0",
+  "author": { "name": "Simon Potter" }
+}

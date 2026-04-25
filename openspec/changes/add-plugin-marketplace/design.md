@@ -51,8 +51,8 @@ The Claude Code plugin system allows skills and agents to be installed from a Gi
 The workflow extends the agent-skills seven phases with pre and post steps:
 
 ```
-Capture ─► Challenge ─► Spec ─► Plan ─► Build ─► Test ─► Review ─► Simplify ─► Ship ─► Retrospective
-  (pre)      (gate)     (1)     (2)     (3)      (4)     (5)       (6)         (7)      (post)
+Capture ─► Challenge ─► Spec ─► Plan sign-off ─► Build ─► Test ─► Review ─► Simplify ─► Ship ─► Retrospective
+  (pre)      (gate)     (1)          (2)           (3)     (4)     (5)       (6)         (7)      (post)
 ```
 
 **Capture** (pre-phase): `issue-to-task` (from Jira) or `new-task` (from scratch) — both produce a lightweight ideation file at `todo/{slug}.md`.
@@ -133,6 +133,65 @@ status: ideation
 **Decision:** `task-to-spec` checks for the `openspec/` directory and halts with a clear message if it is missing. It does not run `openspec init`.
 
 **Rationale:** Auto-initialisation could clobber an existing openspec setup in a parent directory. The prerequisite is simple to satisfy; the error message includes the exact command to run.
+
+---
+
+### 11. Two-tier skill architecture: atomics and orchestrators
+
+**Decision:** `workflow-core` uses two named tiers within the single `skills/` directory:
+
+- **Atomic skills** — single-responsibility capabilities with descriptive names. Can be invoked directly or composed by orchestrators. Examples: `incremental-implementation`, `test-runner`, `debug-recovery`, `test-creator`.
+- **Orchestrator skills** — user-facing entry points with short action names. Explicitly compose one or more atomic skills in their body. Examples: `build`, `test`.
+
+Both tiers use SKILL.md format. No separate `commands/` directory is used.
+
+**Rationale:** The `addyosmani/agent-skills` reference repo separates orchestration (`.claude/commands/`) from atomic capabilities (`skills/`). However, Claude Code and Codex are unifying slash commands into the skills system (SKILL.md format), making the `commands/` directory a deprecated path. This decision achieves the same separation of concerns — orchestrators compose atomics — without building on the deprecated layer.
+
+An orchestrator skill's body explicitly names the atomic skills it invokes:
+
+```markdown
+To implement the current task:
+1. Invoke `workflow-core:incremental-implementation` — finds the first unchecked task,
+   implements it, marks it complete.
+2. Next, run `workflow-core:test-creator` to write behaviour tests for the new code.
+3. If tests fail, invoke `workflow-core:debug-recovery`.
+```
+
+**What composes vs what stays atomic:**
+
+| Skill | Tier | Composes |
+|---|---|---|
+| `task-to-spec` | Atomic | — single OpenSpec action |
+| `plan-signoff` | Atomic | — single review + sign-off action |
+| `incremental-implementation` | Atomic | — |
+| `test-creator` | Atomic | — |
+| `test-runner` | Atomic | — |
+| `debug-recovery` | Atomic | — |
+| `pr-reviewer` | Atomic | — single review action |
+| `simplify` | Atomic | — single scan action |
+| `ship` | Atomic | — single PR creation |
+| `build` | **Orchestrator** | `test-creator` (Red) → `incremental-implementation` (Green) → `test-runner` (Verify) → `debug-recovery` on failure → recommends `simplify` |
+| `test` | **Orchestrator** | `test-runner` → `debug-recovery` on failure |
+
+**Why not all stages are orchestrators:** Only `build` and `test` have meaningful composition — they sequence two sub-steps and have a conditional failure branch. All other stages are single-responsibility actions and need no decomposition.
+
+**Alternative rejected:** Monolithic skills per stage (all logic in one SKILL.md, named after the command). This conflates the user-facing interface with the implementation, prevents reuse of `test-runner` across `build` and `test`, and makes the `build` stage unable to conditionally branch to `debug-recovery` cleanly.
+
+---
+
+### 12. `build` orchestrates the full Red-Green-Refactor cycle; `test-creator` is its first composed step
+
+**Decision:** `build` invokes `test-creator` (Red: write failing tests) first, then `incremental-implementation` (Green: make them pass), then `test-runner` (Verify: confirm full suite green), then `debug-recovery` on failure. It recommends `simplify` (Refactor) on completion.
+
+**Rationale:** Red-Green-Refactor is the canonical TDD discipline. Tests must be written before implementation — not after — so the contract is defined before the code. `build` enforces this order: you cannot reach the Green phase without first completing Red. The `disable-model-invocation: true` constraint (Decision 6) still applies — the user explicitly invokes `/workflow-core:build` as the entry point, and the orchestrator directs the sub-steps declaratively. The user retains the option to invoke each atomic step individually for granular control.
+
+**Composition in `build/SKILL.md`:**
+```
+Red    → test-creator           (write failing tests for the current task)
+Green  → incremental-implementation  (implement only what makes those tests pass)
+Verify → test-runner            (confirm the full suite is green)
+Refactor → recommend simplify   (clean up with tests as a safety net)
+```
 
 ---
 

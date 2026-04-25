@@ -22,17 +22,17 @@ The repo SHALL contain a `.claude-plugin/marketplace.json` at its root that is v
 
 ### Requirement: workflow-core covers all seven phases
 
-The `workflow-core` plugin SHALL provide exactly 8 skills: `task-to-spec`, `plan`, `build`, `test-creator`, `test`, `pr-reviewer`, `simplify`, `ship`. Each SHALL be invocable as `/workflow-core:<name>`.
+The `workflow-core` plugin SHALL provide exactly 8 skills: `task-to-spec`, `plan-signoff`, `build`, `test-creator`, `test`, `pr-reviewer`, `simplify`, `ship`. Each SHALL be invocable as `/workflow-core:<name>`.
 
 #### Scenario: Invoke a phase skill
 
-- **WHEN** a user types `/workflow-core:plan`
-- **THEN** the plan skill SHALL execute and read the current OpenSpec `tasks.md`
+- **WHEN** a user types `/workflow-core:plan-signoff`
+- **THEN** the plan-signoff skill SHALL execute, read the current OpenSpec `tasks.md`, assess task quality, and present the plan for human approval
 
 #### Scenario: All eight skills listed
 
 - **WHEN** a user runs `/plugin list workflow-core`
-- **THEN** exactly 8 skills SHALL appear: task-to-spec, plan, build, test-creator, test, pr-reviewer, simplify, ship
+- **THEN** exactly 8 skills SHALL appear: task-to-spec, plan-signoff, build, test-creator, test, pr-reviewer, simplify, ship
 
 ---
 
@@ -169,11 +169,11 @@ Both `issue-to-task` and `new-task` SHALL produce files at `todo/{slug}.md` with
 
 ### Requirement: Seeded skills carry attribution
 
-Each skill in `workflow-core` seeded from `addyosmani/agent-skills` SHALL include `# Source: https://github.com/addyosmani/agent-skills — MIT licence` as a comment in its SKILL.md frontmatter. Affected skills: `plan`, `build`, `test`, `simplify`, `ship`.
+Each skill in `workflow-core` seeded from `addyosmani/agent-skills` SHALL include `# Source: https://github.com/addyosmani/agent-skills — MIT licence` as a comment in its SKILL.md frontmatter. Affected skills: `plan-signoff`, `build`, `test`, `simplify`, `ship`.
 
-#### Scenario: Attribution present in plan skill
+#### Scenario: Attribution present in plan-signoff skill
 
-- **WHEN** a developer reads `plugins/workflow-core/skills/plan/SKILL.md`
+- **WHEN** a developer reads `plugins/workflow-core/skills/plan-signoff/SKILL.md`
 - **THEN** the frontmatter SHALL contain: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
 
 ---

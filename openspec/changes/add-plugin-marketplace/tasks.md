@@ -1,110 +1,126 @@
 # Tasks: add-plugin-marketplace
 
 > **Authoritative Reference:** [`todo/Marketplace_setup.md`](../../../todo/Marketplace_setup.md) — consult for exact file contents, JSON schemas, allowed-tools configuration, and skill-by-skill details.
+> **Architecture Reference:** [`design.md`](./design.md) — see Decisions 11 and 12 for the two-tier skill architecture (atomics vs orchestrators) that governs Phase 2.
 
 ## Phase 0 — Repo Initialisation
 
-- [ ] 0.1 Write `README.md` at repo root (what the marketplace is, who it is for, prerequisites section, single install command pair)
-- [ ] 0.2 Create `.claude-plugin/` directory at repo root
-- [ ] 0.3 Create `plugins/` directory at repo root
+- [x] 0.1 Write `README.md` at repo root (what the marketplace is, who it is for, prerequisites section, single install command pair)
+- [x] 0.2 Create `.claude-plugin/` directory at repo root
+- [x] 0.3 Create `plugins/` directory at repo root
 
 ## Phase 1 — Marketplace Catalog
 
-- [ ] 1.1 Create `.claude-plugin/marketplace.json` with the schema from `todo/Marketplace_setup.md → Phase 1` (name: `simon-marketplace`, three plugins: workflow-core, workflow-tools, workflow-agents, pluginRoot: `./plugins`)
-- [ ] 1.2 Validate the JSON is well-formed
+- [x] 1.1 Create `.claude-plugin/marketplace.json` (name: `simon-marketplace`, three plugins: workflow-core, workflow-tools, workflow-agents, pluginRoot: `./plugins`)
+- [x] 1.2 Validate the JSON is well-formed
 
-## Phase 2 — `workflow-core` Plugin (8 skills)
+## Phase 2 — `workflow-core` Plugin (11 skills: 9 atomics + 2 orchestrators)
 
-- [ ] 2.1 Create `plugins/workflow-core/.claude-plugin/plugin.json`
-- [ ] 2.2 Create `plugins/workflow-core/README.md` describing the seven-phase coverage and agent-skills attribution policy
-- [ ] 2.3 Scaffold `plugins/workflow-core/skills/` with subdirectories for all 8 skills: task-to-spec, plan, build, test-creator, test, pr-reviewer, simplify, ship
+> **Two-tier architecture:** Atomic skills have descriptive names and single responsibility. Orchestrator skills (`build`, `test`) have short action names and explicitly compose multiple atomics. See design.md Decision 11.
 
-**skill: task-to-spec** (original — renamed from `ideation-to-openspec`)
-- [ ] 2.4 Copy `~/.claude/skills/ideation-to-openspec/SKILL.md` into `plugins/workflow-core/skills/task-to-spec/SKILL.md`
-- [ ] 2.5 Update frontmatter: rename, add phase annotation, set `disable-model-invocation: true`, set `allowed-tools: [Read, Write, Bash]`
-- [ ] 2.6 Add openspec-directory check at top of skill body — halts with "OpenSpec not initialised. Run: openspec init" if `openspec/` is missing
+- [x] 2.1 Create `plugins/workflow-core/.claude-plugin/plugin.json`
+- [x] 2.2 Create `plugins/workflow-core/README.md` — document both tiers, list all 11 skills, note attribution policy
+- [x] 2.3 Scaffold `plugins/workflow-core/skills/` with subdirectories for all 11 skills: `task-to-spec`, `plan`, `incremental-implementation`, `test-creator`, `test-runner`, `debug-recovery`, `pr-reviewer`, `simplify`, `ship`, `build`, `test`
 
-**skill: plan** (seeded from `planning-and-task-breakdown`)
-- [ ] 2.7 Write `plugins/workflow-core/skills/plan/SKILL.md` — reads and validates `openspec/changes/{change-id}/tasks.md`, surfaces task list for review before /build starts
-- [ ] 2.8 Add attribution comment in frontmatter: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
-- [ ] 2.9 Set `allowed-tools: [Read, Write]`, `disable-model-invocation: true`
+---
 
-**skill: build** (seeded from `incremental-implementation`)
-- [ ] 2.10 Write `plugins/workflow-core/skills/build/SKILL.md` — locates first unchecked item in OpenSpec tasks.md, implements it, checks it off on completion; references opsx:* skills as the implementation vehicle
-- [ ] 2.11 Add attribution comment
-- [ ] 2.12 Set `allowed-tools: [Read, Edit, Write, Bash]`, `disable-model-invocation: true`
+**Atomic skill: `task-to-spec`** (original — adapted from `ideation-to-openspec`)
+- [x] 2.4 Write `task-to-spec/SKILL.md` — adapted from `~/.claude/skills/ideation-to-openspec/SKILL.md`; checks `openspec/` exists; halts with "OpenSpec not initialised. Run: openspec init" if missing
+- [x] 2.5 Set frontmatter: `name: task-to-spec`, phase annotation in description, `disable-model-invocation: true`, `allowed-tools: [Read, Write, Bash]`
 
-**skill: test-creator** (original — new skill, writes tests)
-- [ ] 2.13 Write `plugins/workflow-core/skills/test-creator/SKILL.md` — reads code, generates test file covering behaviour scenarios (not line %); runs to confirm they pass
-- [ ] 2.14 Set `allowed-tools: [Read, Write, Bash, Grep, Glob]`, `disable-model-invocation: true`
+**Atomic skill: `plan`** (seeded from `planning-and-task-breakdown`)
+- [x] 2.6 Write `plan/SKILL.md` — reads and validates `openspec/changes/{change-id}/tasks.md`; surfaces the full task list for review before `/build` starts
+- [x] 2.7 Add attribution comment in frontmatter: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
+- [x] 2.8 Set `allowed-tools: [Read, Write]`, `disable-model-invocation: true`
 
-**skill: test** (seeded from `test-driven-development` — runs defined tests)
-- [ ] 2.15 Write `plugins/workflow-core/skills/test/SKILL.md` — runs the existing test suite, reports pass/fail, stops on first failure
-- [ ] 2.16 Add attribution comment
-- [ ] 2.17 Set `allowed-tools: [Read, Bash]`, `disable-model-invocation: true`
+**Atomic skill: `incremental-implementation`** (seeded from `incremental-implementation`)
+- [x] 2.9 Write `incremental-implementation/SKILL.md` — find first unchecked task in `openspec/changes/{change-id}/tasks.md`, implement it exactly, mark it `[x]` on completion; stop at task boundary
+- [x] 2.10 Add attribution comment: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
+- [x] 2.11 Set `allowed-tools: [Read, Edit, Write, Bash]`, `disable-model-invocation: true`
 
-**skill: pr-reviewer** (original — extends `code-review-excellence`)
-- [ ] 2.18 Copy `~/.claude/skills/code-review-excellence/SKILL.md` into `plugins/workflow-core/skills/pr-reviewer/SKILL.md`
-- [ ] 2.19 Extend with PR-specific context: reads `$ARGUMENTS` as PR reference, halts with usage hint if omitted, uses `gh pr view` / `gh pr diff` to fetch PR data
-- [ ] 2.20 Set `allowed-tools: [Read, Bash]` (gh pr *), `disable-model-invocation: true`
+**Atomic skill: `test-creator`** (original — new skill)
+- [x] 2.12 Write `test-creator/SKILL.md` — reads recently implemented code; generates test file covering behaviour scenarios (not line %); runs to confirm all pass before reporting done
+- [x] 2.13 Set `allowed-tools: [Read, Write, Bash, Grep, Glob]`, `disable-model-invocation: true`
 
-**skill: simplify** (seeded from `code-simplification`)
-- [ ] 2.21 Write `plugins/workflow-core/skills/simplify/SKILL.md` — identifies candidates for removal or clarification across changed files; never touches tests
-- [ ] 2.22 Add attribution comment
-- [ ] 2.23 Set `allowed-tools: [Read, Edit, Grep, Glob]`, `disable-model-invocation: true`
+**Atomic skill: `test-runner`** (seeded from `test-driven-development`)
+- [x] 2.14 Write `test-runner/SKILL.md` — run the full test suite; report pass/fail clearly; stop on first failure with file + line + error; do not attempt to fix
+- [x] 2.15 Add attribution comment: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
+- [x] 2.16 Set `allowed-tools: [Read, Bash]`, `disable-model-invocation: true`
 
-**skill: ship** (seeded from `git-workflow-and-versioning` — PR creation only)
-- [ ] 2.24 Write `plugins/workflow-core/skills/ship/SKILL.md` — creates a PR via `gh pr create`; does not deploy; CI/CD owns deployment
-- [ ] 2.25 Add attribution comment
-- [ ] 2.26 Set `allowed-tools: [Read, Bash]` (gh pr create), `disable-model-invocation: true`
+**Atomic skill: `debug-recovery`** (new)
+- [x] 2.17 Write `debug-recovery/SKILL.md` — diagnose a failing test or broken build; identify root cause; apply a minimal fix; re-run to confirm; report clearly if unable to resolve
+- [x] 2.18 Set `allowed-tools: [Read, Edit, Bash]`, `disable-model-invocation: true`
+
+**Atomic skill: `pr-reviewer`** (original — adapted from `code-review-excellence`)
+- [x] 2.19 Write `pr-reviewer/SKILL.md` — adapted from `~/.claude/skills/code-review-excellence/SKILL.md`; reads `$ARGUMENTS` as PR reference; halts with usage hint if omitted; uses `gh pr view` / `gh pr diff` to fetch PR data; produces structured review report; does not create PRs
+- [x] 2.20 Set `allowed-tools: [Read, Bash]`, `disable-model-invocation: true`
+
+**Atomic skill: `simplify`** (seeded from `code-simplification`)
+- [x] 2.21 Write `simplify/SKILL.md` — review changed files for dead code, unclear names, unnecessary complexity; apply safe unambiguous removals; flag judgment-calls; never touch test files
+- [x] 2.22 Add attribution comment: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
+- [x] 2.23 Set `allowed-tools: [Read, Edit, Grep, Glob]`, `disable-model-invocation: true`
+
+**Atomic skill: `ship`** (seeded from `git-workflow-and-versioning`)
+- [x] 2.24 Write `ship/SKILL.md` — pre-flight checks (not on main, commits exist, no uncommitted changes); create PR via `gh pr create`; CI/CD owns deployment; report PR URL
+- [x] 2.25 Add attribution comment: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
+- [x] 2.26 Set `allowed-tools: [Read, Bash]`, `disable-model-invocation: true`
+
+---
+
+**Orchestrator skill: `build`** (composes `incremental-implementation` → recommends `test-creator` → `debug-recovery` on failure)
+- [x] 2.27 Write `build/SKILL.md` — orchestrator body directs full RGR cycle: (1) invoke `workflow-core:test-creator` (Red: write failing tests); (2) invoke `workflow-core:incremental-implementation` (Green: make them pass); (3) invoke `workflow-core:test-runner` (Verify: confirm full suite green); (4) if still red, invoke `workflow-core:debug-recovery`; (5) recommend `workflow-core:simplify` (Refactor)
+- [x] 2.28 Add attribution comment: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
+- [x] 2.29 Set `allowed-tools: [Read, Edit, Write, Bash, Grep, Glob]`, `disable-model-invocation: true`
+
+**Orchestrator skill: `test`** (composes `test-runner` → `debug-recovery` on failure)
+- [x] 2.30 Write `test/SKILL.md` — orchestrator body explicitly directs: (1) invoke `workflow-core:test-runner`; (2) if any test fails, invoke `workflow-core:debug-recovery`; (3) report final pass/fail
+- [x] 2.31 Add attribution comment: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
+- [x] 2.32 Set `allowed-tools: [Read, Edit, Bash]`, `disable-model-invocation: true`
 
 ## Phase 3 — `workflow-tools` Plugin (6 skills)
 
-- [ ] 3.1 Create `plugins/workflow-tools/.claude-plugin/plugin.json`
-- [ ] 3.2 Create `plugins/workflow-tools/README.md` describing the extended phases and cross-cutting skills
-- [ ] 3.3 Scaffold `plugins/workflow-tools/skills/` with subdirectories for all 6 skills
+- [x] 3.1 Create `plugins/workflow-tools/.claude-plugin/plugin.json`
+- [x] 3.2 Create `plugins/workflow-tools/README.md` describing the extended phases and cross-cutting skills
+- [x] 3.3 Scaffold `plugins/workflow-tools/skills/` with subdirectories for all 6 skills
 
-**skill: issue-to-task** (heavily adapted from `jira-to-openspec`)
-- [ ] 3.4 Copy `~/.claude/skills/jira-to-openspec/SKILL.md` as starting point
-- [ ] 3.5 Strip all OpenSpec generation phases — output is a `todo/{slug}.md` ideation file only (format: YAML frontmatter + Context + What we know + Open questions + Rough scope)
-- [ ] 3.6 Preserve Jira fetch and content extraction logic
-- [ ] 3.7 Set `allowed-tools: [Read, Write, mcp__atlassian__*]`, `disable-model-invocation: true`
+**skill: `issue-to-task`** (heavily adapted from `jira-to-openspec`)
+- [x] 3.4 Write `issue-to-task/SKILL.md` — adapted from `~/.claude/skills/jira-to-openspec/SKILL.md`; strips all OpenSpec generation; output is `todo/{slug}.md` ideation file only (YAML frontmatter + Context + What we know + Open questions + Rough scope); preserves Jira fetch and content extraction
+- [x] 3.5 Set `allowed-tools: [Read, Write, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]`, `disable-model-invocation: true`
 
-**skill: new-task** (new — scratch capture, no Jira)
-- [ ] 3.8 Write `plugins/workflow-tools/skills/new-task/SKILL.md` — asks user for idea description interactively; produces same ideation file format as `issue-to-task`
-- [ ] 3.9 Set `allowed-tools: [Read, Write]`, `disable-model-invocation: true`
+**skill: `new-task`** (new — scratch capture)
+- [x] 3.6 Write `new-task/SKILL.md` — asks user for idea description interactively (one question at a time); produces same ideation file format as `issue-to-task` at `todo/{slug}.md`
+- [x] 3.7 Set `allowed-tools: [Read, Write]`, `disable-model-invocation: true`
 
-**skill: grill-me** (direct copy from `~/.claude/skills/grill-me`, minor adaptation)
-- [ ] 3.10 Copy `~/.claude/skills/grill-me/SKILL.md` into `plugins/workflow-tools/skills/grill-me/SKILL.md`
-- [ ] 3.11 Adapt to accept file path as `$ARGUMENTS` — if no argument, defaults to most recent file in `todo/`
-- [ ] 3.12 Set `disable-model-invocation: true`, `allowed-tools: [Read, Grep, Glob]`
+**skill: `grill-me`** (adapted from `~/.claude/skills/grill-me`)
+- [x] 3.8 Write `grill-me/SKILL.md` — adapted from `~/.claude/skills/grill-me/SKILL.md`; accepts file path as `$ARGUMENTS`; defaults to most recent file in `todo/` if no argument; reads file first; interviews relentlessly until all open questions resolved
+- [x] 3.9 Set `disable-model-invocation: true`, `allowed-tools: [Read, Grep, Glob]`
 
-**skill: doc-lint** (direct copy)
-- [ ] 3.13 Copy `~/.claude/skills/doc-lint/SKILL.md` into `plugins/workflow-tools/skills/doc-lint/SKILL.md` — no changes
-- [ ] 3.14 Set `disable-model-invocation: true`, `allowed-tools: [Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion]`
+**skill: `doc-lint`** (direct copy from `~/.claude/skills/doc-lint`)
+- [x] 3.10 Write `doc-lint/SKILL.md` — copied from `~/.claude/skills/doc-lint/SKILL.md` verbatim
+- [x] 3.11 Set `disable-model-invocation: true`, `allowed-tools: [Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion]`
 
-**skill: agent-optimise** (new — synthesises claude-validate + agent-architect concerns)
-- [ ] 3.15 Write `plugins/workflow-tools/skills/agent-optimise/SKILL.md` — audits both project `.claude/` and personal `~/.claude/`; covers CLAUDE.md scope/length, agent descriptions, skill frontmatter, settings.json conflicts; produces prioritised fix list
-- [ ] 3.16 Set `disable-model-invocation: true`, `allowed-tools: [Read, Glob, Grep, Bash]`
+**skill: `agent-optimise`** (new)
+- [x] 3.12 Write `agent-optimise/SKILL.md` — audits both project `.claude/` and personal `~/.claude/`; covers CLAUDE.md scope/length, agent descriptions, skill frontmatter, settings.json conflicts; produces prioritised P1/P2/P3 fix list
+- [x] 3.13 Set `disable-model-invocation: true`, `allowed-tools: [Read, Glob, Grep, Bash]`
 
-**skill: learn-from-mistakes** (renamed from `commits-to-knowledge`)
-- [ ] 3.17 Copy `~/.claude/skills/commits-to-knowledge/SKILL.md` into `plugins/workflow-tools/skills/learn-from-mistakes/SKILL.md` — rename only, no functional changes
-- [ ] 3.18 Set `disable-model-invocation: true`, `allowed-tools: [Read, Glob, Grep, Bash, Edit, Write]`
+**skill: `learn-from-mistakes`** (renamed from `commits-to-knowledge`)
+- [x] 3.14 Write `learn-from-mistakes/SKILL.md` — copied from `~/.claude/skills/commits-to-knowledge/SKILL.md`; rename only, no functional changes
+- [x] 3.15 Set `disable-model-invocation: true`, `allowed-tools: [Read, Glob, Grep, Bash, Edit, Write]`
 
 ## Phase 4 — `workflow-agents` Plugin (8 agents)
 
-- [ ] 4.1 Create `plugins/workflow-agents/.claude-plugin/plugin.json`
-- [ ] 4.2 Create `plugins/workflow-agents/README.md` describing each agent's phase and model assignment
-- [ ] 4.3 Scaffold `plugins/workflow-agents/agents/` directory
+- [x] 4.1 Create `plugins/workflow-agents/.claude-plugin/plugin.json`
+- [x] 4.2 Create `plugins/workflow-agents/README.md` — describe each agent's phase and model assignment
+- [x] 4.3 Scaffold `plugins/workflow-agents/agents/` directory
 
-- [ ] 4.4 Write `capturer.md` — Haiku, tools: [Read, Write, MCP Atlassian], fetches and summarises only — does not interpret or suggest implementation
-- [ ] 4.5 Write `specifier.md` — Sonnet, tools: [Read, Write, Bash (openspec)], asks clarifying questions, writes spec artefacts, refuses to suggest implementation
-- [ ] 4.6 Write `planner.md` — Haiku, tools: [Read, Write], reads spec, produces atomic task list, validates each task is independently testable
-- [ ] 4.7 Write `builder.md` — Sonnet, tools: [All], reads current task from plan, implements it, stops at task boundary
-- [ ] 4.8 Write `tester.md` — Sonnet, tools: [Read, Write, Bash], reads code, writes tests, runs suite, reports pass/fail
-- [ ] 4.9 Write `reviewer.md` — Haiku, tools: [Read, Bash (gh pr *)], reads diff/PR, produces structured review — no edits, one Write for report
-- [ ] 4.10 Write `simplifier.md` — Haiku, tools: [Read, Edit, Glob, Grep], identifies candidates for removal — does not touch tests
-- [ ] 4.11 Write `shipper.md` — Haiku, tools: [Read, Bash], runs deploy checklist, gates on all checks passing — does not deploy
+- [x] 4.4 Write `capturer.md` — model: Haiku; tools: [Read, Write, mcp__atlassian__*]; fetches and summarises only; does not interpret or suggest implementation
+- [x] 4.5 Write `specifier.md` — model: Sonnet; tools: [Read, Write, Bash (openspec)]; asks clarifying questions; writes spec artefacts; refuses to suggest implementation
+- [x] 4.6 Write `planner.md` — model: Haiku; tools: [Read, Write]; reads spec; produces atomic task list; validates each task is independently testable
+- [x] 4.7 Write `builder.md` — model: Sonnet; tools: [All]; reads current task from plan; implements it; stops at task boundary; delegates to `workflow-core:incremental-implementation`
+- [x] 4.8 Write `tester.md` — model: Sonnet; tools: [Read, Write, Bash]; reads code; writes tests; runs suite; reports pass/fail
+- [x] 4.9 Write `reviewer.md` — model: Haiku; tools: [Read, Bash (gh pr *)]; reads diff/PR; produces structured review; no edits; one Write for report
+- [x] 4.10 Write `simplifier.md` — model: Haiku; tools: [Read, Edit, Glob, Grep]; identifies candidates for removal; does not touch tests
+- [x] 4.11 Write `shipper.md` — model: Haiku; tools: [Read, Bash]; runs deploy checklist; gates on all checks passing; does not deploy
 
 ## Phase 5 — Migration from `~/.claude`
 
@@ -124,16 +140,16 @@
   - `/plugin install workflow-core@simon-marketplace`
   - `/plugin install workflow-tools@simon-marketplace`
   - `/plugin install workflow-agents@simon-marketplace`
-- [ ] 6.3 Verify all 8 `workflow-core` skills are invocable via `/workflow-core:<name>`
+- [ ] 6.3 Verify all 11 `workflow-core` skills are invocable via `/workflow-core:<name>` — including both atomic skills (`incremental-implementation`, `test-runner`, `debug-recovery`) and orchestrators (`build`, `test`)
 - [ ] 6.4 Verify all 6 `workflow-tools` skills are invocable via `/workflow-tools:<name>`
 - [ ] 6.5 Verify all 8 agents appear in `/agents` with correct trigger descriptions
 - [ ] 6.6 Run full extended lifecycle on a toy task:
   - `/workflow-tools:new-task` → ideation file created
   - `/workflow-tools:grill-me todo/{file}.md` → file challenged
   - `/workflow-core:task-to-spec todo/{file}.md` → OpenSpec generated
-  - `/workflow-core:plan` → task list surfaces
-  - opsx skills + `/workflow-core:test-creator` → slice implemented, tests written
-  - `/workflow-core:test` → tests pass
+  - `/workflow-core:plan-signoff` → task list reviewed and approved
+  - `/workflow-core:build` → test-creator (Red) → incremental-implementation (Green) → test-runner (Verify)
+  - `/workflow-core:test` → invokes `test-runner`; confirm tests pass
   - `/workflow-core:pr-reviewer <PR>` → review produced
   - `/workflow-core:simplify` → code cleaned up
   - `/workflow-core:ship` → PR created

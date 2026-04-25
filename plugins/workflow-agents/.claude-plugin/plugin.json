@@ -1,0 +1,6 @@
+{
+  "name": "workflow-agents",
+  "description": "Specialist subagents for each phase of the extended engineering workflow",
+  "version": "0.1.0",
+  "author": { "name": "Simon Potter" }
+}

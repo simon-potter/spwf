@@ -1,0 +1,31 @@
+{
+  "name": "simon-marketplace",
+  "owner": {
+    "name": "Simon Potter",
+    "email": "simon@academypl.us"
+  },
+  "metadata": {
+    "description": "Simon's extended engineering workflow: capture, challenge, spec, plan, build, test, review, simplify, ship, learn",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "workflow-core",
+      "source": "./plugins/workflow-core",
+      "description": "Seven-phase workflow skills: task-to-spec, plan, build, test-creator, test, pr-reviewer, simplify, ship",
+      "version": "0.1.0"
+    },
+    {
+      "name": "workflow-tools",
+      "source": "./plugins/workflow-tools",
+      "description": "Extended workflow skills: issue-to-task, new-task, grill-me, doc-lint, agent-optimise, learn-from-mistakes",
+      "version": "0.1.0"
+    },
+    {
+      "name": "workflow-agents",
+      "source": "./plugins/workflow-agents",
+      "description": "Specialist subagents for each workflow phase",
+      "version": "0.1.0"
+    }
+  ]
+}
