@@ -145,14 +145,13 @@
 - [ ] 6.5 Verify all 8 agents appear in `/agents` with correct trigger descriptions
 - [ ] 6.6 Run full extended lifecycle on a toy task:
   - `/workflow-tools:new-task` → ideation file created
-  - `/workflow-tools:grill-me todo/{file}.md` → file challenged
-  - `/workflow-core:task-to-spec todo/{file}.md` → OpenSpec generated
-  - `/workflow-core:plan-signoff` → task list reviewed and approved
-  - `/workflow-core:build` → test-creator (Red) → incremental-implementation (Green) → test-runner (Verify)
-  - `/workflow-core:test` → invokes `test-runner`; confirm tests pass
-  - `/workflow-core:pr-reviewer <PR>` → review produced
+  - `/workflow-tools:challenge todo/{file}.md` → file challenged
+  - `/workflow-core:spec todo/{file}.md` → OpenSpec generated
+  - `/workflow-core:approve-plan` → task list reviewed and approved
+  - `/workflow-core:build` → write-tests (Red) → opsx:apply (Green) → run-tests (Verify) → opsx:verify (spec sign-off)
+  - `/workflow-core:pr-review <PR>` → review produced
   - `/workflow-core:simplify` → code cleaned up
-  - `/workflow-core:ship` → PR created
+  - `/workflow-core:pr-create` → PR created
   - `/workflow-tools:learn-from-mistakes` → learnings extracted
 - [ ] 6.7 Test `/reload-plugins` after an edit — confirm no restart needed
 

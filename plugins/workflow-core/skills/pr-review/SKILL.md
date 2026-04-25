@@ -1,12 +1,12 @@
 ---
 # Adapted from: https://github.com/wshobson/agents — skill: code-review-excellence (via npx skills add https://github.com/wshobson/agents --skill code-review-excellence). Extended with gh pr view/diff and PR-specific structure.
-name: pr-reviewer
-description: Phase 5 — Review. Fetch and review a specific PR using gh pr view and gh pr diff. Produces a structured review report. Requires a PR number or URL as the argument. Does not create PRs. Use when you have a PR open and want a structured review before merge.
+name: pr-review
+description: Phase 5 — PR Review. Fetch and review a specific PR using gh pr view and gh pr diff. Produces a structured review report. Requires a PR number or URL as the argument. Does not create PRs. Use when you have a PR open and want a structured review before merge.
 disable-model-invocation: true
 allowed-tools: [Read, Bash]
 ---
 
-# pr-reviewer
+# pr-review
 
 Fetch and review a pull request. Produce a structured review report. Does not create PRs.
 
@@ -17,11 +17,11 @@ Fetch and review a pull request. Produce a structured review report. Does not cr
 If `$ARGUMENTS` is empty, halt:
 
 ```
-Usage: /workflow-core:pr-reviewer <PR number or URL>
+Usage: /workflow-core:pr-review <PR number or URL>
 
 Examples:
-  /workflow-core:pr-reviewer 42
-  /workflow-core:pr-reviewer https://github.com/org/repo/pull/42
+  /workflow-core:pr-review 42
+  /workflow-core:pr-review https://github.com/org/repo/pull/42
 ```
 
 ## Step 1: Fetch PR data

@@ -15,13 +15,13 @@ Simon's extended engineering workflow, packaged as three installable Claude Code
 |---|---|---|---|---|
 | **Capture** | `/workflow-tools:capture [source]` | Atlassian MCP (Jira mode) | Accepts a Jira ticket, existing file, or freeform description; runs a lightweight qualification check; one targeted question at a time for any gaps | `todo/{slug}.md` |
 | **Debug** *(bug entry point)* | `/workflow-tools:debug [ticket or description]` | Atlassian MCP (Jira mode) | Systematic root-cause investigation before any fix; forms a written hypothesis; produces an artefact that feeds into the standard workflow | `todo/BUG-{slug}.md` |
-| **Challenge** | `/workflow-tools:grill-me todo/{slug}.md` | — | Surfaces gaps and ambiguities before they reach code | Resolved ideation file |
-| **Spec** | `/workflow-core:task-to-spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
-| **Approve plan** | `/workflow-core:plan-signoff` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
-| **Build** | `/workflow-core:build` | `test-creator` → `openspec:apply` → `test-runner` → `debug-recovery` | Red-Green-Verify per task, loops until all done; confirms tests fail before implementing, green before proceeding | All tasks complete, tests green |
+| **Challenge** | `/workflow-tools:challenge todo/{slug}.md` | — | Surfaces gaps and ambiguities before they reach code | Resolved ideation file |
+| **Spec** | `/workflow-core:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
+| **Approve plan** | `/workflow-core:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
+| **Build** | `/workflow-core:build` | `write-tests` → `opsx:apply` → `run-tests` → `debug-recovery` → `opsx:verify` | Red-Green-Verify per task, loops until all done; spec sign-off after all tasks complete | All tasks complete, tests green, spec aligned |
 | **Simplify** (TDD Refactor) | `/workflow-core:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
-| **PR Create** | `/workflow-core:ship` | `gh pr create` | Pre-flight checks then PR creation; CI/CD owns the rest | PR URL |
-| **PR Review** | `/workflow-core:pr-reviewer <PR>` | `gh pr view`, `gh pr diff` | Structured review before merge; catches regressions and drift | Review report with verdict |
+| **PR Create** | `/workflow-core:pr-create` | `gh pr create` | Pre-flight checks then PR creation; CI/CD owns the rest | PR URL |
+| **PR Review** | `/workflow-core:pr-review <PR>` | `gh pr view`, `gh pr diff` | Structured review before merge; catches regressions and drift | Review report with verdict |
 | **Retrospective** | `/workflow-tools:retrospective` | `learn-from-mistakes` → change spec audit → `doc-lint` | Extract learnings from commits; align spec artefacts with what was built; broad doc drift check | Updated learnings, aligned spec, doc quality report |
 
 ---
@@ -71,16 +71,16 @@ The entire spec → plan → build chain depends on OpenSpec.
 npm install -g openspec
 ```
 
-Every project that uses this workflow must be initialised before running `/workflow-core:task-to-spec`:
+Every project that uses this workflow must be initialised before running `/workflow-core:spec`:
 
 ```bash
 cd your-project
 openspec init
 ```
 
-If the `openspec/` directory is missing, `task-to-spec` will halt with a clear message.
+If the `openspec/` directory is missing, `spec` will halt with a clear message.
 
-### 3. GitHub CLI (for `pr-reviewer` and `ship`)
+### 3. GitHub CLI (for `pr-review` and `pr-create`)
 
 ```bash
 brew install gh   # macOS — or: https://cli.github.com
@@ -99,17 +99,15 @@ Required only if pulling from Jira. Not needed for any other skill. Configure th
 
 | Skill | Invoke | Phase |
 |---|---|---|
-| `task-to-spec` | `/workflow-core:task-to-spec` | 1 — Spec |
-| `plan-signoff` | `/workflow-core:plan-signoff` | 2 — Plan sign-off |
-| `incremental-implementation` | `/workflow-core:incremental-implementation` | 3 — Build (atomic) |
-| `test-creator` | `/workflow-core:test-creator` | 3 — Build (atomic) |
+| `spec` | `/workflow-core:spec` | 1 — Spec |
+| `approve-plan` | `/workflow-core:approve-plan` | 2 — Approve plan |
+| `write-tests` | `/workflow-core:write-tests` | 3 — Build (atomic) |
 | `debug-recovery` | `/workflow-core:debug-recovery` | 3 — Build (atomic) |
 | `build` | `/workflow-core:build` | 3 — Build (orchestrator) |
-| `test-runner` | `/workflow-core:test-runner` | 4 — Test (atomic) |
-| `test` | `/workflow-core:test` | 4 — Test (orchestrator) |
-| `pr-reviewer` | `/workflow-core:pr-reviewer <PR>` | 5 — Review |
+| `run-tests` | `/workflow-core:run-tests` | 3 — Build (atomic) |
+| `pr-review` | `/workflow-core:pr-review <PR>` | 5 — PR Review |
 | `simplify` | `/workflow-core:simplify` | 6 — Simplify |
-| `ship` | `/workflow-core:ship` | 7 — Ship |
+| `pr-create` | `/workflow-core:pr-create` | 7 — PR Create |
 
 ### `workflow-tools` — Extended phases
 
@@ -117,7 +115,7 @@ Required only if pulling from Jira. Not needed for any other skill. Configure th
 |---|---|---|
 | `issue-to-task` | `/workflow-tools:issue-to-task` | Pre — Capture (Jira) |
 | `new-task` | `/workflow-tools:new-task` | Pre — Capture (scratch) |
-| `grill-me` | `/workflow-tools:grill-me [file]` | Gate — Challenge |
+| `challenge` | `/workflow-tools:challenge [file]` | Gate — Challenge |
 | `doc-lint` | `/workflow-tools:doc-lint` | Cross-cutting |
 | `agent-optimise` | `/workflow-tools:agent-optimise` | Cross-cutting |
 | `learn-from-mistakes` | `/workflow-tools:learn-from-mistakes` | Post — Retrospective |

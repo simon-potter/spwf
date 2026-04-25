@@ -3,7 +3,7 @@
 # Adaptation: investigation-only — stops before implementation; produces an ideation artefact
 # that feeds into the standard workflow (Challenge → Spec → Build) rather than fixing inline.
 name: debug
-description: Pre-phase entry point for bugs — Accepts a Jira ticket or freeform description, runs systematic root-cause investigation (no fixes), forms a written hypothesis, and produces todo/BUG-{slug}.md ready for /workflow-tools:grill-me. Investigation happens before any fix is attempted. Use whenever an issue occurs.
+description: Pre-phase entry point for bugs — Accepts a Jira ticket or freeform description, runs systematic root-cause investigation (no fixes), forms a written hypothesis, and produces todo/BUG-{slug}.md ready for /workflow-tools:challenge. Investigation happens before any fix is attempted. Use whenever an issue occurs.
 disable-model-invocation: true
 allowed-tools: [Read, Write, Glob, Grep, Bash, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
 ---
@@ -129,5 +129,5 @@ Source: {jira PROJ-123 | scratch}
 Hypothesis: {one-line summary}
 Open questions: {count}
 
-Recommended next step: /workflow-tools:grill-me todo/BUG-{slug}.md
+Recommended next step: /workflow-tools:challenge todo/BUG-{slug}.md
 ```

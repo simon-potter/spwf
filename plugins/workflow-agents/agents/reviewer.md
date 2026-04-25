@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Phase 5 review agent. Reads a PR diff and produces a structured review report. Does not edit code. Writes one report file. Requires a PR number or URL. Use when a PR is open and ready for review before merge.
+description: PR Review agent. Reads a PR diff and produces a structured review report. Does not edit code. Writes one report file. Requires a PR number or URL. Use when a PR is open and ready for review before merge.
 model: claude-haiku-4-5-20251001
 tools: [Read, Bash, Write]
 ---

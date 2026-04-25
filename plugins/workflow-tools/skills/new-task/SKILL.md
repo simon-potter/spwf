@@ -1,6 +1,6 @@
 ---
 name: new-task
-description: Pre-phase — Capture a new idea interactively and produce a lightweight ideation file at todo/{slug}.md. Asks one question at a time to fill the four sections. Produces the same format as issue-to-task so grill-me and task-to-spec can consume it without adaptation.
+description: Pre-phase — Capture a new idea interactively and produce a lightweight ideation file at todo/{slug}.md. Asks one question at a time to fill the four sections. Produces the same format as issue-to-task so challenge and spec can consume it without adaptation.
 disable-model-invocation: true
 allowed-tools: [Read, Write]
 ---
@@ -77,5 +77,5 @@ status: ideation
 ```
 ✓ Ideation file created: todo/{slug}.md
 
-Recommended next step: /workflow-tools:grill-me todo/{slug}.md
+Recommended next step: /workflow-tools:challenge todo/{slug}.md
 ```

@@ -13,6 +13,7 @@ Three-part post-ship retrospective for the completed change.
 Part 1 → learn-from-mistakes     (extract learnings from recent commits)
 Part 2 → change spec audit       (align OpenSpec artefacts with what was built)
 Part 3 → doc-lint                (broad project docs drift check)
+Part 4 → workflow-lint           (full golden path coherence sweep)
 ```
 
 ---
@@ -77,6 +78,18 @@ If `docs/documentation-rules.md` does not exist, note this and skip rather than 
 
 ---
 
+## Part 4 — workflow-lint pass
+
+Invoke `workflow-tools:workflow-lint`:
+
+- Runs a full golden path coherence sweep — not just changed files
+- Checks step↔skill coverage, agent coverage, cross-reference validity, stale names, attribution presence, orphaned skills/agents, diagram↔table consistency
+- Outputs a P1/P2/P3 prioritised health report
+
+This is a full sweep. Do not scope it to the current change only — the point is to catch drift that accumulated across multiple changes.
+
+---
+
 ## Report
 
 ```
@@ -91,8 +104,12 @@ If `docs/documentation-rules.md` does not exist, note this and skip rather than 
 ### Part 3 — Doc quality
 {✓ Clean | summary of doc-lint findings}
 
+### Part 4 — workflow-lint
+{✓ Coherent | P1/P2/P3 findings from workflow-lint}
+
 ### Recommended actions
 - [ ] {update design.md: undocumented decision — X}
 - [ ] {update spec scenario Y: test asserts Z, spec says W}
 - [ ] {docs/path/to/file.md: staleness warning — last reviewed N months ago}
+- [ ] {workflow-lint P1: stale name in skill body — X}
 ```

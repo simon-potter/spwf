@@ -1,6 +1,6 @@
 ---
 name: simplifier
-description: Phase 6 simplification agent. Reviews changed files for unnecessary complexity, dead code, and clarity issues. Never touches test files. Apply safe unambiguous removals; flag judgment calls. Use after tests pass, before creating the PR.
+description: Simplify agent. Reviews changed files for unnecessary complexity, dead code, and clarity issues. Never touches test files. Apply safe unambiguous removals; flag judgment calls. Use after tests pass, before creating the PR.
 model: claude-haiku-4-5-20251001
 tools: [Read, Edit, Glob, Grep]
 ---

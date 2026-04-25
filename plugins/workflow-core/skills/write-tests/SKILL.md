@@ -1,11 +1,11 @@
 ---
-name: test-creator
-description: Phase 3 atomic — Red phase of TDD. Read the next unchecked task, write failing tests that define the expected behaviour, then run them to confirm they fail. Tests must fail before implementation begins — a test that passes before the code exists is wrong. Use before incremental-implementation, or let /workflow-core:build invoke it.
+name: write-tests
+description: Phase 3 atomic — Red phase of TDD. Read the next unchecked task, write failing tests that define the expected behaviour, then run them to confirm they fail. Tests must fail before implementation begins — a test that passes before the code exists is wrong. Use before build, or let /workflow-core:build invoke it.
 disable-model-invocation: true
 allowed-tools: [Read, Write, Bash, Grep, Glob]
 ---
 
-# test-creator
+# write-tests
 
 **Red phase.** Write failing tests that define the behaviour required by the next task. The tests must fail when run — that failure is the signal that they are correctly describing code that does not yet exist.
 
@@ -76,7 +76,7 @@ Failing tests:
 
 Failing correctly? ✓
 
-Recommended next step: /workflow-core:incremental-implementation
+Recommended next step: /workflow-core:build (opsx:apply phase)
 ```
 
-Do not proceed to implementation. Stop here.
+Do not proceed to implementation. Stop here. `build` will invoke `opsx:apply` for the Green phase.

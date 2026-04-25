@@ -1,12 +1,12 @@
 ---
 # Adapted from: ~/.claude/skills/ideation-to-openspec/ — original by Simon Potter
-name: task-to-spec
-description: Phase 1 — Spec. Convert a challenged ideation file into a complete OpenSpec change proposal with fidelity validation. Use when you have a file in todo/ that has been through grill-me and is ready to be formalised. Checks that openspec/ is initialised before starting.
+name: spec
+description: Phase 1 — Spec. Convert a challenged ideation file into a complete OpenSpec change proposal with fidelity validation. Use when you have a file in todo/ that has been through challenge and is ready to be formalised. Checks that openspec/ is initialised before starting.
 disable-model-invocation: true
 allowed-tools: [Read, Write, Bash]
 ---
 
-# task-to-spec
+# spec
 
 Convert a challenged ideation file (in `todo/`) into a validated OpenSpec change proposal. Requires OpenSpec to be initialised in the current project.
 
@@ -138,4 +138,4 @@ openspec validate {change-id} --strict
 Fix any validation errors, then report:
 - Files created
 - Any items from the ideation file needing a decision
-- Suggested next step: `/workflow-core:plan-signoff`
+- Suggested next step: `/workflow-core:approve-plan`

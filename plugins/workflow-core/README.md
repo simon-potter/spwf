@@ -15,22 +15,20 @@ Skills are organised in two named tiers within the single `skills/` directory:
 
 | Skill | Invoke | Responsibility |
 |---|---|---|
-| `task-to-spec` | `/workflow-core:task-to-spec` | Convert a challenged ideation file into a full OpenSpec change proposal |
-| `plan-signoff` | `/workflow-core:plan-signoff` | Review and quality-check the generated task list; human sign-off gate before building |
-| `incremental-implementation` | `/workflow-core:incremental-implementation` | Find the first unchecked task, implement it exactly, mark it done |
-| `test-creator` | `/workflow-core:test-creator` | Red phase: write failing tests for the next unchecked task before implementation; confirm they fail |
-| `test-runner` | `/workflow-core:test-runner` | Run the full test suite; report pass/fail; stop on first failure |
+| `spec` | `/workflow-core:spec` | Convert a challenged ideation file into a full OpenSpec change proposal |
+| `approve-plan` | `/workflow-core:approve-plan` | Review and quality-check the generated task list; human sign-off gate before building |
+| `write-tests` | `/workflow-core:write-tests` | Red phase: write failing tests for the next unchecked task before implementation; confirm they fail |
+| `run-tests` | `/workflow-core:run-tests` | Run the full test suite; report pass/fail; stop on first failure |
 | `debug-recovery` | `/workflow-core:debug-recovery` | Diagnose a failing test or broken build; apply a minimal fix |
-| `pr-reviewer` | `/workflow-core:pr-reviewer <PR>` | Fetch and review a specific PR; produce a structured report |
+| `pr-review` | `/workflow-core:pr-review <PR>` | Fetch and review a specific PR; produce a structured report |
 | `simplify` | `/workflow-core:simplify` | Remove dead code and unnecessary complexity from changed files |
-| `ship` | `/workflow-core:ship` | Run pre-PR checks and create the PR; CI/CD owns deployment |
+| `pr-create` | `/workflow-core:pr-create` | Run pre-PR checks and create the PR; CI/CD owns deployment |
 
 ### Orchestrator skills
 
 | Skill | Invoke | Composes |
 |---|---|---|
-| `build` | `/workflow-core:build` | `test-creator` (Red) → `openspec:apply` (Green) → `test-runner` (Verify) → `debug-recovery` on failure → recommends `simplify` (Refactor) |
-| `test` | `/workflow-core:test` | `test-runner` → `debug-recovery` on failure |
+| `build` | `/workflow-core:build` | `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` (Refactor) |
 
 ## Attribution
 
@@ -38,10 +36,8 @@ Five skills are seeded from [addyosmani/agent-skills](https://github.com/addyosm
 
 | Skill | Source |
 |---|---|
-| `plan-signoff` | `planning-and-task-breakdown` |
-| `incremental-implementation` | `incremental-implementation` |
-| `test-runner` | `test-driven-development` |
+| `approve-plan` | `planning-and-task-breakdown` |
+| `run-tests` | `test-driven-development` |
 | `simplify` | `code-simplification` |
-| `ship` | `git-workflow-and-versioning` |
-| `build` | `incremental-implementation` (orchestrator wrapper) |
-| `test` | `test-driven-development` (orchestrator wrapper) |
+| `pr-create` | `git-workflow-and-versioning` |
+| `build` | `incremental-implementation` (upstream orchestrator pattern) |

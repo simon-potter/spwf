@@ -90,7 +90,7 @@ status: ideation
 
 ### 5. Plan format = OpenSpec tasks.md
 
-**Decision:** The canonical plan is `openspec/changes/{change-id}/tasks.md` produced by `task-to-spec`. `/plan` reads and validates it; `/build` finds the first unchecked item in it.
+**Decision:** The canonical plan is `openspec/changes/{change-id}/tasks.md` produced by `approve-plan`. `/build` finds the first unchecked item in it.
 
 **Rationale:** OpenSpec is already the spec layer. Keeping the task list there means one place to look for both the spec and the plan.
 
@@ -120,9 +120,9 @@ status: ideation
 
 ---
 
-### 9. ship = PR creation only
+### 9. pr-create = PR creation only
 
-**Decision:** `ship` creates a pull request via `gh pr create`. It does not trigger, wait for, or describe deployment steps.
+**Decision:** `pr-create` creates a pull request via `gh pr create`. It does not trigger, wait for, or describe deployment steps.
 
 **Rationale:** CI/CD owns deployment. Mixing deployment steps into a skill creates a false sense of completeness and obscures what actually happened. The PR is the atomic artefact the skill can guarantee.
 
@@ -161,17 +161,15 @@ To implement the current task:
 
 | Skill | Tier | Composes |
 |---|---|---|
-| `task-to-spec` | Atomic | — single OpenSpec action |
-| `plan-signoff` | Atomic | — single review + sign-off action |
-| `incremental-implementation` | Atomic | — |
-| `test-creator` | Atomic | — |
-| `test-runner` | Atomic | — |
+| `spec` | Atomic | — single OpenSpec action |
+| `approve-plan` | Atomic | — single review + sign-off action |
+| `write-tests` | Atomic | — |
+| `run-tests` | Atomic | — |
 | `debug-recovery` | Atomic | — |
-| `pr-reviewer` | Atomic | — single review action |
+| `pr-review` | Atomic | — single review action |
 | `simplify` | Atomic | — single scan action |
-| `ship` | Atomic | — single PR creation |
-| `build` | **Orchestrator** | `test-creator` (Red) → `incremental-implementation` (Green) → `test-runner` (Verify) → `debug-recovery` on failure → recommends `simplify` |
-| `test` | **Orchestrator** | `test-runner` → `debug-recovery` on failure |
+| `pr-create` | Atomic | — single PR creation |
+| `build` | **Orchestrator** | `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` |
 
 **Why not all stages are orchestrators:** Only `build` and `test` have meaningful composition — they sequence two sub-steps and have a conditional failure branch. All other stages are single-responsibility actions and need no decomposition.
 
@@ -179,18 +177,19 @@ To implement the current task:
 
 ---
 
-### 12. `build` orchestrates the full Red-Green-Refactor cycle; `test-creator` is its first composed step
+### 12. `build` orchestrates the full Red-Green-Refactor cycle; `write-tests` is its first composed step
 
-**Decision:** `build` invokes `test-creator` (Red: write failing tests) first, then `incremental-implementation` (Green: make them pass), then `test-runner` (Verify: confirm full suite green), then `debug-recovery` on failure. It recommends `simplify` (Refactor) on completion.
+**Decision:** `build` invokes `write-tests` (Red: write failing tests) first, then `opsx:apply` (Green: make them pass), then `run-tests` (Verify: confirm full suite green), then `debug-recovery` on failure, then `opsx:verify` (spec sign-off). It recommends `simplify` (Refactor) on completion.
 
 **Rationale:** Red-Green-Refactor is the canonical TDD discipline. Tests must be written before implementation — not after — so the contract is defined before the code. `build` enforces this order: you cannot reach the Green phase without first completing Red. The `disable-model-invocation: true` constraint (Decision 6) still applies — the user explicitly invokes `/workflow-core:build` as the entry point, and the orchestrator directs the sub-steps declaratively. The user retains the option to invoke each atomic step individually for granular control.
 
 **Composition in `build/SKILL.md`:**
 ```
-Red    → test-creator           (write failing tests for the current task)
-Green  → incremental-implementation  (implement only what makes those tests pass)
-Verify → test-runner            (confirm the full suite is green)
-Refactor → recommend simplify   (clean up with tests as a safety net)
+Red          → write-tests      (write failing tests for the current task)
+Green        → opsx:apply       (implement only what makes those tests pass)
+Verify       → run-tests        (confirm the full suite is green)
+Spec sign-off → opsx:verify     (check implementation against artefacts)
+Refactor     → recommend simplify (clean up with tests as a safety net)
 ```
 
 ---

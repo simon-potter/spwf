@@ -1,21 +1,21 @@
 ---
 # Source: https://github.com/addyosmani/agent-skills — MIT licence
 # Adversarial review lenses adapted from: https://skills.sh/poteto/noodle/adversarial-review (poteto/noodle)
-name: plan-signoff
-description: Phase 2 — Approve plan. Reviews the task list from task-to-spec for quality (atomicity, testability, clarity), then applies three adversarial lenses (Skeptic, Architect, Minimalist) as advisory input for the human reviewer. Quality issues are blocking; adversarial findings are advisory. Presents everything for explicit human go/no-go before building starts.
+name: approve-plan
+description: Phase 2 — Approve plan. Reviews the task list from spec for quality (atomicity, testability, clarity), then applies three adversarial lenses (Skeptic, Architect, Minimalist) as advisory input for the human reviewer. Quality issues are blocking; adversarial findings are advisory. Presents everything for explicit human go/no-go before building starts.
 disable-model-invocation: true
 allowed-tools: [Read, Write]
 ---
 
-# plan-signoff
+# approve-plan
 
-Review the task list that `task-to-spec` generated. The plan was created by `task-to-spec` — this step does not create or rewrite tasks. It assesses them.
+Review the task list that `spec` generated. The plan was created by `spec` — this step does not create or rewrite tasks. It assesses them.
 
 Two layers of review, in order:
 1. **Quality check** — blocking issues with atomicity, testability, clarity
 2. **Adversarial review** — three lenses that challenge the plan's coherence and scope; advisory, not blocking
 
-The human makes the final call. `grill-me` has already challenged the underlying idea — this step reviews the *plan*, not the idea.
+The human makes the final call. `challenge` has already challenged the underlying idea — this step reviews the *plan*, not the idea.
 
 ---
 
@@ -39,7 +39,7 @@ If `tasks.md` does not exist, halt:
 
 ```
 No tasks.md found for change: {change-id}
-Run /workflow-core:task-to-spec first.
+Run /workflow-core:spec first.
 ```
 
 ---
@@ -62,7 +62,7 @@ Mark each issue `⚠` with a specific suggested fix. These are the only findings
 
 ## Step 4: Adversarial review (advisory)
 
-Apply three lenses to the plan as a whole. Findings from this step are advisory — the human decides whether to act on them. Do not re-litigate the spec or ideation file; `grill-me` has already done that work. Focus on the task list structure and coverage.
+Apply three lenses to the plan as a whole. Findings from this step are advisory — the human decides whether to act on them. Do not re-litigate the spec or ideation file; `challenge` has already done that work. Focus on the task list structure and coverage.
 
 ### Skeptic — will this plan actually deliver the goal?
 
@@ -117,7 +117,7 @@ Mark each finding `ℹ` with the lens name. No suggested fix required — these 
 ---
 
 Approve? → /workflow-core:build
-Revise tasks → edit openspec/changes/{change-id}/tasks.md, re-run /workflow-core:plan-signoff
+Revise tasks → edit openspec/changes/{change-id}/tasks.md, re-run /workflow-core:approve-plan
 ```
 
 If no quality issues and no adversarial findings worth surfacing:

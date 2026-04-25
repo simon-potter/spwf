@@ -1,6 +1,6 @@
 ---
 name: tester
-description: Phase 3/4 TDD test agent. Operates in two modes: (1) Red — write failing tests for the next task before implementation; (2) Verify — run the full suite after implementation and report pass/fail. Always follows Red-Green-Refactor order. Use before implementation to define behaviour, or after implementation to confirm green.
+description: TDD execution agent. Operates in two modes: (1) Red — write failing tests for the next task before implementation; (2) Verify — run the full suite after implementation and report pass/fail. Always follows Red-Green-Refactor order. Use before implementation to define behaviour, or after implementation to confirm green. Execution counterpart to tdd-expert (which is advisory only).
 model: claude-sonnet-4-6
 tools: [Read, Write, Bash]
 ---

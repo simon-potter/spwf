@@ -1,7 +1,7 @@
 ---
 # Qualification check inspired by: https://skills.sh/obra/superpowers/brainstorming (obra superpowers) — one-question-at-a-time heuristic gate before proceeding
 name: capture
-description: Pre-phase orchestrator — Captures a requirement from any source (Jira ticket, existing file, or freeform description) and runs a lightweight qualification check before producing an ideation file. Detects input mode from arguments; prompts if ambiguous. Quick-fails vague or incomplete inputs with one targeted question at a time. Produces todo/{slug}.md ready for /workflow-tools:grill-me.
+description: Pre-phase orchestrator — Captures a requirement from any source (Jira ticket, existing file, or freeform description) and runs a lightweight qualification check before producing an ideation file. Detects input mode from arguments; prompts if ambiguous. Quick-fails vague or incomplete inputs with one targeted question at a time. Produces todo/{slug}.md ready for /workflow-tools:challenge.
 disable-model-invocation: true
 allowed-tools: [Read, Write, Glob, Bash, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
 ---
@@ -124,5 +124,5 @@ Source: {jira PROJ-123 | file path | scratch}
 Qualify: {passed cleanly | 1 question asked | 2 questions asked — {N} gaps remain}
 Open questions: {count} (will be surfaced in Challenge)
 
-Recommended next step: /workflow-tools:grill-me todo/{slug}.md
+Recommended next step: /workflow-tools:challenge todo/{slug}.md
 ```

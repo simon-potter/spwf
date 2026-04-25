@@ -1,14 +1,14 @@
 ---
 # Adapted from: ~/.claude/skills/jira-to-openspec/ — original by Simon Potter. Strips all OpenSpec generation; output is a lightweight ideation file only.
 name: issue-to-task
-description: Pre-phase — Capture a Jira ticket as a lightweight ideation file at todo/{slug}.md. Fetches the ticket via MCP, extracts context and open questions, and produces an ideation file ready for /workflow-tools:grill-me. Does NOT generate OpenSpec — that is task-to-spec's job.
+description: Pre-phase — Capture a Jira ticket as a lightweight ideation file at todo/{slug}.md. Fetches the ticket via MCP, extracts context and open questions, and produces an ideation file ready for /workflow-tools:challenge. Does NOT generate OpenSpec — that is spec's job.
 disable-model-invocation: true
 allowed-tools: [Read, Write, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
 ---
 
 # issue-to-task
 
-Fetch a Jira ticket and produce a lightweight ideation file at `todo/{slug}.md`. This file is the input to `grill-me` and eventually `task-to-spec`. It is intentionally lightweight — not an OpenSpec.
+Fetch a Jira ticket and produce a lightweight ideation file at `todo/{slug}.md`. This file is the input to `challenge` and eventually `spec`. It is intentionally lightweight — not an OpenSpec.
 
 ## Step 1: Fetch the ticket
 
@@ -80,7 +80,7 @@ status: ideation
 Source: {TICKET-ID}
 Title: {title}
 
-Recommended next step: /workflow-tools:grill-me todo/{slug}.md
+Recommended next step: /workflow-tools:challenge todo/{slug}.md
 ```
 
 Do not generate OpenSpec output. Do not interpret or suggest implementation approaches.

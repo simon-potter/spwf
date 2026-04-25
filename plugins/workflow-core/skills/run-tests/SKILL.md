@@ -1,12 +1,12 @@
 ---
 # Source: https://github.com/addyosmani/agent-skills — MIT licence
-name: test-runner
-description: Phase 4 atomic — Run the full test suite and report pass/fail clearly. Stops on the first failure with file, line, and error details. Does not attempt to fix failures — that is debug-recovery's job. Use this skill directly or let /workflow-core:test invoke it.
+name: run-tests
+description: Phase 3 atomic — Run the full test suite and report pass/fail clearly. Stops on the first failure with file, line, and error details. Does not attempt to fix failures — that is debug-recovery's job. Use this skill directly or let /workflow-core:build invoke it.
 disable-model-invocation: true
 allowed-tools: [Read, Bash]
 ---
 
-# test-runner
+# run-tests
 
 Run the full test suite. Report pass or fail clearly. Stop on first failure with enough detail to act on. Do not fix anything.
 

@@ -1,12 +1,12 @@
 ---
 # Source: https://github.com/addyosmani/agent-skills — MIT licence
-name: ship
-description: Phase 7 — Ship. Run pre-PR checks then create a pull request via gh pr create. CI/CD owns deployment after merge. The PR is the deliverable. Halts if any pre-flight check fails.
+name: pr-create
+description: Phase 7 — PR Create. Run pre-PR checks then create a pull request via gh pr create. CI/CD owns deployment after merge. The PR is the deliverable. Halts if any pre-flight check fails.
 disable-model-invocation: true
 allowed-tools: [Read, Bash]
 ---
 
-# ship
+# pr-create
 
 Run the pre-PR checklist. If all checks pass, create the PR. Report the URL.
 

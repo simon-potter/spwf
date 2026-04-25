@@ -1,6 +1,6 @@
 ---
 name: builder
-description: Phase 3 build agent. Reads the current task from the OpenSpec task list, implements it, marks it complete, and stops. Does not move to the next task. Delegates to workflow-core:incremental-implementation for the implementation step. Use for the main build loop, one task at a time.
+description: Phase 3 build agent. Reads the current task from the OpenSpec task list, implements it, marks it complete, and stops. Does not move to the next task. Implements via opsx:apply. Use for the main build loop, one task at a time.
 model: claude-sonnet-4-6
 tools: [Read, Edit, Write, Bash, Grep, Glob]
 ---
@@ -43,5 +43,5 @@ Files changed:
 
 Progress: {X}/{total} tasks complete
 
-Recommended next step: /workflow-core:test-creator
+Recommended next step: /workflow-core:write-tests
 ```

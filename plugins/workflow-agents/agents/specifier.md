@@ -1,6 +1,6 @@
 ---
 name: specifier
-description: Phase 1 spec agent. Reads a challenged ideation file and generates a full OpenSpec change proposal. Asks clarifying questions when the ideation file is ambiguous. Refuses to suggest implementation approaches — spec only. Use after grill-me has resolved all open questions.
+description: Phase 1 spec agent. Reads a challenged ideation file and generates a full OpenSpec change proposal. Asks clarifying questions when the ideation file is ambiguous. Refuses to suggest implementation approaches — spec only. Use after challenge has resolved all open questions.
 model: claude-sonnet-4-6
 tools: [Read, Write, Bash]
 ---
@@ -39,4 +39,4 @@ If any of these are no longer clear after reading the ideation file, ask before 
 
 Report files created, line counts, and validation result.
 
-Next recommended step: `/workflow-core:plan-signoff`
+Next recommended step: `/workflow-core:approve-plan`
