@@ -2,7 +2,7 @@
 # Source: https://github.com/addyosmani/agent-skills — MIT licence
 # Adversarial review lenses adapted from: https://skills.sh/poteto/noodle/adversarial-review (poteto/noodle)
 name: approve-plan
-description: Phase 2 — Approve plan. Reviews the task list from spec for quality (atomicity, testability, clarity), then applies three adversarial lenses (Skeptic, Architect, Minimalist) as advisory input for the human reviewer. Quality issues are blocking; adversarial findings are advisory. Presents everything for explicit human go/no-go before building starts.
+description: Phase 2 — Approve plan. Reviews the task list from spec for quality (atomicity, testability, clarity), then applies four adversarial lenses (Skeptic, Architect, Minimalist, Security) as advisory input for the human reviewer. Quality issues are blocking; adversarial findings are advisory. Security lens identifies tasks touching auth, billing, user input, or secrets so the builder has explicit awareness before writing those tasks. Presents everything for explicit human go/no-go before building starts.
 disable-model-invocation: true
 allowed-tools: [Read, Write]
 ---
@@ -82,7 +82,29 @@ Apply three lenses to the plan as a whole. Findings from this step are advisory 
 - Is any task gold-plating or scope creep beyond what the proposal requires?
 - Are any tasks duplicates of each other under different names?
 
-Mark each finding `ℹ` with the lens name. No suggested fix required — these are prompts for the human reviewer, not prescriptions.
+### Security — which tasks need extra care during build?
+
+Identify any task that touches a security-sensitive surface. Flag it as `⚠ Security` with the specific surface. This is not a blocker — it is advance notice so the builder agent and human reviewer know which tasks warrant closer attention.
+
+Security-sensitive surfaces:
+- Authentication or authorisation logic (login, session, tokens, permissions, roles)
+- Payment or billing flows
+- User-supplied input entering a query, shell command, or file path
+- Secrets, credentials, API keys, or environment variables
+- File system access outside of the project directory
+- External API calls where response data enters the codebase
+- Schema changes on tables holding personal data (PII, health, financial)
+- Cryptography or hashing
+
+Mark each finding `⚠ Security: {surface}`. No suggested fix — the note is a heads-up, not a prescription. A task with no security surfaces needs no entry.
+
+If any security-sensitive tasks are identified, add a reminder at the bottom of the security section:
+```
+Before merging, consider running /trailofbits:semgrep for a thorough SAST review
+against curated Trail of Bits rulesets (SARIF output, Important-only filtering).
+```
+
+Mark each finding `ℹ` with the lens name for Skeptic/Architect/Minimalist. No suggested fix required — these are prompts for the human reviewer, not prescriptions.
 
 ---
 
@@ -114,18 +136,23 @@ Mark each finding `ℹ` with the lens name. No suggested fix required — these 
 - ℹ Architect: {finding}
 - ℹ Minimalist: {finding}
 
+### Security-sensitive tasks (heads-up for builder)
+
+- ⚠ Security: 2.1 — user input enters SQL query (injection surface)
+- ⚠ Security: 3.2 — adds environment variable for external API key
+
 ---
 
 Approve? → /workflow-core:build
 Revise tasks → edit openspec/changes/{change-id}/tasks.md, re-run /workflow-core:approve-plan
 ```
 
-If no quality issues and no adversarial findings worth surfacing:
+If no quality issues and no adversarial findings worth surfacing and no security-sensitive tasks:
 
 ```
 ## Approve plan: {change-id}
 
-{X} tasks — quality checks passed, no adversarial concerns.
+{X} tasks — quality checks passed, no adversarial concerns, no security-sensitive surfaces.
 
 ✓ Ready to build.
 

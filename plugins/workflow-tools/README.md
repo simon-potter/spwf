@@ -26,6 +26,14 @@ All skills set `disable-model-invocation: true`.
 | `workflow-lint` | `/workflow-tools:workflow-lint` | Cross-cutting — coherence audit of the full golden path |
 | `claudemd-curator` | `/workflow-tools:claudemd-curator` | Cross-cutting — audit, refactor, and sync CLAUDE.md and AGENTS.md |
 
+## Recommended external skills
+
+These are not part of this plugin but are referenced from within workflow skills when relevant:
+
+| Skill | Source | When referenced |
+|---|---|---|
+| `semgrep` | `trailofbits/skills` — [skills.sh/trailofbits/skills/semgrep](https://skills.sh/trailofbits/skills/semgrep) | Invoked as `/trailofbits:semgrep`. Referenced by `pr-create` when SAST findings need deep review, and by `approve-plan` when security-sensitive tasks are flagged. Curated rulesets (Trail of Bits + 0xdea + Decurity), SARIF output, `--metrics=off` enforced. Use this instead of raw semgrep for production security review. |
+
 ## Ideation file format
 
 Both `issue-to-task` and `new-task` produce the same lightweight ideation file at `todo/{slug}.md`. This format is the input to `challenge` and `spec`.

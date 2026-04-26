@@ -2,6 +2,8 @@
 
 Seven-phase workflow skills covering the canonical engineering cycle. All skills set `disable-model-invocation: true` — they are explicit user-triggered checkpoints, not autonomous suggestions.
 
+**Plugin boundary rule:** if a skill reads or writes `openspec/changes/` or `openspec/specs/` — or is only useful in a project where `openspec init` has been run — it belongs here. Skills that work on any repo regardless of OpenSpec belong in `workflow-tools`.
+
 ## Two-tier architecture
 
 Skills are organised in two named tiers within the single `skills/` directory:

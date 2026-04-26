@@ -1,7 +1,7 @@
 ---
 # Source: https://github.com/addyosmani/agent-skills — MIT licence
 name: pr-create
-description: Phase 7 — PR Create. Run pre-PR checks then create a pull request via gh pr create. CI/CD owns deployment after merge. The PR is the deliverable. Halts if any pre-flight check fails.
+description: Phase 7 — PR Create. Run pre-PR checks then create a pull request via gh pr create. CI/CD owns deployment after merge. The PR is the deliverable. Halts if any pre-flight check fails. Security checks (secret scan, SAST, dependency audit) run if tools are available; high/critical findings halt PR creation.
 disable-model-invocation: true
 allowed-tools: [Read, Bash]
 ---
@@ -12,7 +12,7 @@ Run the pre-PR checklist. If all checks pass, create the PR. Report the URL.
 
 ## Step 1: Pre-PR checklist
 
-Run each check. If any fails, stop and report — do not proceed to PR creation.
+Run each check in order. If any blocking check fails, stop and report — do not proceed to PR creation.
 
 ```bash
 # Check 1: Not on main
@@ -44,6 +44,93 @@ Implement a task first: /workflow-core:build
 If uncommitted changes exist, warn (not halt):
 ```
 ⚠ Uncommitted changes present. These will not be included in the PR.
+```
+
+## Step 1b: Security pre-flight
+
+Run security checks against the diff about to be shipped. Each check is conditional on the tool being installed. If none of the tools are available, warn once and continue — do not halt.
+
+```bash
+# Secret scan — halt on any finding
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks detect --source . --no-banner
+fi
+
+# SAST — halt on high or critical severity
+if command -v semgrep >/dev/null 2>&1; then
+  semgrep --config=auto --severity=ERROR --quiet .
+fi
+
+# Dependency audit — detect project type and run appropriate tool
+if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
+  npm audit --audit-level=high --json | \
+    jq -e '.metadata.vulnerabilities | (.high + .critical) > 0' && \
+    echo "npm audit: high/critical vulnerabilities found" || true
+fi
+if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
+  if command -v pip-audit >/dev/null 2>&1; then
+    pip-audit --severity high
+  fi
+fi
+if [ -f Cargo.toml ] && command -v cargo-audit >/dev/null 2>&1; then
+  cargo audit --deny warnings
+fi
+```
+
+**Secret scan finding (gitleaks):**
+Any detected secret is a hard halt:
+```
+✗ Secret detected in diff. Remove before shipping.
+{gitleaks output}
+```
+
+**SAST finding (semgrep ERROR severity):**
+Halt with findings listed, and recommend deep review:
+```
+✗ SAST: {N} high/critical finding(s). Review before shipping.
+{semgrep output}
+
+For a thorough security review before merge, run:
+  /trailofbits:semgrep
+(curated rulesets: Trail of Bits + 0xdea + Decurity; SARIF output; Important-only filtering)
+```
+
+**Dependency audit — high/critical vulnerability:**
+Halt with findings:
+```
+✗ Dependency: {N} high/critical vulnerability/vulnerabilities found.
+Run: npm audit / pip-audit / cargo audit for details.
+```
+
+**No tools installed — actionable setup recommendations:**
+
+Do not silently skip. Report each missing tool with its setup path:
+
+```
+⚠ Security pre-flight: tools not configured. Recommendations:
+
+── Secret scanning (gitleaks) ──────────────────────────────────
+  gitleaks is not installed. Recommended setup:
+
+  1. Install:  brew install gitleaks
+  2. Pre-commit hook (catches secrets before commit):
+       echo 'gitleaks protect --staged' >> .git/hooks/pre-commit
+       chmod +x .git/hooks/pre-commit
+  3. GitHub Actions (catches anything that slips through):
+       # .github/workflows/security.yml
+       - uses: gitleaks/gitleaks-action@v2
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+── SAST (semgrep) ──────────────────────────────────────────────
+  semgrep is not installed. For production-grade SAST with curated
+  Trail of Bits rulesets, use the vetted skill instead of raw semgrep:
+    /trailofbits:semgrep
+  (parallel scanning, SARIF output, --metrics=off enforced, Important-only filtering)
+
+── Dependency audit ────────────────────────────────────────────
+  pip-audit / cargo-audit not found. npm audit is always available for Node projects.
+  Install: pip install pip-audit  |  cargo install cargo-audit
 ```
 
 ## Step 2: Read context for PR content
