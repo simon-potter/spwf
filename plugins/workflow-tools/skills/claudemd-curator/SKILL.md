@@ -162,6 +162,32 @@ Anything that fails all eight tests is bloat.
 
 Full layer definitions, templates, and a worked 280→65 line refactor example are in `references/layer-model.md`. Anti-patterns with rationale are in `references/anti-patterns.md`.
 
+### Quality score (Anthropic rubric)
+
+After the layer classification pass, score each CLAUDE.md file against six quality dimensions. This is the official Anthropic quality rubric from the `claude-md-management` plugin (Isabella He, Anthropic). Full scoring detail is in `references/quality-criteria.md`.
+
+| Criterion | Points | What to check |
+|---|---|---|
+| Commands/workflows | /20 | Are build, test, lint, deploy commands present and correct? |
+| Architecture clarity | /20 | Key directories explained? Entry points identified? Module relationships clear? |
+| Non-obvious patterns | /15 | Gotchas, quirks, workarounds, "why we do it this way" for unusual patterns |
+| Conciseness | /15 | No filler, no restating obvious code, no redundancy with code comments |
+| Currency | /15 | Commands work as documented? File references exist? Tech stack current? |
+| Actionability | /15 | Instructions executable and copy-paste ready? Paths are real? |
+
+**Grade thresholds:** A (90–100) · B (70–89) · C (50–69) · D (30–49) · F (0–29)
+
+**Red flags to check explicitly:**
+- Commands that would fail (wrong paths, missing dependencies)
+- References to deleted files or folders
+- Outdated technology versions
+- Content copy-pasted from a template without customisation
+- Generic best-practice advice not specific to this project
+- `TODO` items that were never completed
+- Duplicate information spread across multiple CLAUDE.md files
+
+Include the score and grade in the Phase 5 proposal header for each file audited. For files scoring C or below, the proposal must include concrete additions drawn from `references/templates.md`.
+
 ### Phase 4 — Sync verification & repair
 
 Locate the `sync-agents-md.sh` script:
@@ -187,12 +213,26 @@ The script reports four states:
 
 ### Phase 5 — Propose, don't apply
 
+Before assembling the proposal, validate every proposed addition against this checklist (from `references/update-guidelines.md`). Any addition that fails a check should be dropped or reworded:
+
+- [ ] Project-specific — not generic advice or obvious code info
+- [ ] No generic best practices the model already knows
+- [ ] No one-off fixes unlikely to recur
+- [ ] Commands tested and working (or explicitly marked as unverified)
+- [ ] File paths accurate
+- [ ] Most concise possible expression — one line per concept where possible
+- [ ] Would a new Claude session find this helpful?
+
 Produce a single artefact: a side-by-side proposal showing current → proposed CLAUDE.md and current → proposed AGENTS.md, plus a numbered list of behavioural-audit findings with the user's accept/reject decision required for each. Wait for explicit approval before editing files.
 
 Format the proposal as:
 
 ```
 ## Proposed changes
+
+### Quality scores
+- CLAUDE.md: XX/100 (Grade: X) — <one-line summary of main weakness>
+- AGENTS.md: XX/100 (Grade: X) — <one-line summary>
 
 ### Removals (N)
 - [path:line] <content> — reason: <linter | inferable | not universal | bloat>
@@ -247,6 +287,9 @@ Deeper material is in `references/` — load on demand:
 - `references/karpathy-block.md` — Canonical wording for the L1 discipline block, ready to paste.
 - `references/product-mode-block.md` — Canonical wording for the L2 decision-posture block.
 - `references/anti-patterns.md` — Specific things to remove, with rationale.
+- `references/quality-criteria.md` — Full 100-point scoring rubric for the six quality dimensions (Anthropic/Isabella He). Load when scoring a file in Phase 3.
+- `references/templates.md` — Four CLAUDE.md templates: minimal, comprehensive, package/module, monorepo root. Load when Phase 5 proposal includes structural additions for a C-or-below file.
+- `references/update-guidelines.md` — What to add vs not add, diff format, and validation checklist. Load to verify proposed additions in Phase 5.
 
 Scripts in `scripts/` — execute when needed:
 
