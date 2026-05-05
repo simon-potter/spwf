@@ -14,6 +14,7 @@ Part 1 → learn-from-mistakes     (extract learnings from recent commits)
 Part 2 → change spec audit       (align OpenSpec artefacts with what was built)
 Part 3 → doc-lint                (broad project docs drift check)
 Part 4 → workflow-lint           (full golden path coherence sweep)
+Part 5 → changelog               (optional — only when preparing a release)
 ```
 
 ---
@@ -90,6 +91,25 @@ This is a full sweep. Do not scope it to the current change only — the point i
 
 ---
 
+## Part 5 — Changelog (release only)
+
+**Only run this part if the user is preparing a release.** Ask explicitly before proceeding:
+
+```
+Preparing a release? Run /workflow-tools:changelog to generate a changelog section from these commits? (yes / no)
+```
+
+If yes, invoke `workflow-tools:changelog`. The skill will:
+
+- Detect the commit range since the last git tag
+- Classify commits by conventional type (feat, fix, security, perf, breaking)
+- Draft a changelog section in Keep a Changelog format
+- Present for approval before writing to `CHANGELOG.md`
+
+If no, skip silently — the retrospective report notes "Part 5 skipped (no release)".
+
+---
+
 ## Report
 
 ```
@@ -106,6 +126,9 @@ This is a full sweep. Do not scope it to the current change only — the point i
 
 ### Part 4 — workflow-lint
 {✓ Coherent | P1/P2/P3 findings from workflow-lint}
+
+### Part 5 — Changelog
+{skipped (no release) | ✓ CHANGELOG.md updated — v{version}, {N} entries}
 
 ### Recommended actions
 - [ ] {update design.md: undocumented decision — X}

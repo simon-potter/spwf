@@ -16,6 +16,7 @@ All skills set `disable-model-invocation: true`.
 | `grill-me` | `/workflow-tools:grill-me [file]` | Gate — Challenge (deprecated: use challenge) |
 | `learn-from-mistakes` | `/workflow-tools:learn-from-mistakes` | Post — Retrospective (atomic) |
 | `retrospective` | `/workflow-tools:retrospective` | Post — Retrospective (orchestrator) |
+| `changelog` | `/workflow-tools:changelog [ref]` | Post — Release notes from conventional commits (atomic) |
 
 ## Quality tools
 
