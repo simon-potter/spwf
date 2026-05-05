@@ -1,0 +1,1 @@
+/var/www/spottmedia/academyplus/plugin-marketplace-simon/plugins/workflow-tools/skills/php-code-simplifier/references/wordpress-patterns.md
