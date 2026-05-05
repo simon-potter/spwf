@@ -191,10 +191,28 @@ The behavioural audit (Phase 2), AGENTS.md sync (Phase 4), and propose diff (Pha
 
 ---
 
+## Baseline scan findings (2026-04-27)
+
+Ran `npx @agent-lint/cli scan --stdout` against the plugin marketplace root. Key results:
+
+**What agentlint found:** 20 artifact files, all in `.claude/commands/opsx/` and `.claude/skills/openspec-*/`. The `plugins/` directory was **not discovered at all** — agentlint only knows about `.claude/` and standard locations. Our 20+ plugin SKILL.md files in `plugins/workflow-core/`, `plugins/workflow-tools/`, `plugins/workflow-agents/` were completely missed.
+
+**False positives (confirmed):**
+- All 10 "stale" findings were template placeholder paths (`openspec/changes/<name>/proposal.md`, `specs/<capability>/spec.md`) — intentional example syntax, not broken links
+- All 20 "incomplete" findings were schema mismatches — agentlint expects its own `goal`/`preconditions`/`step`/`failure`/`verification`/`safety` sections; our SKILL.md files use Claude Code frontmatter format
+- "Missing artifact types" (AGENTS.md, docs/rules.md, docs/plans/) are agentlint's own taxonomy, not requirements for a plugin marketplace repo
+
+**Genuine signal (1 finding):**
+- "No gotchas section" across all skills — valid. Added Gotchas sections to `claudemd-curator` and `pr-create` as proof-of-concept.
+
+**Revised integration conclusion:** agentlint's discovery model is scoped to `.claude/`, `.github/`, `.cursor/` trees. It is **not useful when run against the marketplace itself**. It is useful when run against **consuming projects** (e.g. ssa-lms) where AGENTS.md, CLAUDE.md, and `.claude/` are real targets. The claudemd-curator integration plan should scope agentlint calls accordingly: run in the target project's directory, not the marketplace root.
+
 ## What we know
 
 - agentlint's 12-dimension scoring is strictly more comprehensive than the L0–L4 layer test for quality assessment of individual artifacts
-- agentlint covers the plugin marketplace's **own** skills and agents — it would score our SKILL.md files against its quality rubric, which our current tools cannot do
+- **agentlint does not discover `plugins/` directories** — it only scans `.claude/`, `.github/`, `.cursor/` trees; our plugin SKILL.md files are invisible to it
+- agentlint is most useful in consuming projects (where CLAUDE.md and AGENTS.md are real targets), not in the marketplace repo itself
+- agentlint's stale reference detection flags template placeholder syntax as broken paths — filtering is needed before acting on stale findings
 - The behavioural audit (transcript mining) is claudemd-curator's highest-value differentiator and has no equivalent anywhere else
 - The AGENTS.md sync management (symlink/shim/sister-tools) is a concrete, mechanical operation that agentlint deliberately avoids — it remains owned by claudemd-curator
 - agentlint's MCP mode is the right integration point if we commit to coupling, but adds a dependency and installation step
@@ -203,19 +221,16 @@ The behavioural audit (Phase 2), AGENTS.md sync (Phase 4), and propose diff (Pha
 ## Open questions
 
 - Is agentlint's MCP API stable enough to depend on? (It is pre-1.0, repo is early-stage)
-- Does agentlint's `score` command support SKILL.md files in our plugin marketplace format? (folder-based skills with frontmatter — agentlint says it supports folder-based skills but we'd need to test)
-- What does agentlint produce when it scores our existing SKILL.md files? Would it flag issues we haven't caught?
+- Can agentlint be configured to scan custom paths (e.g. `plugins/`) beyond its default discovery tree?
 - Can agentlint be run without `npx` (local install) for offline/air-gapped environments?
-- How does agentlint's stale reference detection handle our `openspec/changes/` paths, which are created and destroyed during the workflow?
 - Should `agent-optimise` be deprecated in favour of agentlint, or does it do something agentlint doesn't?
 
 ## Rough scope (if we proceed)
 
-**Immediate (low risk, high value):**
-- Run agentlint scan against the current plugin marketplace to get a baseline quality score on our own artifacts
-- Document findings — this tells us empirically whether agentlint adds value for our case
-- Update `workflow-tools/README.md` to reference agentlint as a recommended standalone complement
-- Add agentlint MCP config block to marketplace root README under Prerequisites (MCP server setup is now documented in this file — see section above)
+**Immediate (done):**
+- ~~Run agentlint scan against the current plugin marketplace~~ — done 2026-04-27; findings above
+- ~~Document findings~~ — done; revised integration scope
+- Added Gotchas sections to `claudemd-curator` and `pr-create` (the one genuine signal from the scan)
 
 **Short-term:**
 - Update claudemd-curator's Phase 1 to call `mcp__agentlint__scan` (if registered) or fall back to `npx @agent-lint/cli scan --json` — graceful if neither available

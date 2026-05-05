@@ -278,6 +278,9 @@ User asks for a behavioural audit but doesn't want a full refactor. Run Phase 1 
 - **Running this skill mid-task.** It mines the project's transcripts; running mid-session pollutes its own findings. Run between sessions.
 - **Forgetting `~/.claude/CLAUDE.md`.** Global CLAUDE.md applies to every project. It's the most leveraged file the user has, and it's almost always neglected. Audit it on the same cadence as project files.
 - **Assuming Claude Code reads AGENTS.md natively.** It doesn't, as of late April 2026. Some third-party guides claim it does — they're wrong or premature. Use the symlink/shim pattern.
+- **Broken links that look like template examples.** If a CLAUDE.md references `docs/SCORM.md` and that file moved to `docs/features/scorm/overview.md`, the skill will surface it as a stale path — which is correct. But path-like strings inside code fences or example blocks (e.g. `openspec/changes/<name>/proposal.md`) are intentional template syntax, not broken links. Read the context before flagging.
+- **Legacy scoped files that predate a newer workflow system.** A project may have `todo/CLAUDE.md` or `.epic/CLAUDE.md` from an older process now superseded by OpenSpec or a similar tool. The inventory phase will surface them; always ask before removing whether the old workflow is still in use anywhere.
+- **agentlint false positives if used alongside this skill.** When running `npx @agent-lint/cli scan` against a consuming project, agentlint will flag template placeholder paths (`<name>`, `<capability>`) as stale references and flag SKILL.md frontmatter sections as "missing" against its own schema. These are schema mismatches, not real issues. Use agentlint findings as a signal, not a directive.
 
 ## References
 

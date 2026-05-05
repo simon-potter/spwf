@@ -170,4 +170,11 @@ EOF
 CI/CD will handle deployment after merge.
 ```
 
+## Gotchas
+
+- **`npm audit` exits 1 on any finding.** The pre-flight uses `--audit-level=high` to suppress low/moderate noise — don't remove that flag or every PR with transitive dependencies will halt.
+- **Gitleaks false positives on test fixtures.** If the project has test files that embed example keys or mock tokens, gitleaks will halt. Add a `.gitleaksignore` or `[allowlist]` in `.gitleaks.toml` for known fixture paths rather than removing the scan.
+- **`semgrep --config=auto` is slow on large repos.** On repos with >10k files the `auto` ruleset can take 3+ minutes. If that's causing timeouts, scope it: `semgrep --config=auto --include="*.py" .` or pin to a specific ruleset. The `/trailofbits:semgrep` skill handles this better than raw semgrep.
+- **Security pre-flight runs on the working tree, not the PR diff.** If the repo has pre-existing findings, they will halt the PR creation. First-time installs: run the scan manually, triage the backlog, then proceed.
+
 Do not wait for CI, do not describe deployment steps, do not merge.
