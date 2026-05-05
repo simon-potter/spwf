@@ -103,6 +103,28 @@ Check for the AGENTS.md sync pattern:
 [ -f CLAUDE.md ] && [ ! -L CLAUDE.md ] && head -3 CLAUDE.md
 ```
 
+### agentlint scan (consuming projects only)
+
+If the project has a `.claude/agents/` or `.claude/skills/` directory, run agentlint to surface structural issues with agent and skill definitions:
+
+```bash
+# Only run if .claude/agents or .claude/skills exists
+if [ -d .claude/agents ] || [ -d .claude/skills ]; then
+    npx --yes @agent-lint/cli scan --json 2>/dev/null \
+        || echo "agentlint unavailable or timed out — skip"
+fi
+```
+
+agentlint scans only the `.claude/` tree — it will not discover agents or skills in `plugins/` or other custom directories. Record the finding count and severity breakdown, and include any HIGH-severity findings in the inventory.
+
+**Interpreting findings before including them in Phase 5:** Cross-check every finding against the Gotchas section below. Two categories are reliably false positives:
+- **Template placeholder paths** — strings like `<name>`, `<capability>`, `openspec/changes/<name>/proposal.md` inside skill files are intentional syntax placeholders, not broken file references.
+- **SKILL.md schema mismatches** — agentlint expects `goal`, `preconditions`, and `step` frontmatter. Our SKILL.md format uses `name`, `description`, `disable-model-invocation`, `allowed-tools`. These produce schema warnings that are not real errors.
+
+Genuine HIGH-severity signals to surface: missing `description` fields in agent frontmatter, agents with no `model` set, skill files with no `allowed-tools` constraint.
+
+**Skip this step if:** `.claude/agents/` and `.claude/skills/` do not exist, or if `npx` is not available in the shell environment.
+
 ### Phase 2 — Behavioural audit (ykdojo-style)
 
 Mine the project's actual session history to find what's broken in practice.
@@ -280,7 +302,7 @@ User asks for a behavioural audit but doesn't want a full refactor. Run Phase 1 
 - **Assuming Claude Code reads AGENTS.md natively.** It doesn't, as of late April 2026. Some third-party guides claim it does — they're wrong or premature. Use the symlink/shim pattern.
 - **Broken links that look like template examples.** If a CLAUDE.md references `docs/SCORM.md` and that file moved to `docs/features/scorm/overview.md`, the skill will surface it as a stale path — which is correct. But path-like strings inside code fences or example blocks (e.g. `openspec/changes/<name>/proposal.md`) are intentional template syntax, not broken links. Read the context before flagging.
 - **Legacy scoped files that predate a newer workflow system.** A project may have `todo/CLAUDE.md` or `.epic/CLAUDE.md` from an older process now superseded by OpenSpec or a similar tool. The inventory phase will surface them; always ask before removing whether the old workflow is still in use anywhere.
-- **agentlint false positives if used alongside this skill.** When running `npx @agent-lint/cli scan` against a consuming project, agentlint will flag template placeholder paths (`<name>`, `<capability>`) as stale references and flag SKILL.md frontmatter sections as "missing" against its own schema. These are schema mismatches, not real issues. Use agentlint findings as a signal, not a directive.
+- **agentlint false positives (Phase 1 integration).** The Phase 1 agentlint scan will reliably flag two things that are not real issues: template placeholder paths (`<name>`, `<capability>`) treated as broken file references, and SKILL.md frontmatter (`name`, `description`, `disable-model-invocation`) flagged as schema violations because agentlint expects a different format (`goal`, `preconditions`, `step`). Filter these before surfacing findings in Phase 5. agentlint also only scans `.claude/` — findings will be incomplete if agents or skills live elsewhere (e.g. in a `plugins/` directory).
 
 ## References
 
