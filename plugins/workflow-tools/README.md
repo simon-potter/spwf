@@ -25,6 +25,7 @@ All skills set `disable-model-invocation: true`.
 | `agent-optimise` | `/workflow-tools:agent-optimise` | Cross-cutting — agent/skill audit across both scopes |
 | `workflow-lint` | `/workflow-tools:workflow-lint` | Cross-cutting — coherence audit of the full golden path |
 | `claudemd-curator` | `/workflow-tools:claudemd-curator` | Cross-cutting — audit, refactor, and sync CLAUDE.md and AGENTS.md |
+| `security-scan` | `/workflow-tools:security-scan [path]` | On-demand — deep security review: OWASP Top 10 + SQL injection |
 
 ## Recommended external skills
 
