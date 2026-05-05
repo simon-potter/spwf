@@ -61,19 +61,27 @@ if command -v semgrep >/dev/null 2>&1; then
   semgrep --config=auto --severity=ERROR --quiet .
 fi
 
-# Dependency audit — detect project type and run appropriate tool
-if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
-  npm audit --audit-level=high --json | \
-    jq -e '.metadata.vulnerabilities | (.high + .critical) > 0' && \
-    echo "npm audit: high/critical vulnerabilities found" || true
-fi
-if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
-  if command -v pip-audit >/dev/null 2>&1; then
+# Dependency audit — prefer dep-audit skill for full ecosystem + Docker coverage;
+# fall back to inline host-only checks when tools are not in containers.
+DEP_AUDIT_SH="$(find ~/.claude -name 'dep-audit.sh' -path '*/dep-audit/scripts/*' 2>/dev/null | head -1 || true)"
+if [ -n "$DEP_AUDIT_SH" ]; then
+  bash "$DEP_AUDIT_SH" 2>&1
+else
+  # Host-only fallback (no Docker awareness)
+  if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
+    npm audit --audit-level=high --json | \
+      jq -e '.metadata.vulnerabilities | (.high + .critical) > 0' && \
+      echo "npm audit: high/critical vulnerabilities found" || true
+  fi
+  if { [ -f requirements.txt ] || [ -f pyproject.toml ]; } && command -v pip-audit >/dev/null 2>&1; then
     pip-audit --severity high
   fi
-fi
-if [ -f Cargo.toml ] && command -v cargo-audit >/dev/null 2>&1; then
-  cargo audit --deny warnings
+  if [ -f Cargo.toml ] && command -v cargo-audit >/dev/null 2>&1; then
+    cargo audit --deny warnings
+  fi
+  if [ -f composer.json ] && command -v composer >/dev/null 2>&1; then
+    composer audit 2>/dev/null || true
+  fi
 fi
 ```
 
@@ -99,7 +107,7 @@ For a thorough security review before merge, run:
 Halt with findings:
 ```
 ✗ Dependency: {N} high/critical vulnerability/vulnerabilities found.
-Run: npm audit / pip-audit / cargo audit for details.
+Run /workflow-tools:dep-audit for full details and fix commands (Docker-aware).
 ```
 
 **No tools installed — actionable setup recommendations:**
@@ -129,8 +137,11 @@ Do not silently skip. Report each missing tool with its setup path:
   (parallel scanning, SARIF output, --metrics=off enforced, Important-only filtering)
 
 ── Dependency audit ────────────────────────────────────────────
-  pip-audit / cargo-audit not found. npm audit is always available for Node projects.
-  Install: pip install pip-audit  |  cargo install cargo-audit
+  For comprehensive multi-ecosystem coverage (npm, composer, pip, cargo, go, ruby)
+  with Docker Compose awareness, use the dedicated skill:
+    /workflow-tools:dep-audit
+  Install individual tools: pip install pip-audit  |  cargo install cargo-audit
+    brew install trivy  (image scanning)
 ```
 
 ## Step 2: Read context for PR content
