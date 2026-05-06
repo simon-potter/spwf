@@ -8,6 +8,7 @@ All skills set `disable-model-invocation: true`.
 
 | Skill | Invoke | Phase |
 |---|---|---|
+| `workflow-status` | `/workflow-tools:workflow-status` | Pre — Orientation: where am I and what's next |
 | `capture` | `/workflow-tools:capture [source]` | Pre — Capture (orchestrator) |
 | `debug` | `/workflow-tools:debug [ticket or description]` | Pre — Capture for bugs |
 | `issue-to-task` | `/workflow-tools:issue-to-task` | Pre — Capture from Jira (atomic) |
