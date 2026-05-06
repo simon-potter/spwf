@@ -17,7 +17,7 @@ Simon's workflow skills and agents are scattered across personal `~/.claude` fil
 
 ## Impact
 
-- **Repo:** Private repo `Academy-Plus/plugin-marketplace-simon`; team members install via `/plugin marketplace add Academy-Plus/plugin-marketplace-simon`
+- **Repo:** Private repo `Academy-Plus/spwf`; team members install via `/plugin marketplace add Academy-Plus/spwf`
 - **Prerequisites:** Claude Code, OpenSpec CLI (`npm install -g openspec`), GitHub CLI (`gh`), Atlassian MCP (conditional, `issue-to-task` only)
 - **No breaking changes** to any existing project — this repo is additive only
 - **Personal skill deprecations (post-validation):** grill-me, ideation-to-openspec, commits-to-knowledge, code-review-excellence, doc-lint, jira-to-openspec from `~/.claude/skills/`

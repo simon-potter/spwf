@@ -10,7 +10,7 @@ The repo SHALL contain a `.claude-plugin/marketplace.json` at its root that is v
 
 #### Scenario: Install from GitHub
 
-- **WHEN** a user with Academy-Plus org access runs `/plugin marketplace add Academy-Plus/plugin-marketplace-simon`
+- **WHEN** a user with Academy-Plus org access runs `/plugin marketplace add Academy-Plus/spwf`
 - **THEN** Claude Code SHALL read `.claude-plugin/marketplace.json` and register `simon-marketplace` as an available source
 
 #### Scenario: Install from local path
@@ -185,7 +185,7 @@ A user with Academy-Plus org access and prerequisites installed (Claude Code, Op
 #### Scenario: Fresh install sequence
 
 - **WHEN** a user runs the four install commands:
-  - `/plugin marketplace add Academy-Plus/plugin-marketplace-simon`
+  - `/plugin marketplace add Academy-Plus/spwf`
   - `/plugin install workflow-core@simon-marketplace`
   - `/plugin install workflow-tools@simon-marketplace`
   - `/plugin install workflow-agents@simon-marketplace`

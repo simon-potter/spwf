@@ -136,16 +136,16 @@ Merge remaining sections (quality tools table, ideation file format, recommended
 New symlink targets (after move):
 ```
 plugins/spwf/skills/php-code-quality-reviewer/references/laravel-patterns.md
-  → /var/www/spottmedia/academyplus/plugin-marketplace-simon/plugins/spwf/skills/php-code-simplifier/references/laravel-patterns.md
+  → /var/www/spottmedia/academyplus/spwf/plugins/spwf/skills/php-code-simplifier/references/laravel-patterns.md
 
 (same pattern for: php-smell-catalog.md, php-version-capabilities.md,
  symfony-patterns.md, wordpress-patterns.md)
 
 plugins/spwf/skills/php-code-quality-reviewer/scripts/analyse-php.sh
-  → /var/www/spottmedia/academyplus/plugin-marketplace-simon/plugins/spwf/skills/php-code-simplifier/scripts/analyse-php.sh
+  → /var/www/spottmedia/academyplus/spwf/plugins/spwf/skills/php-code-simplifier/scripts/analyse-php.sh
 
 plugins/spwf/skills/php-code-quality-reviewer/scripts/php-quality-baseline.sh
-  → /var/www/spottmedia/academyplus/plugin-marketplace-simon/plugins/spwf/skills/php-code-simplifier/scripts/php-quality-baseline.sh
+  → /var/www/spottmedia/academyplus/spwf/plugins/spwf/skills/php-code-simplifier/scripts/php-quality-baseline.sh
 ```
 
 ### 5. Namespace text replacement — 99 occurrences across 32 files
@@ -238,7 +238,7 @@ cp -r plugins/workflow-agents/agents/* plugins/spwf/agents/
 Delete the copied (now broken) symlinks and recreate pointing to new paths:
 
 ```bash
-SPWF_ROOT="/var/www/spottmedia/academyplus/plugin-marketplace-simon/plugins/spwf"
+SPWF_ROOT="/var/www/spottmedia/academyplus/spwf/plugins/spwf"
 
 # References symlinks (5)
 cd "$SPWF_ROOT/skills/php-code-quality-reviewer/references"
@@ -357,7 +357,7 @@ rm -rf plugins/workflow-core plugins/workflow-tools plugins/workflow-agents
 ### Phase 9 (optional, separate PR): Marketplace rename
 
 - Update `marketplace.json` `"name"` from `"spwf"` to match any new handle
-- Rename GitHub repo from `plugin-marketplace-simon` → `spwf` (GitHub handles redirect)
+- Rename GitHub repo from `spwf` → `spwf` (GitHub handles redirect)
 - Update root README install URL accordingly
 
 ---

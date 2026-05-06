@@ -157,10 +157,10 @@
 
 ## Phase 7 — GitHub Hosting and Distribution
 
-- [ ] 7.1 Push `main` branch to `Academy-Plus/plugin-marketplace-simon` (private)
+- [ ] 7.1 Push `main` branch to `Academy-Plus/spwf` (private)
 - [ ] 7.2 Tag `v0.1.0` once all Phase 6 acceptance criteria pass
 - [ ] 7.3 Test install on a second machine:
-  - `/plugin marketplace add Academy-Plus/plugin-marketplace-simon`
+  - `/plugin marketplace add Academy-Plus/spwf`
   - `/plugin install workflow-core@simon-marketplace`
   - `/plugin install workflow-tools@simon-marketplace`
   - `/plugin install workflow-agents@simon-marketplace`
