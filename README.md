@@ -5,7 +5,7 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 ## The workflow
 
 ```
-[workflow-status] → [Capture | Debug] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Retrospective
+[status] → [Capture | Debug] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Retrospective
    (orient)               (pre)           (gate)     (1)        (2)          (3)      (4)          (5)        (6)        (post)
 ```
 
@@ -13,7 +13,7 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 
 | Step | Command | Invokes | Why | Produces |
 |---|---|---|---|---|
-| **Orient** | `/spwf:workflow-status` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
+| **Orient** | `/spwf:status` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
 | **Capture** | `/spwf:capture [source]` | Atlassian MCP (Jira mode) | Accepts a Jira ticket, existing file, or freeform description; runs a lightweight qualification check; one targeted question at a time for any gaps | `todo/{slug}.md` |
 | **Debug** *(bug entry point)* | `/spwf:debug [ticket or description]` | Atlassian MCP (Jira mode) | Systematic root-cause investigation before any fix; forms a written hypothesis; produces an artefact that feeds into the standard workflow | `todo/BUG-{slug}.md` |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Surfaces gaps and ambiguities before they reach code | Resolved ideation file |
@@ -150,7 +150,7 @@ These are not required to use the workflow but enable the security pre-flight ga
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
-| `workflow-status` | `/spwf:workflow-status` | Pre — Session orientation |
+| `status` | `/spwf:status` | Pre — Session orientation |
 | `capture` | `/spwf:capture [source]` | Pre — Capture (orchestrator) |
 | `debug` | `/spwf:debug [ticket or description]` | Pre — Capture for bugs |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from Jira (atomic) |

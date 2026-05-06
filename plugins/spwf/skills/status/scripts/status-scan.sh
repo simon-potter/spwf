@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# status-scan.sh — collect workflow signals for the workflow-status skill
+# status-scan.sh — collect workflow signals for the status skill
 # Outputs labeled sections of raw signal data; SKILL.md interprets them.
 # Fast: no network calls, no subagents, no npm.
 set -uo pipefail
