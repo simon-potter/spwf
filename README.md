@@ -5,8 +5,8 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 ## The workflow
 
 ```
-[status] → [Capture | Debug] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Retrospective
-   (orient)               (pre)           (gate)     (1)        (2)          (3)      (4)          (5)        (6)        (post)
+[status] → [Capture] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Retrospective
+ (orient)    (pre)      (gate)      (1)        (2)          (3)      (4)          (5)        (6)        (post)
 ```
 
 ## Golden path
@@ -14,8 +14,7 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 | Step | Command | Invokes | Why | Produces |
 |---|---|---|---|---|
 | **Orient** | `/spwf:status` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
-| **Capture** | `/spwf:capture [source]` | Atlassian MCP (Jira mode) | Accepts a Jira ticket, existing file, or freeform description; runs a lightweight qualification check; one targeted question at a time for any gaps | `todo/{slug}.md` |
-| **Debug** *(bug entry point)* | `/spwf:debug [ticket or description]` | Atlassian MCP (Jira mode) | Systematic root-cause investigation before any fix; forms a written hypothesis; produces an artefact that feeds into the standard workflow | `todo/BUG-{slug}.md` |
+| **Capture** | `/spwf:capture [source]` | Atlassian MCP (Jira mode) | Accepts a Jira ticket, file, or freeform description; classifies as bug or change automatically. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md` |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Surfaces gaps and ambiguities before they reach code | Resolved ideation file |
 | **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
@@ -146,13 +145,12 @@ These are not required to use the workflow but enable the security pre-flight ga
 
 ## What's included
 
-### `spwf` — 28 workflow skills
+### `spwf` — 27 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
 | `status` | `/spwf:status` | Pre — Session orientation |
-| `capture` | `/spwf:capture [source]` | Pre — Capture (orchestrator) |
-| `debug` | `/spwf:debug [ticket or description]` | Pre — Capture for bugs |
+| `capture` | `/spwf:capture [source]` | Pre — Capture (orchestrator); auto-classifies bugs vs changes |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from Jira (atomic) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch (atomic) |
 | `challenge` | `/spwf:challenge [file]` | Gate — Challenge |
@@ -179,14 +177,13 @@ These are not required to use the workflow but enable the security pre-flight ga
 | `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | On-demand — PHP safe refactor |
 | `php-code-quality-reviewer` | `/spwf:php-code-quality-reviewer [path]` | On-demand — PHP bad-practice analysis |
 
-### `spwf-agents` — 14 specialist subagents
+### `spwf-agents` — 13 specialist subagents
 
 Fourteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
 
 | Agent | Phase | Model |
 |---|---|---|
-| `capturer` | Pre — Capture | Haiku |
-| `debugger` | Pre — Debug | Sonnet |
+| `capturer` | Pre — Capture (bugs + changes) | Sonnet |
 | `challenger` | Gate — Challenge | Sonnet |
 | `specifier` | Spec | Sonnet |
 | `approver` | Approve plan | Haiku |

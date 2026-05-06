@@ -1,64 +1,141 @@
 ---
-# Qualification check inspired by: https://skills.sh/obra/superpowers/brainstorming (obra superpowers) — one-question-at-a-time heuristic gate before proceeding
+# Qualification heuristic inspired by: https://skills.sh/obra/superpowers/brainstorming (obra superpowers)
+# Bug investigation adapted from: https://skills.sh/obra/superpowers/systematic-debugging (obra superpowers)
+# Adaptation: investigation-only — stops before implementation; produces an ideation artefact
+# that feeds into Challenge → Spec → Build rather than fixing inline.
 name: capture
-description: Pre-phase orchestrator — Captures a requirement from any source (Jira ticket, existing file, or freeform description) and runs a lightweight qualification check before producing an ideation file. Detects input mode from arguments; prompts if ambiguous. Quick-fails vague or incomplete inputs with one targeted question at a time. Produces todo/{slug}.md ready for /spwf:challenge.
+description: Pre-phase orchestrator — accepts any input (Jira ticket, file, or freeform description), classifies it as a bug or a change, then routes to the appropriate path. Bug path runs systematic root-cause investigation and produces todo/BUG-{slug}.md. Change path runs a lightweight qualification check and produces todo/{slug}.md. Both outputs feed /spwf:challenge.
 disable-model-invocation: true
-allowed-tools: [Read, Write, Glob, Bash, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
+allowed-tools: [Read, Write, Glob, Grep, Bash, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
 ---
 
 # capture
 
-Capture a requirement from any source, qualify it quickly, and produce an ideation file.
+Accept any input, classify it, and produce an ideation file ready for `/spwf:challenge`.
 
-## Mode detection
+## Step 1 — Fetch input
 
 Read `$ARGUMENTS`:
 
-| Input pattern | Mode |
+| Input pattern | Action |
 |---|---|
-| Empty | **Prompt** — ask which mode |
-| `from jira PROJ-123` or just a ticket key | **Jira** — fetch from Atlassian |
-| `from todo/…` or a file path ending `.md` | **File** — read existing ideation file |
-| Anything else | **Freeform** — treat as raw description |
+| Empty | Ask: "What are you capturing? (Jira ticket key, file path, or describe it)" |
+| `PROJ-123` or `from jira PROJ-123` | **Jira** — fetch with `mcp__atlassian__jira_get_issue` |
+| File path ending `.md` | **File** — read existing file |
+| Anything else | **Freeform** — treat as-is |
 
-If empty, ask:
-
-```
-Where is this requirement coming from?
-1. Jira ticket (provide ticket key)
-2. An existing file (provide path)
-3. I'll describe it now
-```
-
-Wait for the answer before proceeding.
+For Jira, extract: summary, description, acceptance criteria, issue type, labels, priority.
 
 ---
 
-## Mode 1 — Jira
+## Step 2 — Classify: bug or change?
 
-Use the Atlassian MCP to fetch the ticket:
-- `mcp__atlassian__jira_get_issue` with the ticket key
-- Extract: summary, description, acceptance criteria, reporter, labels, priority
+Apply in order — stop at the first confident match.
 
-Proceed to **Qualify**.
+**Bug signals:**
+- Jira `issuetype = Bug`
+- Input contains a stack trace (multi-line with file paths and line numbers)
+- Input contains: `error`, `exception`, `crash`, `traceback`, `not working`, `broken`, `failing`, `regression`, `500`, `null pointer`, `undefined is not`
+- Input starts with `BUG:` or `FIX:`
 
-## Mode 2 — File
+**Change signals:**
+- Jira `issuetype = Story / Task / Epic / Improvement`
+- Input contains: `add`, `implement`, `build`, `create`, `new feature`, `support`, `allow`, `as a user`
+- Input describes a desired future state
 
-Read the file at the given path. Treat its content as the raw input.
-
-Proceed to **Qualify**.
-
-## Mode 3 — Freeform
-
-The `$ARGUMENTS` string is the requirement. Treat it as-is.
-
-Proceed to **Qualify**.
+**If ambiguous** — ask one question: *"Is this something that's broken, or something new to build?"* Then route accordingly.
 
 ---
 
-## Qualify
+## Bug path
 
-Lightweight heuristic check — not a deep dive. The goal is to catch obviously incomplete inputs before they waste time in Challenge. Four checks:
+### Phase 1 — Gather context
+
+Collect as much of the following as is available:
+
+- Error message and full stack trace (ask the user if not provided)
+- Steps to reproduce consistently
+- Recent git changes in the relevant area: `git log --oneline -20 -- {relevant paths}`
+- Environment context (version, config, runtime)
+
+For multi-component systems, identify at which boundary the failure occurs before assuming a root cause.
+
+### Phase 2 — Root cause investigation
+
+Trace backward from the symptom:
+
+1. Read the error message and stack trace carefully — where does the trace originate?
+2. Read the code at the failure site and its callers
+3. Check git history for recent changes: `git log --oneline -10 -- {file}`
+4. Look for similar working code — compare working vs broken
+
+Document every difference found, however minor.
+
+### Phase 3 — Pattern analysis
+
+Find working code structurally similar to the broken code. Compare completely:
+
+- What assumptions does the working code make that the broken code does not?
+- What dependencies differ?
+- What does the broken code do that the working code avoids?
+
+### Phase 4 — Form a written hypothesis
+
+Write a single, specific hypothesis:
+
+```
+Hypothesis: {The bug is caused by X, because Y. Evidence: Z.}
+```
+
+Rules:
+- One hypothesis at a time — specific enough to be falsifiable
+- Grounded in evidence from Phases 2–3, not assumption
+- If three hypotheses fail to explain the evidence: stop and flag that the architecture may need re-examination
+
+### Produce bug artefact
+
+Generate `todo/BUG-{slug}.md`:
+
+```markdown
+---
+source: jira | scratch
+ticket: PROJ-123          # omit if not jira
+created: YYYY-MM-DD
+status: ideation
+type: bug
+---
+
+# BUG: {Title}
+
+## Context
+{What is broken: observed behaviour vs expected behaviour}
+
+## Reproduction
+{Steps to reproduce consistently; "cannot reproduce" if applicable}
+
+## Root cause hypothesis
+{The written hypothesis from Phase 4 — specific and evidenced}
+
+## Evidence
+{Stack traces, error messages, relevant git log, working vs broken comparison}
+
+## Affected area
+{Files, components, or systems involved}
+
+## Open questions
+{What remains unclear; gaps that Challenge will surface}
+
+## Rough scope
+{What a fix would likely touch; rough complexity estimate}
+```
+
+---
+
+## Change path
+
+### Qualify
+
+Lightweight check — catch obviously incomplete inputs before Challenge. Four checks:
 
 | Check | Passes when |
 |---|---|
@@ -67,22 +144,15 @@ Lightweight heuristic check — not a deep dive. The goal is to catch obviously 
 | **Scope boundary** | It is roughly clear what is in scope (even if vague) |
 | **Motivation** | There is a reason this matters (business value, user pain, technical debt) |
 
-For each check that fails, ask **one targeted question** before continuing. Ask questions one at a time — never more than one per message.
+For each check that fails, ask **one targeted question** before continuing — never more than one per message.
 
-**Examples of targeted questions:**
-- "Who would use this, and what would they be trying to do?" (missing actor)
-- "What problem does this solve — what happens today without it?" (missing motivation)
-- "Is there a boundary here — what's explicitly out of scope?" (unclear scope)
+**Limit:** After two clarifying questions, proceed regardless. Record remaining gaps as open questions — Challenge will surface them.
 
-**Limit:** After two clarifying questions, proceed regardless. Record any remaining gaps as open questions in the ideation file — Challenge will surface them properly.
+If the input clearly passes all four checks: proceed immediately, no questions.
 
-If the input clearly passes all four checks without questions: proceed immediately, no delay.
+### Produce ideation file
 
----
-
-## Produce ideation file
-
-Generate `todo/{slug}.md` where `{slug}` is a kebab-case summary of the requirement.
+Generate `todo/{slug}.md`:
 
 ```markdown
 ---
@@ -107,22 +177,30 @@ status: ideation
 {What's in scope; note anything explicitly out of scope}
 ```
 
-For **Jira mode**: map ticket fields directly. Flag any acceptance criteria that are ambiguous or missing as open questions.
-
-For **File mode**: read the existing content and reformat into the ideation file structure if needed. If it already matches the format, leave it and note it was reviewed.
-
-For **Freeform mode**: construct all sections from the description and qualify dialogue.
-
 ---
 
 ## Report
 
+**Bug path:**
+```
+✓ Bug artefact created: todo/BUG-{slug}.md
+
+Source: {jira PROJ-123 | scratch}
+Classified as: bug ({signal that triggered classification})
+Hypothesis: {one-line summary}
+Open questions: {count}
+
+Recommended next step: /spwf:challenge todo/BUG-{slug}.md
+```
+
+**Change path:**
 ```
 ✓ Ideation file created: todo/{slug}.md
 
 Source: {jira PROJ-123 | file path | scratch}
+Classified as: change ({signal that triggered classification, or "confirmed by user"})
 Qualify: {passed cleanly | 1 question asked | 2 questions asked — {N} gaps remain}
-Open questions: {count} (will be surfaced in Challenge)
+Open questions: {count}
 
 Recommended next step: /spwf:challenge todo/{slug}.md
 ```
