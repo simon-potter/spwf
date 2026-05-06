@@ -1,18 +1,18 @@
 ---
-name: status
+name: wfstatus
 description: Shows where you are in your workflow right now — what you're most likely working on, what's incomplete, and what to pick up next. Uses heuristics across git state, OpenSpec changes, todo files, and project memory to produce a concise dashboard. Read-only. Use at the start of a session or whenever you've lost the thread. Fast — no subagents, no network calls.
 disable-model-invocation: true
 allowed-tools: [Read, Bash, Glob, Grep]
 ---
 
-# status
+# wfstatus
 
 Instant workflow orientation. Answers three questions: where am I, what's incomplete, and what should I do next?
 
 ## Usage
 
 ```
-/spwf:status
+/spwf:wfstatus
 ```
 
 No arguments. Run it, read the dashboard, start working.
@@ -23,7 +23,7 @@ Run the scan script:
 
 ```bash
 SKILL_ROOT="$(find ~/.claude -name 'status-scan.sh' \
-    -path '*/status/scripts/*' 2>/dev/null | head -1 | xargs dirname 2>/dev/null || echo '')"
+    -path '*/wfstatus/scripts/*' 2>/dev/null | head -1 | xargs dirname 2>/dev/null || echo '')"
 
 if [ -n "$SKILL_ROOT" ]; then
     bash "$SKILL_ROOT/status-scan.sh" 2>&1

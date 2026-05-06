@@ -23,7 +23,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
-| `status` | `/spwf:status` | Pre — Session orientation: where am I, what's next |
+| `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation: where am I, what's next |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from Jira |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch |
 | `challenge` | `/spwf:challenge [file]` | Gate — Surface gaps before committing to spec |

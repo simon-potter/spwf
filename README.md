@@ -13,7 +13,7 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 
 | Step | Command | Invokes | Why | Produces |
 |---|---|---|---|---|
-| **Orient** | `/spwf:status` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
+| **Orient** | `/spwf:wfstatus` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
 | **Capture** | `/spwf:capture [source]` | Atlassian MCP (Jira mode) | Accepts a Jira ticket, file, or freeform description; classifies as bug or change automatically. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md` |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Surfaces gaps and ambiguities before they reach code | Resolved ideation file |
 | **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
@@ -149,7 +149,7 @@ These are not required to use the workflow but enable the security pre-flight ga
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
-| `status` | `/spwf:status` | Pre — Session orientation |
+| `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation |
 | `capture` | `/spwf:capture [source]` | Pre — Capture (orchestrator); auto-classifies bugs vs changes |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from Jira (atomic) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch (atomic) |
