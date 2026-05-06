@@ -1,7 +1,7 @@
 ---
 source: scratch
 created: 2026-05-06
-status: ideation
+status: complete
 ---
 
 # SPWorkflow renamespace plan

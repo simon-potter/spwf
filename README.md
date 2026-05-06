@@ -1,6 +1,6 @@
-# Simon's Plugin Marketplace
+# SPWorkflow
 
-Simon's extended engineering workflow, packaged as three installable Claude Code plugins.
+Simon's engineering workflow, packaged as two installable Claude Code plugins.
 
 ## The workflow
 
@@ -13,17 +13,17 @@ Simon's extended engineering workflow, packaged as three installable Claude Code
 
 | Step | Command | Invokes | Why | Produces |
 |---|---|---|---|---|
-| **Orient** | `/workflow-tools:workflow-status` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
-| **Capture** | `/workflow-tools:capture [source]` | Atlassian MCP (Jira mode) | Accepts a Jira ticket, existing file, or freeform description; runs a lightweight qualification check; one targeted question at a time for any gaps | `todo/{slug}.md` |
-| **Debug** *(bug entry point)* | `/workflow-tools:debug [ticket or description]` | Atlassian MCP (Jira mode) | Systematic root-cause investigation before any fix; forms a written hypothesis; produces an artefact that feeds into the standard workflow | `todo/BUG-{slug}.md` |
-| **Challenge** | `/workflow-tools:challenge todo/{slug}.md` | — | Surfaces gaps and ambiguities before they reach code | Resolved ideation file |
-| **Spec** | `/workflow-core:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
-| **Approve plan** | `/workflow-core:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
-| **Build** | `/workflow-core:build` | `write-tests` → `opsx:apply` → `run-tests` → `debug-recovery` → `opsx:verify` | Red-Green-Verify per task, loops until all done; spec sign-off after all tasks complete | All tasks complete, tests green, spec aligned |
-| **Simplify** (TDD Refactor) | `/workflow-core:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
-| **PR Create** | `/workflow-core:pr-create` | `dep-audit` · `gh pr create` | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then PR creation; CI/CD owns the rest | PR URL |
-| **PR Review** | `/workflow-core:pr-review <PR>` | `gh pr view`, `gh pr diff` | Structured review before merge; catches regressions and drift | Review report with verdict |
-| **Retrospective** | `/workflow-tools:retrospective` | `learn-from-mistakes` → change spec audit → `doc-lint` → `workflow-lint` → `changelog` (release only) | Extract learnings from commits; align spec artefacts with what was built; broad doc drift check; optional changelog generation for releases | Updated learnings, aligned spec, doc quality report |
+| **Orient** | `/spwf:workflow-status` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
+| **Capture** | `/spwf:capture [source]` | Atlassian MCP (Jira mode) | Accepts a Jira ticket, existing file, or freeform description; runs a lightweight qualification check; one targeted question at a time for any gaps | `todo/{slug}.md` |
+| **Debug** *(bug entry point)* | `/spwf:debug [ticket or description]` | Atlassian MCP (Jira mode) | Systematic root-cause investigation before any fix; forms a written hypothesis; produces an artefact that feeds into the standard workflow | `todo/BUG-{slug}.md` |
+| **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Surfaces gaps and ambiguities before they reach code | Resolved ideation file |
+| **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
+| **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
+| **Build** | `/spwf:build` | `write-tests` → `opsx:apply` → `run-tests` → `debug-recovery` → `opsx:verify` | Red-Green-Verify per task, loops until all done; spec sign-off after all tasks complete | All tasks complete, tests green, spec aligned |
+| **Simplify** (TDD Refactor) | `/spwf:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
+| **PR Create** | `/spwf:pr-create` | `dep-audit` · `gh pr create` | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then PR creation; CI/CD owns the rest | PR URL |
+| **PR Review** | `/spwf:pr-review <PR>` | `gh pr view`, `gh pr diff` | Structured review before merge; catches regressions and drift | Review report with verdict |
+| **Retrospective** | `/spwf:retrospective` | `learn-from-mistakes` → change spec audit → `doc-lint` → `workflow-lint` → `changelog` (release only) | Extract learnings from commits; align spec artefacts with what was built; broad doc drift check; optional changelog generation for releases | Updated learnings, aligned spec, doc quality report |
 
 ## Quality tools
 
@@ -31,16 +31,15 @@ A second class of skills sits outside the main workflow. These are cross-cutting
 
 | Skill | Invoke | When to use |
 |---|---|---|
-| `workspace-health` | `/workflow-tools:workspace-health` | Monthly cadence: full health check combining agentlint structural scan, behavioural audit from session transcripts, and AGENTS.md sync check. Produces a P1/P2/P3 action report. Advisory only — tells you what's broken and which tool to run. Supersedes `agent-optimise` when agentlint is available. |
-| `claudemd-curator` | `/workflow-tools:claudemd-curator` | CLAUDE.md or AGENTS.md has grown, drifted, or is being ignored. Five-phase pipeline: agentlint inventory → transcript mining for violated/dead rules → layer classification (L0–L4) + Anthropic 100-point quality score → AGENTS.md sync check → numbered proposal. Waits for approval before touching anything. Monthly or after `/init`. |
-| `security-scan` | `/workflow-tools:security-scan [path]` | Deep security review before a sensitive merge or when auditing a legacy codebase. Covers all OWASP Top 10 categories and SQL injection patterns across PHP, Python, JS, and Go. Complements the automated dep-audit gate in `pr-create`. |
-| `dep-audit` | `/workflow-tools:dep-audit` | Multi-ecosystem dependency CVE audit (npm, Composer, pip, cargo, govulncheck, bundle audit) with Docker Compose awareness — detects running containers and runs audit tools inside them if not available on the host. Also scans images via Trivy/Grype/Docker Scout when available. |
-| `php-code-quality-reviewer` | `/workflow-tools:php-code-quality-reviewer [path]` | Read-only PHP bad-practice analysis grouped into five risk categories: Correctness, Security, Performance, Maintainability, and Modern PHP. Framework-aware (Laravel, Symfony, WordPress). Confidence-graded findings with tabular output. |
-| `php-code-simplifier` | `/workflow-tools:php-code-simplifier [path]` | PHP-aware safe refactor: applies guard clauses, nullsafe `?->`, `match` over `switch`, null coalescing, and debug-statement removal directly; flags type hints, enums, readonly, and constructor promotion for human review. Never touches test files. |
-| `workflow-lint` | `/workflow-tools:workflow-lint` | Golden path feels out of sync — skill names changed, agents don't cover a phase, a cross-reference is broken. Sweeps the full plugin tree for coherence issues. |
-| `claudemd-curator` *(see above)* | — | — |
-| `agent-optimise` | `/workflow-tools:agent-optimise` | Lightweight agent/skill audit without external dependencies. Audits both plugin-scoped and user-scoped agents for description quality, tool scope, and model assignment. Use when agentlint is not available or as a quick spot-check. |
-| `doc-lint` | `/workflow-tools:doc-lint` | Documentation has accumulated drift — stale READMEs, broken links, misaligned specs. |
+| `workspace-health` | `/spwf:workspace-health` | Monthly cadence: full health check combining agentlint structural scan, behavioural audit from session transcripts, and AGENTS.md sync check. Produces a P1/P2/P3 action report. Advisory only — tells you what's broken and which tool to run. |
+| `claudemd-curator` | `/spwf:claudemd-curator` | CLAUDE.md or AGENTS.md has grown, drifted, or is being ignored. Five-phase pipeline: agentlint inventory → transcript mining for violated/dead rules → layer classification (L0–L4) + Anthropic 100-point quality score → AGENTS.md sync check → numbered proposal. Waits for approval before touching anything. Monthly or after `/init`. |
+| `security-scan` | `/spwf:security-scan [path]` | Deep security review before a sensitive merge or when auditing a legacy codebase. Covers all OWASP Top 10 categories and SQL injection patterns across PHP, Python, JS, and Go. Complements the automated dep-audit gate in `pr-create`. |
+| `dep-audit` | `/spwf:dep-audit` | Multi-ecosystem dependency CVE audit (npm, Composer, pip, cargo, govulncheck, bundle audit) with Docker Compose awareness — detects running containers and runs audit tools inside them if not available on the host. Also scans images via Trivy/Grype/Docker Scout when available. |
+| `php-code-quality-reviewer` | `/spwf:php-code-quality-reviewer [path]` | Read-only PHP bad-practice analysis grouped into five risk categories: Correctness, Security, Performance, Maintainability, and Modern PHP. Framework-aware (Laravel, Symfony, WordPress). Confidence-graded findings with tabular output. |
+| `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | PHP-aware safe refactor: applies guard clauses, nullsafe `?->`, `match` over `switch`, null coalescing, and debug-statement removal directly; flags type hints, enums, readonly, and constructor promotion for human review. Never touches test files. |
+| `workflow-lint` | `/spwf:workflow-lint` | Golden path feels out of sync — skill names changed, agents don't cover a phase, a cross-reference is broken. Sweeps the full plugin tree for coherence issues. |
+| `agent-optimise` | `/spwf:agent-optimise` | Lightweight agent/skill audit without external dependencies. Audits both plugin-scoped and user-scoped agents for description quality, tool scope, and model assignment. Use when agentlint is not available or as a quick spot-check. |
+| `doc-lint` | `/spwf:doc-lint` | Documentation has accumulated drift — stale READMEs, broken links, misaligned specs. |
 
 ### `claudemd-curator` in depth
 
@@ -59,25 +58,23 @@ Requires `jq` for transcript mining (see Prerequisites).
 ## Install
 
 ```bash
-/plugin marketplace add Academy-Plus/plugin-marketplace-simon
-/plugin install workflow-core@simon-marketplace
-/plugin install workflow-tools@simon-marketplace
-/plugin install workflow-agents@simon-marketplace
+/plugin marketplace add Academy-Plus/spwf
+/plugin install spwf@spwf
+/plugin install spwf-agents@spwf
 ```
 
 ## Update
 
 ```bash
-/plugin marketplace update simon-marketplace
+/plugin marketplace update spwf
 ```
 
 ## Local install (from this repo)
 
 ```bash
 /plugin marketplace add ./
-/plugin install workflow-core@simon-marketplace
-/plugin install workflow-tools@simon-marketplace
-/plugin install workflow-agents@simon-marketplace
+/plugin install spwf@spwf
+/plugin install spwf-agents@spwf
 ```
 
 ---
@@ -101,7 +98,7 @@ The entire spec → plan → build chain depends on OpenSpec.
 npm install -g openspec
 ```
 
-Every project that uses this workflow must be initialised before running `/workflow-core:spec`:
+Every project that uses this workflow must be initialised before running `/spwf:spec`:
 
 ```bash
 cd your-project
@@ -149,45 +146,40 @@ These are not required to use the workflow but enable the security pre-flight ga
 
 ## What's included
 
-### `workflow-core` — Seven canonical phases
-
-| Skill | Invoke | Phase |
-|---|---|---|
-| `spec` | `/workflow-core:spec` | 1 — Spec |
-| `approve-plan` | `/workflow-core:approve-plan` | 2 — Approve plan |
-| `write-tests` | `/workflow-core:write-tests` | 3 — Build (atomic) |
-| `debug-recovery` | `/workflow-core:debug-recovery` | 3 — Build (atomic) |
-| `build` | `/workflow-core:build` | 3 — Build (orchestrator) |
-| `run-tests` | `/workflow-core:run-tests` | 3 — Build (atomic) |
-| `simplify` | `/workflow-core:simplify` | 4 — Simplify |
-| `pr-create` | `/workflow-core:pr-create` | 5 — PR Create |
-| `pr-review` | `/workflow-core:pr-review <PR>` | 6 — PR Review |
-
-### `workflow-tools` — Extended phases and quality tools
+### `spwf` — 28 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
-| `workflow-status` | `/workflow-tools:workflow-status` | Pre — Session orientation |
-| `capture` | `/workflow-tools:capture [source]` | Pre — Capture (orchestrator) |
-| `debug` | `/workflow-tools:debug [ticket or description]` | Pre — Capture for bugs |
-| `issue-to-task` | `/workflow-tools:issue-to-task` | Pre — Capture from Jira (atomic) |
-| `new-task` | `/workflow-tools:new-task` | Pre — Capture from scratch (atomic) |
-| `challenge` | `/workflow-tools:challenge [file]` | Gate — Challenge |
-| `grill-me` | `/workflow-tools:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
-| `learn-from-mistakes` | `/workflow-tools:learn-from-mistakes` | Post — Retrospective (atomic) |
-| `changelog` | `/workflow-tools:changelog [ref]` | Post — Release notes from conventional commits (atomic) |
-| `retrospective` | `/workflow-tools:retrospective` | Post — Retrospective (orchestrator) |
-| `workspace-health` | `/workflow-tools:workspace-health` | Cross-cutting — periodic health check |
-| `claudemd-curator` | `/workflow-tools:claudemd-curator` | Cross-cutting — instruction file audit and sync |
-| `workflow-lint` | `/workflow-tools:workflow-lint` | Cross-cutting — golden path coherence audit |
-| `agent-optimise` | `/workflow-tools:agent-optimise` | Cross-cutting — agent/skill audit |
-| `doc-lint` | `/workflow-tools:doc-lint` | Cross-cutting — documentation drift check |
-| `security-scan` | `/workflow-tools:security-scan [path]` | On-demand — OWASP Top 10 + deep SQL injection review |
-| `dep-audit` | `/workflow-tools:dep-audit` | On-demand / pre-PR — dependency CVE audit, Docker-aware |
-| `php-code-simplifier` | `/workflow-tools:php-code-simplifier [path]` | On-demand — PHP safe refactor |
-| `php-code-quality-reviewer` | `/workflow-tools:php-code-quality-reviewer [path]` | On-demand — PHP bad-practice analysis |
+| `workflow-status` | `/spwf:workflow-status` | Pre — Session orientation |
+| `capture` | `/spwf:capture [source]` | Pre — Capture (orchestrator) |
+| `debug` | `/spwf:debug [ticket or description]` | Pre — Capture for bugs |
+| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from Jira (atomic) |
+| `new-task` | `/spwf:new-task` | Pre — Capture from scratch (atomic) |
+| `challenge` | `/spwf:challenge [file]` | Gate — Challenge |
+| `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
+| `spec` | `/spwf:spec` | 1 — Spec |
+| `approve-plan` | `/spwf:approve-plan` | 2 — Approve plan |
+| `write-tests` | `/spwf:write-tests` | 3 — Build (atomic) |
+| `debug-recovery` | `/spwf:debug-recovery` | 3 — Build (atomic) |
+| `build` | `/spwf:build` | 3 — Build (orchestrator) |
+| `run-tests` | `/spwf:run-tests` | 3 — Build (atomic) |
+| `simplify` | `/spwf:simplify` | 4 — Simplify |
+| `pr-create` | `/spwf:pr-create` | 5 — PR Create |
+| `pr-review` | `/spwf:pr-review <PR>` | 6 — PR Review |
+| `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Retrospective (atomic) |
+| `changelog` | `/spwf:changelog [ref]` | Post — Release notes from conventional commits (atomic) |
+| `retrospective` | `/spwf:retrospective` | Post — Retrospective (orchestrator) |
+| `workspace-health` | `/spwf:workspace-health` | Cross-cutting — periodic health check |
+| `claudemd-curator` | `/spwf:claudemd-curator` | Cross-cutting — instruction file audit and sync |
+| `workflow-lint` | `/spwf:workflow-lint` | Cross-cutting — golden path coherence audit |
+| `agent-optimise` | `/spwf:agent-optimise` | Cross-cutting — agent/skill audit |
+| `doc-lint` | `/spwf:doc-lint` | Cross-cutting — documentation drift check |
+| `security-scan` | `/spwf:security-scan [path]` | On-demand — OWASP Top 10 + deep SQL injection review |
+| `dep-audit` | `/spwf:dep-audit` | On-demand / pre-PR — dependency CVE audit, Docker-aware |
+| `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | On-demand — PHP safe refactor |
+| `php-code-quality-reviewer` | `/spwf:php-code-quality-reviewer [path]` | On-demand — PHP bad-practice analysis |
 
-### `workflow-agents` — Specialist subagents
+### `spwf-agents` — 14 specialist subagents
 
 Fourteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
 

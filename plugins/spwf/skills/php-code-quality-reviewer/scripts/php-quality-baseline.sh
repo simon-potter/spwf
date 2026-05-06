@@ -1,0 +1,1 @@
+/var/www/spottmedia/academyplus/plugin-marketplace-simon/plugins/spwf/skills/php-code-simplifier/scripts/php-quality-baseline.sh

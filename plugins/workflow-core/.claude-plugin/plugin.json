@@ -1,6 +1,0 @@
-{
-  "name": "workflow-core",
-  "description": "Seven opinionated skills for the task-to-spec → plan → build → test → pr-reviewer → simplify → ship cycle",
-  "version": "0.1.0",
-  "author": { "name": "Simon Potter" }
-}

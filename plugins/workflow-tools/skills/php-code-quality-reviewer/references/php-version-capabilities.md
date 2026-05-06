@@ -1,1 +1,0 @@
-/var/www/spottmedia/academyplus/plugin-marketplace-simon/plugins/workflow-tools/skills/php-code-simplifier/references/php-version-capabilities.md
