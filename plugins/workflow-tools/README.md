@@ -26,6 +26,7 @@ All skills set `disable-model-invocation: true`.
 | `agent-optimise` | `/workflow-tools:agent-optimise` | Cross-cutting — agent/skill audit across both scopes |
 | `workflow-lint` | `/workflow-tools:workflow-lint` | Cross-cutting — coherence audit of the full golden path |
 | `claudemd-curator` | `/workflow-tools:claudemd-curator` | Cross-cutting — audit, refactor, and sync CLAUDE.md and AGENTS.md |
+| `workspace-health` | `/workflow-tools:workspace-health` | Cross-cutting — periodic health check: agentlint scan + behavioural audit + sync check |
 | `security-scan` | `/workflow-tools:security-scan [path]` | On-demand — deep security review: OWASP Top 10 + SQL injection |
 | `dep-audit` | `/workflow-tools:dep-audit` | Pre-PR / on-demand — multi-ecosystem dependency CVE audit; Docker Compose-aware |
 | `php-code-simplifier` | `/workflow-tools:php-code-simplifier [path]` | On-demand — PHP-aware refactor: guard clauses, match, nullsafe, DTOs, enums |
