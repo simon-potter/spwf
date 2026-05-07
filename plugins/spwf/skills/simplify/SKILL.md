@@ -3,7 +3,7 @@
 name: simplify
 description: Phase 6 — Simplify. Review files changed on the current branch for dead code, unclear names, and unnecessary complexity. Apply safe unambiguous removals directly; flag judgment calls without touching them. Never touches test files.
 disable-model-invocation: true
-allowed-tools: [Read, Edit, Grep, Glob]
+allowed-tools: [Read, Edit, Grep, Glob, Bash]
 ---
 
 # simplify
@@ -68,3 +68,26 @@ If nothing was applied and nothing was flagged:
 ```
 No simplification opportunities found in changed files.
 ```
+
+## Step 5: Commit
+
+If any changes were applied in Step 3, show `git diff --stat` and propose a commit:
+
+```
+refactor: simplify {change-id} — {brief description of what was removed}
+
+{list the most significant removals — one line each}
+{if any judgment-call flag is worth noting in git history: "flagged {X} in {file} for human review"}
+{if a removal revealed something unexpected: note it here}
+```
+
+Ask: "Ready to commit? Confirm with 'yes' or edit the message first."
+
+After confirming:
+
+```bash
+git add {changed files}
+git commit -m "{confirmed message}"
+```
+
+If nothing was applied (report showed only flags), skip the commit: "Nothing to commit — no changes were applied."

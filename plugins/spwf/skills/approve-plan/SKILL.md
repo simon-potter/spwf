@@ -4,7 +4,7 @@
 name: approve-plan
 description: Phase 2 — Approve plan. Reviews the task list from spec for quality (atomicity, testability, clarity), then applies four adversarial lenses (Skeptic, Architect, Minimalist, Security) as advisory input for the human reviewer. Quality issues are blocking; adversarial findings are advisory. Security lens identifies tasks touching auth, billing, user input, or secrets so the builder has explicit awareness before writing those tasks. Presents everything for explicit human go/no-go before building starts.
 disable-model-invocation: true
-allowed-tools: [Read, Write]
+allowed-tools: [Read, Write, Bash]
 ---
 
 # approve-plan
@@ -162,3 +162,28 @@ Run: /spwf:build
 ## Step 6: Stop and wait
 
 Stop after presenting. The human decides: approve, revise, or return to spec.
+
+## Step 7: Commit on approval
+
+Once the human approves (with or without revisions), run `git status` to show what changed (typically `tasks.md` if revised, nothing if approved as-is), then propose a commit:
+
+```
+chore: approve plan — {change-id}
+
+{if tasks were revised: Revised N tasks: {brief list of what changed and why}}
+{if approved as-is: Plan approved without revision}
+{any notable concern raised by adversarial review that was accepted or dismissed, e.g.
+"Skeptic flagged missing error-state task — accepted, covered by existing error middleware"}
+{any security-sensitive tasks flagged: heads-up for build phase on tasks N.N, N.N}
+```
+
+Ask: "Ready to commit? Confirm with 'yes' or edit the message first."
+
+After confirming:
+
+```bash
+git add openspec/changes/{change-id}/tasks.md
+git commit -m "{confirmed message}"
+```
+
+If there is nothing to commit (no file changes), skip the commit and note: "Nothing to commit — plan approved with no file changes."

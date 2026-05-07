@@ -139,3 +139,27 @@ Fix any validation errors, then report:
 - Files created
 - Any items from the ideation file needing a decision
 - Suggested next step: `/spwf:approve-plan`
+
+## Step 6: Commit
+
+Show `git status` so the user sees all new spec artefacts, then propose a commit:
+
+```
+spec: add OpenSpec change {change-id}
+
+{1-2 sentences summarising what the change delivers and why}
+
+Artefacts: proposal.md, tasks.md, {N} spec scenarios{, design.md if created}
+{if any open decisions remain: TBD decisions: {list them}}
+{if any notable structural discovery during spec work, e.g. "split into 2 phases
+because task 3 depends on task 1 completing fully"}
+```
+
+Ask: "Ready to commit? Confirm with 'yes' or edit the message first."
+
+After confirming, stage all new spec artefacts and commit:
+
+```bash
+git add openspec/changes/{change-id}/
+git commit -m "{confirmed message}"
+```

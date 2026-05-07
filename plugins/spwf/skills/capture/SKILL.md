@@ -236,3 +236,38 @@ Open questions: {count}
 
 Recommended next step: /spwf:challenge todo/{slug}.md
 ```
+
+---
+
+## Commit
+
+After the report (and after the Jira prompt if applicable), propose a commit:
+
+**Bug path message:**
+```
+chore: capture bug — {title}
+
+Source: {source}
+Signal: {signal that triggered bug classification}
+Fix type: {content/config only | trivial code fix | non-trivial code fix}
+Hypothesis: {one-line root cause}
+{if any notable finding during investigation, e.g. "found recent commit X may have introduced this"}
+```
+
+**Change path message:**
+```
+chore: capture — {title}
+
+Source: {source}
+{key qualification decisions or constraints surfaced during capture}
+{open questions count if > 0: N open questions remain for challenge}
+```
+
+Show `git status`, then ask: "Ready to commit? Confirm with 'yes' or edit the message first."
+
+After confirming, run:
+
+```bash
+git add todo/{slug}.md   # or todo/BUG-{slug}.md
+git commit -m "{confirmed message}"
+```

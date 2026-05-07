@@ -79,6 +79,34 @@ Re-run /spwf:build when resolved.
 
 Do NOT invoke `debug-recovery` on a spec misalignment — this is a human decision, not a code bug.
 
+## Phase 4.5 — Commit per task
+
+After `opsx:verify` passes for a task, **before looping to the next task**, propose a commit.
+
+Show `git diff --stat HEAD` so the user sees exactly what was written, then propose:
+
+```
+feat({change-id}): {task description — the exact task text from tasks.md}
+
+{1-2 sentences on what was implemented — not what the task says, what was actually built}
+{if any unexpected discovery: e.g. "found existing X was incompatible — worked around by Y"}
+{if any design decision made during implementation that wasn't in the spec}
+{if any edge case discovered and handled that the tests didn't originally cover}
+```
+
+Ask: "Ready to commit task {N}? Confirm with 'yes' or edit the message first."
+
+After confirming:
+
+```bash
+git add -p   # show a patch-mode summary so nothing accidental is staged
+git commit -m "{confirmed message}"
+```
+
+If the user declines: note "Skipped — changes are unstaged" and continue to the next task. Do not force commits.
+
+---
+
 ## Phase 5 — Loop or complete
 
 If pending tasks remain, return to Phase 1 for the next task.

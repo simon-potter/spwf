@@ -3,7 +3,7 @@
 name: challenge
 description: Gate — Challenge a plan, ideation file, or design relentlessly. Accepts a file path as $ARGUMENTS (defaults to the most recent file in todo/ if omitted). Reads the file first, then interviews until all open questions are resolved. Use before spec to ensure the idea is ready to formalise.
 disable-model-invocation: true
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: [Read, Write, Grep, Glob, Bash]
 ---
 
 # challenge
@@ -48,9 +48,17 @@ Keep going until every branch of the decision tree is resolved. Do not summarise
 
 The interview is complete only when there are no remaining open questions and the rough scope is unambiguous enough to write a spec from.
 
-## Step 4: Summarise
+## Step 4: Write decisions back to the todo file
 
-Once complete:
+Once the interview is complete, update the source todo file:
+
+- Replace the `## Open questions` section with the resolved answers — each question followed by its answer in one or two sentences
+- Append a `## Challenge decisions` section listing every new decision made during the interview that was not already in the file
+- Do not touch any other section
+
+## Step 5: Summarise and commit
+
+Print the summary:
 
 ```
 Challenge complete. All questions resolved.
@@ -59,6 +67,28 @@ Key decisions made:
 - {decision 1}
 - {decision 2}
 ...
-
-Recommended next step: /spwf:spec todo/{slug}.md
 ```
+
+Then show `git diff todo/{slug}.md` so the user can see what changed, and propose a commit:
+
+```
+docs: challenge {slug} — resolve open questions
+
+Decisions made:
+- {decision 1}
+- {decision 2 — include any gotcha or non-obvious constraint that emerged}
+
+{note any surprises discovered during codebase exploration, e.g. "discovered X
+is already handled by Y — no new code needed"}
+```
+
+Ask: "Ready to commit? Confirm with 'yes' or edit the message first."
+
+After confirming, run:
+
+```bash
+git add todo/{slug}.md
+git commit -m "{confirmed message}"
+```
+
+Then: `Recommended next step: /spwf:spec todo/{slug}.md`
