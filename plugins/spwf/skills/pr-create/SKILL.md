@@ -1,14 +1,19 @@
 ---
 # Source: https://github.com/addyosmani/agent-skills — MIT licence
 name: pr-create
-description: Phase 7 — PR Create. Run pre-PR checks then create a pull request via gh pr create. CI/CD owns deployment after merge. The PR is the deliverable. Halts if any pre-flight check fails. Security checks (secret scan, SAST, dependency audit) run if tools are available; high/critical findings halt PR creation.
+description: Phase 7 — PR / MR Create. Run pre-PR checks then create a pull request (GitHub) or merge request (GitLab) via the active forge's CLI. CI/CD owns deployment after merge. The request is the deliverable. Halts if any pre-flight check fails. Security checks (secret scan, SAST, dependency audit) run if tools are available; high/critical findings halt creation.
 disable-model-invocation: true
 allowed-tools: [Read, Bash]
 ---
 
 # pr-create
 
-Run the pre-PR checklist. If all checks pass, create the PR. Report the URL.
+Run the pre-flight checklist. If all checks pass, create the pull request (GitHub)
+or merge request (GitLab). Report the URL.
+
+Forge selection follows `_shared/forge-dispatch.md` — auto-detected from
+`git remote get-url origin` unless overridden in `.spwf/forge.yaml`. GitLab
+default; GitHub supported.
 
 ## Step 1: Pre-PR checklist
 
@@ -124,11 +129,17 @@ Do not silently skip. Report each missing tool with its setup path:
   2. Pre-commit hook (catches secrets before commit):
        echo 'gitleaks protect --staged' >> .git/hooks/pre-commit
        chmod +x .git/hooks/pre-commit
-  3. GitHub Actions (catches anything that slips through):
-       # .github/workflows/security.yml
+  3. CI workflow (catches anything that slips through):
+       # GitHub Actions — .github/workflows/security.yml
        - uses: gitleaks/gitleaks-action@v2
          env:
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+       # GitLab CI — .gitlab-ci.yml
+       gitleaks:
+         stage: test
+         image: zricethezav/gitleaks:latest
+         script: gitleaks detect --source . --no-banner
 
 ── SAST (semgrep) ──────────────────────────────────────────────
   semgrep is not installed. For production-grade SAST with curated
@@ -150,12 +161,21 @@ Read these files to derive the PR title and body:
 - `openspec/changes/*/proposal.md` — for the change description
 - `git log main...HEAD --oneline` — for commit summary
 
-## Step 3: Create the PR
+## Step 3: Resolve forge and create the request
+
+Detect the active forge per `_shared/forge-dispatch.md`. Run `{cli} auth status`
+first.
+
+**Fail fast on missing CLI.** If the required CLI (`glab` for GitLab, `gh` for
+GitHub) is missing or unauthenticated, halt with:
+
+> *"Forge CLI `{cli}` not installed or not authenticated. Install (`brew install {cli}`) and run `{cli} auth login`. See `plugins/spwf/skills/_shared/forge-dispatch.md`."*
+
+Compose the title and body, then dispatch:
 
 ```bash
-gh pr create \
-  --title "{verb-led title from proposal or commits}" \
-  --body "$(cat <<'EOF'
+TITLE="{verb-led title from proposal or commits}"
+BODY=$(cat <<'EOF'
 ## Summary
 
 {bullet points from proposal What Changes section}
@@ -170,13 +190,21 @@ gh pr create \
 
 `{change-id}`
 EOF
-)"
+)
+
+# GitLab (default) — note: --description, not --body; --target-branch, not --base
+glab mr create --title "$TITLE" --description "$BODY"
+
+# GitHub
+gh pr create --title "$TITLE" --body "$BODY"
 ```
 
 ## Step 4: Report
 
+Use the active forge's vocabulary. GitHub: "PR created". GitLab: "MR created".
+
 ```
-✓ PR created: {URL}
+✓ {PR | MR} created: {URL}
 
 CI/CD will handle deployment after merge.
 ```

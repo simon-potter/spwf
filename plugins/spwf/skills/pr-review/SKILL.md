@@ -1,37 +1,63 @@
 ---
-# Adapted from: https://github.com/wshobson/agents — skill: code-review-excellence (via npx skills add https://github.com/wshobson/agents --skill code-review-excellence). Extended with gh pr view/diff and PR-specific structure.
+# Adapted from: https://github.com/wshobson/agents — skill: code-review-excellence (via npx skills add https://github.com/wshobson/agents --skill code-review-excellence). Extended with PR/MR fetch and forge-agnostic structure.
 name: pr-review
-description: Phase 5 — PR Review. Fetch and review a specific PR using gh pr view and gh pr diff. Produces a structured review report. Requires a PR number or URL as the argument. Does not create PRs. Use when you have a PR open and want a structured review before merge.
+description: Phase 5 — PR Review. Fetch and review a specific pull request (GitHub) or merge request (GitLab) using the active forge's CLI. Produces a structured review report. Requires a PR/MR number or URL as the argument. Does not create requests. Use when a request is open and you want a structured review before merge.
 disable-model-invocation: true
 allowed-tools: [Read, Bash]
 ---
 
 # pr-review
 
-Fetch and review a pull request. Produce a structured review report. Does not create PRs.
+Fetch and review a pull request (GitHub) or merge request (GitLab). Produce a
+structured review report. Does not create requests.
 
-## Step 0: Require a PR reference
+Forge selection follows `_shared/forge-dispatch.md` — auto-detected from
+`git remote get-url origin` unless overridden in `.spwf/forge.yaml`. GitLab
+default; GitHub supported.
 
-`$ARGUMENTS` must contain a PR number or URL.
+## Step 0: Require a PR/MR reference
+
+`$ARGUMENTS` must contain a request number or URL.
 
 If `$ARGUMENTS` is empty, halt:
 
 ```
-Usage: /spwf:pr-review <PR number or URL>
+Usage: /spwf:pr-review <PR/MR number or URL>
 
 Examples:
   /spwf:pr-review 42
+  /spwf:pr-review https://gitlab.com/org/repo/-/merge_requests/42
   /spwf:pr-review https://github.com/org/repo/pull/42
 ```
 
-## Step 1: Fetch PR data
+## Step 1: Resolve forge and fetch request data
+
+Detect the active forge per `_shared/forge-dispatch.md` (auto-detect from
+`git remote`, or read `.spwf/forge.yaml`).
+
+**Fail fast on missing CLI.** Run `{cli} auth status`. If the required CLI
+(`glab` for GitLab, `gh` for GitHub) is missing or unauthenticated, halt with:
+
+> *"Forge CLI `{cli}` not installed or not authenticated. Install (`brew install {cli}`) and run `{cli} auth login`. See `plugins/spwf/skills/_shared/forge-dispatch.md`."*
+
+Dispatch the fetch:
 
 ```bash
+# GitLab (default)
+glab mr view $ARGUMENTS --output json
+glab mr diff $ARGUMENTS
+
+# GitHub
 gh pr view $ARGUMENTS --json number,title,body,baseRefName,headRefName,state,author,additions,deletions,changedFiles
 gh pr diff $ARGUMENTS
 ```
 
-If the `gh` command fails, report the error and stop.
+Normalise the response into a uniform internal shape per the JSON-field-mapping
+table in `_shared/forge-dispatch.md`. For GitLab, if additions/deletions stats
+are needed for the report and not present in the initial response, run an
+additional `glab mr changes {ref}` call.
+
+If any CLI command fails, report the error verbatim and stop.
 
 ## Step 2: Context gathering
 
@@ -79,12 +105,15 @@ For each changed file in the diff:
 
 ## Step 5: Produce the review report
 
+Use the active forge's reference syntax in the heading: `#{id}` for GitHub,
+`!{id}` for GitLab.
+
 ```markdown
-## PR Review: #{number} — {title}
+## {Request type} Review: {ref} — {title}     <!-- "PR Review: #42" or "MR Review: !42" -->
 
 **Author**: {author}
-**Base → Head**: {baseRefName} ← {headRefName}
-**Size**: +{additions} -{deletions} across {changedFiles} files
+**Base → Head**: {base} ← {head}
+**Size**: +{additions} -{deletions} across {files_changed} files
 
 ---
 

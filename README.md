@@ -20,8 +20,8 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
 | **Build** | `/spwf:build` | `write-tests` → `opsx:apply` → `run-tests` → `debug-recovery` → `opsx:verify` | Red-Green-Verify per task, loops until all done; spec sign-off after all tasks complete | All tasks complete, tests green, spec aligned |
 | **Simplify** (TDD Refactor) | `/spwf:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
-| **PR Create** | `/spwf:pr-create` | `dep-audit` · `gh pr create` | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then PR creation; CI/CD owns the rest | PR URL |
-| **PR Review** | `/spwf:pr-review <PR>` | `gh pr view`, `gh pr diff` | Structured review before merge; catches regressions and drift | Review report with verdict |
+| **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; CI/CD owns the rest | PR / MR URL |
+| **PR / MR Review** | `/spwf:pr-review <ref>` | forge CLI (`glab mr view/diff` default; `gh pr view/diff` supported) | Structured review before merge; catches regressions and drift | Review report with verdict |
 | **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Issue tracker MCP | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, optional changelog), then after explicit confirmation marks the todo file complete, archives the OpenSpec change, and transitions the linked tracker ticket to its done state (per `.spwf/tracker.yaml`) | Closed todo, archived change, tracker ticket marked done |
 
 ## Quality tools
@@ -106,12 +106,27 @@ openspec init
 
 If the `openspec/` directory is missing, `spec` will halt with a clear message.
 
-### 3. GitHub CLI (for `pr-review` and `pr-create`)
+### 3. Forge CLI (for `pr-create` and `pr-review`)
+
+The forge is auto-detected from `git remote get-url origin`. GitLab is the
+default; GitHub is supported. Install whichever CLI matches your repo (or both,
+if you work across forges):
 
 ```bash
-brew install gh   # macOS — or: https://cli.github.com
+# GitLab (default) — used when remote contains gitlab.com or gitlab.*
+brew install glab                  # macOS — or https://gitlab.com/gitlab-org/cli/-/releases
+glab auth login                    # gitlab.com
+# glab auth login --hostname {host}   # self-hosted
+
+# GitHub — used when remote contains github.com
+brew install gh                    # macOS — or https://cli.github.com
 gh auth login
 ```
+
+Skills fail fast if the matching CLI is missing or unauthenticated — there is
+no silent fallback. For self-hosted GitLab on a non-`gitlab.*` domain, or to opt
+out of forge integration entirely (`forge: none`), see
+`plugins/spwf/skills/_shared/forge-dispatch.md`.
 
 ### 4. Issue tracker MCP (for `capture`, `issue-to-task`, and `close`)
 

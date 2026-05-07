@@ -95,6 +95,35 @@ status: ideation
 ## Rough scope
 ```
 
+## Forge integration
+
+`pr-create` and `pr-review` (and the `pr-creator` / `reviewer` agents) are
+forge-agnostic. The active forge is auto-detected from `git remote get-url
+origin`:
+
+- `github.com` → GitHub, uses `gh`
+- `gitlab.com` or `gitlab.{anything}` → GitLab, uses `glab`
+- Other / ambiguous → asked once and offered for save to `.spwf/forge.yaml`
+
+GitLab is the default when both CLIs are installed and detection lands on a
+GitLab host; GitHub is used when detection lands on a GitHub host. Neither CLI
+present + a forge action requested = **fail fast** with installation
+instructions. No silent fallback.
+
+Optional `.spwf/forge.yaml` in the repo root (only needed for self-hosted
+GitLab on a non-`gitlab.*` domain or to opt out):
+
+```yaml
+forge: gitlab              # github | gitlab | bitbucket | gitea | none
+host: gitlab.example.com   # self-hosted host (auto-derived when possible)
+default_base: main         # base branch for PR/MR creation (usually auto-detected)
+```
+
+Set `forge: none` to disable forge-touching skills entirely. Auth tokens live
+in `gh auth login` / `glab auth login`, never in the repo. Full reference
+(including JSON field normalisation between `gh --json` and
+`glab --output json`, and how to add Bitbucket/Gitea/Forgejo): `skills/_shared/forge-dispatch.md`.
+
 ## Issue tracker integration
 
 `capture`, `issue-to-task`, and `close` assume an issue tracker MCP is configured. If

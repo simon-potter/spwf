@@ -102,7 +102,7 @@ Breaking change markers: `!` suffix on type (`feat!:`, `fix!:`) OR `BREAKING CHA
 1. Extract `type`, optional `scope`, and `description` from the subject using the pattern: `^(\w+)(\(\w[\w/-]*\))?(!)?:\s+(.+)$`
 2. If the subject does not match the pattern (non-conventional commit), put it in a **Non-conventional** bucket for review — do not discard.
 3. Scope (if present) appears in the changelog as bold prefix: `feat(auth):` → **auth**: description
-4. Strip trailing issue references (`(#123)`, `fixes #456`) from the description for the main line; convert to a link if GitHub remote is detectable.
+4. Strip trailing issue references (`(#123)`, `fixes #456`, `(!42)`, `closes !42`) from the description for the main line; convert to a link if a forge remote is detectable per `_shared/forge-dispatch.md` (GitHub: `#N` → `/issues/N`; GitLab: `!N` → `/-/merge_requests/N`, `#N` → `/-/issues/N`).
 5. Detect breaking changes in two ways:
    - `!` in the type: `feat!:` or `fix!:`
    - `BREAKING CHANGE:` line in the commit body
