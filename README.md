@@ -211,3 +211,52 @@ Fourteen agents covering every workflow phase. Each is scoped to a single respon
 | `retrospector` | Post — Retrospective | Sonnet |
 | `php-code-simplifier` | On-demand — PHP safe refactor | Sonnet |
 | `php-code-quality-reviewer` | On-demand — PHP bad-practice analysis | Sonnet |
+
+---
+
+## Repository structure
+
+```
+spwf/
+├── CLAUDE.md                              # project rules (e.g. bump version before push)
+├── README.md
+├── migrate-to-spwf.sh                     # helper script for moving projects into this repo
+│
+├── openspec/                              # OpenSpec change tracking (managed by openspec CLI)
+│   ├── config.yaml
+│   ├── specs/                             # global specs
+│   └── changes/
+│       ├── {change-id}/                   # active change
+│       │   ├── proposal.md                # why and what changes
+│       │   ├── design.md                  # decisions and rationale
+│       │   ├── tasks.md                   # TDD task list
+│       │   └── specs/{capability}/
+│       │       └── spec.md                # requirements and scenarios
+│       └── archive/                       # completed changes (opsx:archive)
+│
+├── plugins/
+│   ├── spwf/                              # workflow skills plugin (28 skills)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json                # name, version, author
+│   │   ├── hooks/                         # auto-registered on plugin install
+│   │   │   ├── hooks.json                 # hook event wiring
+│   │   │   ├── uncommitted-changes.sh     # Stop: warn on dirty working tree
+│   │   │   ├── plugin-version-check.sh    # Write|Edit: warn if plugin.json version unchanged
+│   │   │   ├── todo-frontmatter-check.sh  # Write|Edit: validate todo/*.md frontmatter
+│   │   │   └── openspec-validate-nudge.sh # Write|Edit: nudge openspec validate after tasks.md
+│   │   ├── skills/
+│   │   │   └── {skill-name}/
+│   │   │       ├── SKILL.md               # skill definition (disable-model-invocation: true)
+│   │   │       ├── scripts/               # helper shell scripts (select skills only)
+│   │   │       └── references/            # reference documents (select skills only)
+│   │   └── README.md
+│   │
+│   └── spwf-agents/                       # specialist agents plugin (13 agents)
+│       ├── .claude-plugin/
+│       │   └── plugin.json
+│       └── agents/
+│           └── {agent-name}.md            # agent definition (model, tools, description)
+│
+└── todo/                                  # ideation files produced by /spwf:capture
+    └── {slug}.md                          # status: ideation → complete lifecycle
+```
