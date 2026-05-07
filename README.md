@@ -14,7 +14,7 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 | Step | Command | Invokes | Why | Produces |
 |---|---|---|---|---|
 | **Orient** | `/spwf:wfstatus` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
-| **Capture** | `/spwf:capture [source]` | Atlassian MCP (Jira mode) | Accepts a Jira ticket, file, or freeform description; classifies as bug or change automatically. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md` |
+| **Capture** | `/spwf:capture [source]` | Issue tracker MCP (YouTrack default; Jira supported) | Accepts a tracker ticket (e.g. `ACAD-42`), file, or freeform description; classifies as bug or change automatically. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md` |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Interviews relentlessly until all open questions are resolved, then runs a scope-sizing check — recommends splitting into independent changes if the work spans natural boundaries, or proceeds as one change if tightly coupled | Resolved ideation file; or N child todo files + original marked `status: split` |
 | **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
@@ -22,7 +22,7 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 | **Simplify** (TDD Refactor) | `/spwf:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
 | **PR Create** | `/spwf:pr-create` | `dep-audit` · `gh pr create` | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then PR creation; CI/CD owns the rest | PR URL |
 | **PR Review** | `/spwf:pr-review <PR>` | `gh pr view`, `gh pr diff` | Structured review before merge; catches regressions and drift | Review report with verdict |
-| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Atlassian MCP | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, optional changelog), then after explicit confirmation marks the todo file complete, archives the OpenSpec change, and closes the linked Jira ticket | Closed todo, archived change, Jira ticket Done |
+| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Issue tracker MCP | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, optional changelog), then after explicit confirmation marks the todo file complete, archives the OpenSpec change, and transitions the linked tracker ticket to its done state (per `.spwf/tracker.yaml`) | Closed todo, archived change, tracker ticket marked done |
 
 ## Quality tools
 
@@ -57,7 +57,7 @@ Requires `jq` for transcript mining (see Prerequisites).
 ## Install
 
 ```bash
-/plugin marketplace add Academy-Plus/spwf
+/plugin marketplace add simon-potter/spwf
 /plugin install spwf@spwf
 /plugin install spwf-agents@spwf
 ```
@@ -113,9 +113,48 @@ brew install gh   # macOS — or: https://cli.github.com
 gh auth login
 ```
 
-### 4. Atlassian MCP (for `issue-to-task` only)
+### 4. Issue tracker MCP (for `capture`, `issue-to-task`, and `close`)
 
-Required only if pulling from Jira. Not needed for any other skill. Configure the Atlassian MCP server in your Claude Code settings.
+Tracker-touching skills assume an issue tracker MCP is configured. If it isn't and you
+ask for a tracker action, the skill **fails fast** with an actionable message. There
+is no silent fallback — configure the MCP, or skip tracker steps explicitly with
+`tracker: none`.
+
+**YouTrack (default)** — every YouTrack instance exposes its own MCP endpoint at
+`{instance-url}/mcp`. The endpoint is per-installation, not global. Add an entry to
+your user-level Claude Code MCP settings using a YouTrack permanent token:
+
+```json
+{
+  "mcpServers": {
+    "youtrack": {
+      "url": "https://projects.firstpartycapital.com/mcp",
+      "transport": "sse",
+      "headers": { "Authorization": "Bearer ${YOUTRACK_TOKEN}" }
+    }
+  }
+}
+```
+
+Name the entry `youtrack` for default-detection to work. Multi-instance setups use
+distinct names and a `.spwf/tracker.yaml` `mcp_server:` override (rare; see dispatch
+reference).
+
+**Jira** — configure the Atlassian MCP server in your Claude Code settings; tools
+appear under `mcp__atlassian__*`.
+
+**Optional per-project file** — `.spwf/tracker.yaml` exists only to persist defaults so
+skills don't have to ask every time:
+
+```yaml
+tracker: youtrack          # youtrack | jira | linear | none
+project: ACAD              # default project key for create_issue
+done_state: Done           # state name for close transition
+```
+
+The file is optional. Absent fields are asked once on first need and offered for save.
+Auth tokens never live in this file. Full reference (including discovery session for
+pinning tool names): `plugins/spwf/skills/_shared/tracker-dispatch.md`.
 
 ### 5. `jq` (for `claudemd-curator`, `workspace-health`, and hooks)
 
@@ -166,7 +205,7 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 |---|---|---|
 | `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation |
 | `capture` | `/spwf:capture [source]` | Pre — Capture (orchestrator); auto-classifies bugs vs changes |
-| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from Jira (atomic) |
+| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (atomic; YouTrack default) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch (atomic) |
 | `challenge` | `/spwf:challenge [file]` | Gate — Challenge |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |

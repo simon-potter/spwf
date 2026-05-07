@@ -17,14 +17,14 @@ Skills are organised in two named tiers within the single `skills/` directory:
 |---|---|---|
 | `capture` | `/spwf:capture [source]` | Classifies input as bug or change → bug path: investigation + `todo/BUG-{slug}.md`; change path: `issue-to-task` / `new-task` + `todo/{slug}.md` |
 | `build` | `/spwf:build` | `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` (Refactor) |
-| `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog) → mark todo complete → `opsx:archive` → Jira transition to Done |
+| `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog) → mark todo complete → `opsx:archive` → tracker transition to done state (per `.spwf/tracker.yaml`; YouTrack default, Jira supported) |
 
 ### Atomic skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
 | `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation: where am I, what's next |
-| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from Jira |
+| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (YouTrack default; Jira and others supported) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch |
 | `challenge` | `/spwf:challenge [file]` | Gate — Interview until all questions resolved; scope-sizing check recommends splitting or proceeding as one change |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
@@ -80,8 +80,9 @@ Both `issue-to-task` and `new-task` produce the same lightweight ideation file a
 
 ```markdown
 ---
-source: jira | scratch
-ticket: PROJ-123          # omit if scratch
+source: youtrack | jira | linear | scratch
+tracker: youtrack         # omit if scratch
+ticket: ACAD-42           # tracker-agnostic id; omit if scratch
 created: YYYY-MM-DD
 status: ideation
 ---
@@ -93,6 +94,28 @@ status: ideation
 ## Open questions
 ## Rough scope
 ```
+
+## Issue tracker integration
+
+`capture`, `issue-to-task`, and `close` assume an issue tracker MCP is configured. If
+it isn't and a tracker action is requested, the skill **fails fast** with an
+actionable message — no silent fallback.
+
+Default detection: probe `mcp__youtrack__*` then `mcp__atlassian__jira_*`. First match
+wins. Override per-project in `.spwf/tracker.yaml` (all fields optional):
+
+```yaml
+tracker: youtrack          # youtrack | jira | linear | none
+project: ACAD              # default project for create_issue
+done_state: Done           # state name for close transition
+```
+
+Set `tracker: none` to opt out of tracker integration entirely. Auth tokens, URLs, and
+multi-instance routing live in user-level Claude Code MCP settings — never in the repo.
+
+Full reference: `skills/_shared/tracker-dispatch.md` (covers YouTrack setup, the
+multi-instance `mcp_server:` override, the discovery session for pinning tool names,
+and how to add Linear or other trackers).
 
 ## Attribution
 

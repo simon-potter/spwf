@@ -4,9 +4,9 @@
 # Adaptation: investigation-only — stops before implementation; produces an ideation artefact
 # that feeds into Challenge → Spec → Build rather than fixing inline.
 name: capture
-description: Pre-phase orchestrator — accepts any input (Jira ticket, Slack message, file, or freeform description), classifies it as a bug or a change, then routes to the appropriate path. Bug path runs systematic root-cause investigation and produces todo/BUG-{slug}.md. Change path runs a lightweight qualification check and produces todo/{slug}.md. Both outputs feed /spwf:challenge.
+description: Pre-phase orchestrator — accepts any input (issue tracker ticket, Slack message, file, or freeform description), classifies it as a bug or a change, then routes to the appropriate path. Bug path runs systematic root-cause investigation and produces todo/BUG-{slug}.md. Change path runs a lightweight qualification check and produces todo/{slug}.md. Both outputs feed /spwf:challenge.
 disable-model-invocation: true
-allowed-tools: [Read, Write, Glob, Grep, Bash, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues, mcp__atlassian__jira_create_issue, mcp__atlassian__jira_update_issue]
+allowed-tools: [Read, Write, Glob, Grep, Bash, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues, mcp__atlassian__jira_create_issue, mcp__atlassian__jira_update_issue]
 ---
 
 # capture
@@ -19,13 +19,23 @@ Read `$ARGUMENTS`:
 
 | Input pattern | Action |
 |---|---|
-| Empty | Ask: "What are you capturing? (Jira ticket key, file path, or describe it)" |
-| `PROJ-123` or `from jira PROJ-123` | **Jira** — fetch with `mcp__atlassian__jira_get_issue` |
+| Empty | Ask: "What are you capturing? (issue tracker ticket key, file path, or describe it)" |
+| Tracker ticket key (e.g. `ACAD-42`, `PROJ-123`) or `from {tracker} TICKET` | **Tracker** — dispatch to the configured tracker's `get_issue` per `_shared/tracker-dispatch.md` |
 | File path ending `.md` | **File** — read existing file |
 | `from slack` or input explicitly attributed to a Slack message | **Slack** — treat body as freeform; record source as `slack` |
 | Anything else | **Freeform** — treat as-is |
 
-For Jira, extract: summary, description, acceptance criteria, issue type, labels, priority.
+For tracker fetches, extract: summary, description, acceptance criteria, issue type,
+labels/tags, priority/state.
+
+**Fail fast on missing MCP.** If the user supplied a ticket-shaped argument and no
+tracker MCP is configured (no `mcp__youtrack__*` and no `mcp__atlassian__jira_*` tools
+respond), stop with: *"No issue tracker MCP configured. Add YouTrack or Atlassian MCP
+in user settings, or set `tracker: none` in `.spwf/tracker.yaml` to skip tracker steps."*
+Do not silently fall back to freeform.
+
+Tracker selection: see `_shared/tracker-dispatch.md`. Default is to probe YouTrack then
+Jira; override via `tracker:` in `.spwf/tracker.yaml`.
 
 ---
 
@@ -34,13 +44,13 @@ For Jira, extract: summary, description, acceptance criteria, issue type, labels
 Apply in order — stop at the first confident match.
 
 **Bug signals:**
-- Jira `issuetype = Bug`
+- Tracker issue type is `Bug` (YouTrack `Type: Bug` / Jira `issuetype = Bug`)
 - Input contains a stack trace (multi-line with file paths and line numbers)
 - Input contains: `error`, `exception`, `crash`, `traceback`, `not working`, `broken`, `failing`, `regression`, `wrong`, `incorrect`, `500`, `null pointer`, `undefined is not`
 - Input starts with `BUG:` or `FIX:`
 
 **Change signals:**
-- Jira `issuetype = Story / Task / Epic / Improvement`
+- Tracker issue type is a feature/work category (YouTrack `Feature / Task / Epic` / Jira `Story / Task / Epic / Improvement`)
 - Input contains: `add`, `implement`, `build`, `create`, `new feature`, `support`, `allow`, `as a user`
 - Input describes a desired future state
 
@@ -111,8 +121,9 @@ Generate `todo/BUG-{slug}.md`:
 
 ```markdown
 ---
-source: jira | slack | file | scratch
-ticket: PROJ-123          # omit if not jira
+source: youtrack | jira | linear | slack | file | scratch
+tracker: youtrack         # omit if source is slack | file | scratch
+ticket: ACAD-42           # tracker-agnostic id; omit if no tracker ticket
 created: YYYY-MM-DD
 status: ideation
 type: bug
@@ -169,8 +180,9 @@ Generate `todo/{slug}.md`:
 
 ```markdown
 ---
-source: jira | slack | file | scratch
-ticket: PROJ-123          # omit if not jira
+source: youtrack | jira | linear | slack | file | scratch
+tracker: youtrack         # omit if source is slack | file | scratch
+ticket: ACAD-42           # tracker-agnostic id; omit if no tracker ticket
 created: YYYY-MM-DD
 status: ideation
 ---
@@ -192,16 +204,25 @@ status: ideation
 
 ---
 
-## Jira prompt (non-Jira sources only)
+## Tracker prompt (non-tracker sources only)
 
-After writing the artefact, if the source was **not** Jira (i.e. slack, file, or scratch), ask:
+After writing the artefact, if the source was **not** an issue tracker (i.e. slack, file,
+or scratch), and a tracker MCP is configured, ask:
 
-> "Is there a Jira ticket for this? If not, I can create one — just give me the project key (e.g. `PROJ`)."
+> "Is there a ticket for this? If not, I can create one — just give me the project key."
+
+If `tracker: none` is set in `.spwf/tracker.yaml`, or no tracker MCP is configured
+(neither `mcp__youtrack__*` nor `mcp__atlassian__jira_*` available), skip this step
+entirely — no error.
 
 If the user provides a project key:
-- Create a Jira issue using `mcp__atlassian__jira_create_issue` with the artefact title as summary and hypothesis/context as description
-- Add the ticket key to the artefact frontmatter (`ticket: PROJ-123`)
-- Report the created ticket URL
+- Dispatch to the configured tracker's `create_issue` operation per
+  `_shared/tracker-dispatch.md`, with the artefact title as summary and
+  hypothesis/context as description
+- If MCP call fails (auth, network, bad project key): report the error verbatim and
+  stop — do not pretend the ticket was created
+- On success: add the resulting id to the artefact frontmatter
+  (`ticket: {ID}`, `tracker: {tracker}`) and report the created ticket URL
 
 If the user says no or skips: proceed without creating a ticket.
 
@@ -213,7 +234,7 @@ If the user says no or skips: proceed without creating a ticket.
 ```
 ✓ Bug artefact created: todo/BUG-{slug}.md
 
-Source: {jira PROJ-123 | slack | scratch}
+Source: {youtrack ACAD-42 | jira PROJ-123 | slack | scratch}
 Classified as: bug ({signal that triggered classification})
 Hypothesis: {one-line summary}
 Fix type: {content/config only | trivial code fix | non-trivial code fix}
@@ -229,7 +250,7 @@ Recommended next step:
 ```
 ✓ Ideation file created: todo/{slug}.md
 
-Source: {jira PROJ-123 | slack | file path | scratch}
+Source: {youtrack ACAD-42 | jira PROJ-123 | slack | file path | scratch}
 Classified as: change ({signal that triggered classification, or "confirmed by user"})
 Qualify: {passed cleanly | 1 question asked | 2 questions asked — {N} gaps remain}
 Open questions: {count}
@@ -241,7 +262,7 @@ Recommended next step: /spwf:challenge todo/{slug}.md
 
 ## Commit
 
-After the report (and after the Jira prompt if applicable), propose a commit:
+After the report (and after the tracker prompt if applicable), propose a commit:
 
 **Bug path message:**
 ```

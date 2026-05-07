@@ -1,8 +1,8 @@
 ---
 name: close
-description: Final-phase orchestrator — wraps the full retrospective then permanently closes the change. Invokes /spwf:retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, optional changelog), then — after explicit confirmation — marks the todo file complete, archives the OpenSpec change, and closes the Jira ticket if one is linked.
+description: Final-phase orchestrator — wraps the full retrospective then permanently closes the change. Invokes /spwf:retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, optional changelog), then — after explicit confirmation — marks the todo file complete, archives the OpenSpec change, and transitions the linked issue tracker ticket to its done state (YouTrack default; Jira and others supported).
 disable-model-invocation: true
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_update_issue]
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_update_issue]
 ---
 
 # close
@@ -10,12 +10,12 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__atlassian__jira_get_is
 Final phase of the SPWorkflow golden path. Retrospect, confirm, then permanently close the change.
 
 ```
-Step 1 → retrospective     (all 5 parts)
-Step 2 → confirm closure   (explicit human gate)
-Step 3 → mark todo done    (status: complete)
-Step 4 → commit changes    (git commit with confirmation)
-Step 5 → archive OpenSpec  (opsx:archive)
-Step 6 → close Jira ticket (if linked)
+Step 1 → retrospective       (all 5 parts)
+Step 2 → confirm closure     (explicit human gate)
+Step 3 → mark todo done      (status: complete)
+Step 4 → commit changes      (git commit with confirmation)
+Step 5 → archive OpenSpec    (opsx:archive)
+Step 6 → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
 ```
 
 ---
@@ -67,7 +67,7 @@ The following will happen:
   1. todo/{slug}.md          → status: complete
   2. git commit              → "chore: close {change-id}" (staged files + todo update)
   3. openspec/changes/{id}/  → archived (opsx:archive)
-  4. {PROJ-123}              → Jira status: Done   ← only if ticket is linked
+  4. {ACAD-42}               → tracker state: {done_state}   ← only if ticket is linked
 
 Type "yes" to close, anything else to stop.
 ```
@@ -114,25 +114,37 @@ If the command fails, report the error and stop — do not proceed to Step 6 unt
 
 ---
 
-## Step 7 — Close Jira ticket
+## Step 7 — Close tracker ticket
 
-Only run this step if the todo file has a `ticket:` field.
+Decision tree:
 
-Fetch the current issue to verify it exists and check its current status:
+| `ticket:` in frontmatter? | tracker MCP configured? | `tracker: none` set? | Action |
+|---|---|---|---|
+| no | — | — | Skip silently (no tracker action implied). Report "No tracker ticket linked." |
+| yes | — | yes | Skip silently (user has opted out). |
+| yes | no | no | **Fail fast.** "Cannot close `{ticket}` — no issue tracker MCP configured. Configure YouTrack or Atlassian MCP, or set `tracker: none` in `.spwf/tracker.yaml`." |
+| yes | yes | no | Run the transition. |
+
+Resolve the active tracker and `done_state` from `.spwf/tracker.yaml` (default
+YouTrack, default state `Done`). Dispatch via `_shared/tracker-dispatch.md`.
+
+Verify the issue exists, then apply the done state:
 
 ```
-mcp__atlassian__jira_get_issue(issue_key: "{ticket}")
+get_issue(id="{ticket}")
+set_state(id="{ticket}", state="{done_state}")
 ```
 
-Transition the issue to **Done** using:
+Tracker-specific notes:
 
-```
-mcp__atlassian__jira_update_issue(issue_key: "{ticket}", fields: {status transition to Done})
-```
+- **YouTrack** uses field-set commands (`State {done_state}`); the dispatch handles this.
+- **Jira** uses named transitions; `done_state` should match an available transition
+  ("Done" or "Closed" typically). If neither matches, report the available transitions
+  and ask the user which to use.
 
-Note: Jira transitions vary by project workflow. Use the transition name "Done" or "Closed" — if neither exists, report the available transitions and ask the user which to use.
-
-If no `ticket:` is present: skip this step silently (report "No Jira ticket linked — skipping").
+If the MCP call fails for any reason (auth, network, unknown state): report the error
+verbatim and stop. Do not mark the closure as complete in the report — leave the
+ticket-transition row as failed.
 
 ---
 
@@ -148,7 +160,7 @@ If no `ticket:` is present: skip this step silently (report "No Jira ticket link
 ✓ todo/{slug}.md              → status: complete
 ✓ git commit                  → chore: close {change-id}
 ✓ openspec/changes/{id}/      → archived
-{✓ PROJ-123                   → Done     | — No Jira ticket linked}
+{✓ {ticket}                   → {done_state}     | — No tracker ticket linked}
 
 ### Recommended actions
 {any unresolved items from retrospective that need follow-up}

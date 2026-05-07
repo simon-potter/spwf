@@ -1,30 +1,42 @@
 ---
-# Adapted from: ~/.claude/skills/jira-to-openspec/ — original by Simon Potter. Strips all OpenSpec generation; output is a lightweight ideation file only.
+# Adapted from: ~/.claude/skills/jira-to-openspec/ — original by Simon Potter. Strips all OpenSpec generation; output is a lightweight ideation file only. Tracker-agnostic via _shared/tracker-dispatch.md (YouTrack default; Jira and others supported).
 name: issue-to-task
-description: Pre-phase — Capture a Jira ticket as a lightweight ideation file at todo/{slug}.md. Fetches the ticket via MCP, extracts context and open questions, and produces an ideation file ready for /spwf:challenge. Does NOT generate OpenSpec — that is spec's job.
+description: Pre-phase — Capture an issue tracker ticket (YouTrack default; Jira and others supported) as a lightweight ideation file at todo/{slug}.md. Fetches the ticket via the configured tracker MCP, extracts context and open questions, and produces an ideation file ready for /spwf:challenge. Does NOT generate OpenSpec — that is spec's job.
 disable-model-invocation: true
-allowed-tools: [Read, Write, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
+allowed-tools: [Read, Write, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
 ---
 
 # issue-to-task
 
-Fetch a Jira ticket and produce a lightweight ideation file at `todo/{slug}.md`. This file is the input to `challenge` and eventually `spec`. It is intentionally lightweight — not an OpenSpec.
+Fetch an issue tracker ticket and produce a lightweight ideation file at `todo/{slug}.md`. This file is the input to `challenge` and eventually `spec`. It is intentionally lightweight — not an OpenSpec.
+
+This skill is by definition tracker-bound. If no tracker MCP is configured, it fails
+fast — see `_shared/tracker-dispatch.md` for setup. Tracker selection follows the
+default probe (YouTrack → Jira) unless overridden in `.spwf/tracker.yaml`.
 
 ## Step 1: Fetch the ticket
 
-If `$ARGUMENTS` contains a ticket key (e.g. `PROJ-123`), fetch it:
+If `$ARGUMENTS` contains a ticket id (e.g. `ACAD-42`, `PROJ-123`), dispatch to the
+active tracker's `get_issue` operation:
 
 ```
-mcp__atlassian__jira_get_issue(issue_key="{TICKET}", fields="*all")
+get_issue(id="{TICKET}", include_all_fields=true)
 ```
 
-If no argument given, ask for the ticket key.
+If `$ARGUMENTS` is empty, ask for the ticket id.
+
+**Fail fast on missing MCP.** If neither `mcp__youtrack__*` nor `mcp__atlassian__jira_*`
+is available, stop with: *"No issue tracker MCP configured. Add YouTrack or Atlassian
+MCP in user settings — see plugins/spwf/skills/_shared/tracker-dispatch.md."* Do not
+fall back to interactive content gathering — the user invoked this skill specifically
+to fetch from a tracker.
 
 ## Step 2: Extract content
 
-Parse the Jira ticket (arrives as Jira wiki markup) and extract:
+Parse the ticket body (markdown for YouTrack, wiki markup for Jira — both supported) and
+extract:
 
-| Jira content | Maps to |
+| Ticket content | Maps to |
 |---|---|
 | Summary/title | File title and slug |
 | Description overview | Context section |
@@ -38,7 +50,7 @@ Parse the Jira ticket (arrives as Jira wiki markup) and extract:
 {ticket-id}-{kebab-case-title}
 ```
 
-Example: `PROJ-123-add-feature-name`
+Example: `ACAD-42-add-feature-name`
 
 Ensure `todo/` directory exists:
 ```bash
@@ -51,7 +63,8 @@ Check for an existing file at `todo/{slug}.md` before writing.
 
 ```markdown
 ---
-source: jira
+source: youtrack | jira | linear
+tracker: {tracker}
 ticket: {TICKET-ID}
 created: {YYYY-MM-DD}
 status: ideation
