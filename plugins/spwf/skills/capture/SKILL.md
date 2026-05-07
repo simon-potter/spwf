@@ -4,9 +4,9 @@
 # Adaptation: investigation-only — stops before implementation; produces an ideation artefact
 # that feeds into Challenge → Spec → Build rather than fixing inline.
 name: capture
-description: Pre-phase orchestrator — accepts any input (Jira ticket, file, or freeform description), classifies it as a bug or a change, then routes to the appropriate path. Bug path runs systematic root-cause investigation and produces todo/BUG-{slug}.md. Change path runs a lightweight qualification check and produces todo/{slug}.md. Both outputs feed /spwf:challenge.
+description: Pre-phase orchestrator — accepts any input (Jira ticket, Slack message, file, or freeform description), classifies it as a bug or a change, then routes to the appropriate path. Bug path runs systematic root-cause investigation and produces todo/BUG-{slug}.md. Change path runs a lightweight qualification check and produces todo/{slug}.md. Both outputs feed /spwf:challenge.
 disable-model-invocation: true
-allowed-tools: [Read, Write, Glob, Grep, Bash, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
+allowed-tools: [Read, Write, Glob, Grep, Bash, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues, mcp__atlassian__jira_create_issue, mcp__atlassian__jira_update_issue]
 ---
 
 # capture
@@ -22,6 +22,7 @@ Read `$ARGUMENTS`:
 | Empty | Ask: "What are you capturing? (Jira ticket key, file path, or describe it)" |
 | `PROJ-123` or `from jira PROJ-123` | **Jira** — fetch with `mcp__atlassian__jira_get_issue` |
 | File path ending `.md` | **File** — read existing file |
+| `from slack` or input explicitly attributed to a Slack message | **Slack** — treat body as freeform; record source as `slack` |
 | Anything else | **Freeform** — treat as-is |
 
 For Jira, extract: summary, description, acceptance criteria, issue type, labels, priority.
@@ -35,7 +36,7 @@ Apply in order — stop at the first confident match.
 **Bug signals:**
 - Jira `issuetype = Bug`
 - Input contains a stack trace (multi-line with file paths and line numbers)
-- Input contains: `error`, `exception`, `crash`, `traceback`, `not working`, `broken`, `failing`, `regression`, `500`, `null pointer`, `undefined is not`
+- Input contains: `error`, `exception`, `crash`, `traceback`, `not working`, `broken`, `failing`, `regression`, `wrong`, `incorrect`, `500`, `null pointer`, `undefined is not`
 - Input starts with `BUG:` or `FIX:`
 
 **Change signals:**
@@ -92,13 +93,25 @@ Rules:
 - Grounded in evidence from Phases 2–3, not assumption
 - If three hypotheses fail to explain the evidence: stop and flag that the architecture may need re-examination
 
+### Classify fix complexity
+
+Before writing the artefact, assess the fix type:
+
+| Fix type | Signals | Recommendation |
+|---|---|---|
+| **Content / config only** | Root cause is in database content, CMS page copy, a config file, or an environment variable — no code change required | Direct edit — no spec needed |
+| **Trivial code fix** | Single-line change, obvious typo, missing null check | Fix directly, no spec needed |
+| **Non-trivial code fix** | Multiple files, logic change, risk of regression | `/spwf:challenge` → Spec → Build |
+
+Record the fix type in the artefact's `Rough scope` section.
+
 ### Produce bug artefact
 
 Generate `todo/BUG-{slug}.md`:
 
 ```markdown
 ---
-source: jira | scratch
+source: jira | slack | file | scratch
 ticket: PROJ-123          # omit if not jira
 created: YYYY-MM-DD
 status: ideation
@@ -126,7 +139,7 @@ type: bug
 {What remains unclear; gaps that Challenge will surface}
 
 ## Rough scope
-{What a fix would likely touch; rough complexity estimate}
+{Fix type: content/config only | trivial code fix | non-trivial code fix. What a fix would touch.}
 ```
 
 ---
@@ -156,7 +169,7 @@ Generate `todo/{slug}.md`:
 
 ```markdown
 ---
-source: jira | file | scratch
+source: jira | slack | file | scratch
 ticket: PROJ-123          # omit if not jira
 created: YYYY-MM-DD
 status: ideation
@@ -179,25 +192,44 @@ status: ideation
 
 ---
 
+## Jira prompt (non-Jira sources only)
+
+After writing the artefact, if the source was **not** Jira (i.e. slack, file, or scratch), ask:
+
+> "Is there a Jira ticket for this? If not, I can create one — just give me the project key (e.g. `ABAU`)."
+
+If the user provides a project key:
+- Create a Jira issue using `mcp__atlassian__jira_create_issue` with the artefact title as summary and hypothesis/context as description
+- Add the ticket key to the artefact frontmatter (`ticket: PROJ-123`)
+- Report the created ticket URL
+
+If the user says no or skips: proceed without creating a ticket.
+
+---
+
 ## Report
 
 **Bug path:**
 ```
 ✓ Bug artefact created: todo/BUG-{slug}.md
 
-Source: {jira PROJ-123 | scratch}
+Source: {jira PROJ-123 | slack | scratch}
 Classified as: bug ({signal that triggered classification})
 Hypothesis: {one-line summary}
+Fix type: {content/config only | trivial code fix | non-trivial code fix}
 Open questions: {count}
 
-Recommended next step: /spwf:challenge todo/BUG-{slug}.md
+Recommended next step:
+  {if content/config only}  → Direct edit — no spec needed. Location: {where to edit}
+  {if trivial code fix}     → Fix directly, then /spwf:retrospective
+  {if non-trivial}          → /spwf:challenge todo/BUG-{slug}.md
 ```
 
 **Change path:**
 ```
 ✓ Ideation file created: todo/{slug}.md
 
-Source: {jira PROJ-123 | file path | scratch}
+Source: {jira PROJ-123 | slack | file path | scratch}
 Classified as: change ({signal that triggered classification, or "confirmed by user"})
 Qualify: {passed cleanly | 1 question asked | 2 questions asked — {N} gaps remain}
 Open questions: {count}
