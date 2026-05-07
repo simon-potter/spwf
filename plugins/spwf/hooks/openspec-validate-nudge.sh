@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # PostToolUse (Write|Edit) — nudge to run openspec validate after tasks.md is written
+#
+# Prerequisites: jq OR python3 (one must be present for JSON parsing), sed (universal)
 input=$(cat)
+
+if ! command -v jq &>/dev/null && ! command -v python3 &>/dev/null; then
+    printf '⚠  spwf hook: jq and python3 both missing — openspec-validate-nudge skipped\n' >&2
+    exit 0
+fi
 
 if command -v jq &>/dev/null; then
     file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')

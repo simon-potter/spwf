@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Stop hook — warn if there are uncommitted changes at end of session
-cat > /dev/null  # drain stdin
+#
+# Prerequisites: git
+cat >/dev/null 2>&1 || true  # drain stdin safely
+
+command -v git &>/dev/null || exit 0
 
 status=$(git status --short 2>/dev/null)
 [[ -z "$status" ]] && exit 0
