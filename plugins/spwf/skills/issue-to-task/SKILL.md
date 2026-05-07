@@ -12,7 +12,7 @@ Fetch a Jira ticket and produce a lightweight ideation file at `todo/{slug}.md`.
 
 ## Step 1: Fetch the ticket
 
-If `$ARGUMENTS` contains a ticket key (e.g. `ABAU-951`), fetch it:
+If `$ARGUMENTS` contains a ticket key (e.g. `PROJ-123`), fetch it:
 
 ```
 mcp__atlassian__jira_get_issue(issue_key="{TICKET}", fields="*all")
@@ -38,7 +38,7 @@ Parse the Jira ticket (arrives as Jira wiki markup) and extract:
 {ticket-id}-{kebab-case-title}
 ```
 
-Example: `ABAU-951-add-safeguarding-free-course`
+Example: `PROJ-123-add-feature-name`
 
 Ensure `todo/` directory exists:
 ```bash

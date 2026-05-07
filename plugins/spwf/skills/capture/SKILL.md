@@ -196,7 +196,7 @@ status: ideation
 
 After writing the artefact, if the source was **not** Jira (i.e. slack, file, or scratch), ask:
 
-> "Is there a Jira ticket for this? If not, I can create one — just give me the project key (e.g. `ABAU`)."
+> "Is there a Jira ticket for this? If not, I can create one — just give me the project key (e.g. `PROJ`)."
 
 If the user provides a project key:
 - Create a Jira issue using `mcp__atlassian__jira_create_issue` with the artefact title as summary and hypothesis/context as description
