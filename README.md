@@ -5,8 +5,8 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 ## The workflow
 
 ```
-[status] → [Capture] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Retrospective
- (orient)    (pre)      (gate)      (1)        (2)          (3)      (4)          (5)        (6)        (post)
+[status] → [Capture] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Close
+ (orient)    (pre)      (gate)      (1)        (2)          (3)      (4)          (5)        (6)       (post)
 ```
 
 ## Golden path
@@ -22,7 +22,8 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 | **Simplify** (TDD Refactor) | `/spwf:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
 | **PR Create** | `/spwf:pr-create` | `dep-audit` · `gh pr create` | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then PR creation; CI/CD owns the rest | PR URL |
 | **PR Review** | `/spwf:pr-review <PR>` | `gh pr view`, `gh pr diff` | Structured review before merge; catches regressions and drift | Review report with verdict |
-| **Retrospective** | `/spwf:retrospective` | `learn-from-mistakes` → change spec audit → `doc-lint` → `workflow-lint` → `changelog` (release only) | Extract learnings from commits; align spec artefacts with what was built; broad doc drift check; optional changelog generation for releases | Updated learnings, aligned spec, doc quality report |
+| **Retrospective** | `/spwf:retrospective` | `learn-from-mistakes` → change spec audit → `doc-lint` → `workflow-lint` → `changelog` (release only) | Extract learnings from commits; align spec artefacts with what was built; broad doc drift check; optional changelog generation for releases. Called automatically by Close. | Updated learnings, aligned spec, doc quality report |
+| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Atlassian MCP | Final phase — runs the full retrospective then, after explicit confirmation, marks the todo file complete, archives the OpenSpec change, and closes the linked Jira ticket | Closed todo, archived change, Jira ticket Done |
 
 ## Quality tools
 
