@@ -117,6 +117,10 @@ gh auth login
 
 Required only if pulling from Jira. Not needed for any other skill. Configure the Atlassian MCP server in your Claude Code settings.
 
+### 5. Hook prerequisites (`jq` or `python3`)
+
+The plugin ships four enforcement hooks that register automatically on install. They require `git` and either `jq` or `python3` for JSON parsing. Both are standard on Ubuntu/Debian. If neither is present the hooks print a named warning and skip rather than silently doing nothing.
+
 ### 5. `jq` (for `claudemd-curator` and `workspace-health`)
 
 Required for transcript mining in the behavioural audit phase.

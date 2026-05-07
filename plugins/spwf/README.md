@@ -55,6 +55,19 @@ Cross-cutting maintenance tools — run between sessions, on a cadence, or when 
 | `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | PHP-aware safe refactor: guard clauses, match, nullsafe, null coalescing, debug removal. |
 | `php-code-quality-reviewer` | `/spwf:php-code-quality-reviewer [path]` | PHP bad-practice analysis: correctness, security, performance, maintainability. |
 
+## Hooks
+
+Four hooks ship with the plugin and register automatically on install. All are advisory — they exit 0 and never block tool execution.
+
+| Hook | Event | What it does |
+|---|---|---|
+| `uncommitted-changes` | `Stop` | Warns at session end if `git status` shows uncommitted changes |
+| `plugin-version-check` | `PostToolUse Write\|Edit` | When `plugin.json` is modified, warns if the version field was not incremented |
+| `todo-frontmatter-check` | `PostToolUse Write\|Edit` | When a `todo/*.md` file is written, validates `source`, `status`, and `created` frontmatter fields are present |
+| `openspec-validate-nudge` | `PostToolUse Write\|Edit` | When `openspec/changes/**/tasks.md` is written, prints the `openspec validate {id} --strict` command |
+
+**Prerequisites:** `git` must be in PATH. JSON parsing requires `jq` or `python3` — if neither is present the hook prints a named warning and skips rather than silently doing nothing.
+
 ## Recommended external skills
 
 | Skill | Source | When referenced |
