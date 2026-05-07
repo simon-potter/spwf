@@ -17,8 +17,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 |---|---|---|
 | `capture` | `/spwf:capture [source]` | Classifies input as bug or change → bug path: investigation + `todo/BUG-{slug}.md`; change path: `issue-to-task` / `new-task` + `todo/{slug}.md` |
 | `build` | `/spwf:build` | `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` (Refactor) |
-| `retrospective` | `/spwf:retrospective` | `learn-from-mistakes` → change spec audit → `doc-lint` → `workflow-lint` → `changelog` (release only). Called automatically by `close`. |
-| `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` → mark todo complete → `opsx:archive` → Jira transition to Done |
+| `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog) → mark todo complete → `opsx:archive` → Jira transition to Done |
 
 ### Atomic skills
 
