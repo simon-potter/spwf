@@ -117,11 +117,7 @@ gh auth login
 
 Required only if pulling from Jira. Not needed for any other skill. Configure the Atlassian MCP server in your Claude Code settings.
 
-### 5. Hook prerequisites (`jq` or `python3`)
-
-The plugin ships four enforcement hooks that register automatically on install. They require `git` and either `jq` or `python3` for JSON parsing. Both are standard on Ubuntu/Debian. If neither is present the hooks print a named warning and skip rather than silently doing nothing.
-
-### 5. `jq` (for `claudemd-curator` and `workspace-health`)
+### 5. `jq` (for `claudemd-curator`, `workspace-health`, and hooks)
 
 Required for transcript mining in the behavioural audit phase.
 
@@ -144,6 +140,21 @@ These are not required to use the workflow but enable the security pre-flight ga
 | `cargo-audit` | `dep-audit` Rust | `cargo install cargo-audit` |
 | `govulncheck` | `dep-audit` Go | `go install golang.org/x/vuln/cmd/govulncheck@latest` |
 | `agentlint` | `workspace-health`, `claudemd-curator` | `npm install -g @agent-lint/cli` |
+
+---
+
+## Hooks
+
+Four hooks ship with the `spwf` plugin and register automatically on install. All are advisory — they exit 0 and never block tool execution.
+
+| Hook | Fires on | What it does |
+|---|---|---|
+| `uncommitted-changes` | Session end (`Stop`) | Runs `git status` and warns if there are uncommitted changes — reinforces the commit-at-each-step discipline built into the workflow |
+| `plugin-version-check` | `Write` or `Edit` on any `plugin.json` | Compares the version field against the last commit; warns if it was not bumped so downstream `/ plugin update` calls will pick up the change |
+| `todo-frontmatter-check` | `Write` or `Edit` on `todo/*.md` | Checks that the required frontmatter fields (`source`, `status`, `created`) are present — catches malformed capture output immediately |
+| `openspec-validate-nudge` | `Write` or `Edit` on `openspec/changes/**/tasks.md` | Prints the `openspec validate {change-id} --strict` command after tasks.md is written or updated |
+
+**Prerequisites:** `git` must be in PATH. JSON parsing requires `jq` or `python3` — if neither is present the hook prints a named warning and skips.
 
 ---
 
