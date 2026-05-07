@@ -13,8 +13,9 @@ Final phase of the SPWorkflow golden path. Retrospect, confirm, then permanently
 Step 1 → retrospective     (all 5 parts)
 Step 2 → confirm closure   (explicit human gate)
 Step 3 → mark todo done    (status: complete)
-Step 4 → archive OpenSpec  (opsx:archive)
-Step 5 → close Jira ticket (if linked)
+Step 4 → commit changes    (git commit with confirmation)
+Step 5 → archive OpenSpec  (opsx:archive)
+Step 6 → close Jira ticket (if linked)
 ```
 
 ---
@@ -64,8 +65,9 @@ Retrospective complete. Ready to close this change permanently.
 
 The following will happen:
   1. todo/{slug}.md          → status: complete
-  2. openspec/changes/{id}/  → archived (opsx:archive)
-  3. {PROJ-123}              → Jira status: Done   ← only if ticket is linked
+  2. git commit              → "chore: close {change-id}" (staged files + todo update)
+  3. openspec/changes/{id}/  → archived (opsx:archive)
+  4. {PROJ-123}              → Jira status: Done   ← only if ticket is linked
 
 Type "yes" to close, anything else to stop.
 ```
@@ -86,7 +88,21 @@ or whatever the current value is. Set it to `complete`. Do not touch any other f
 
 ---
 
-## Step 5 — Archive OpenSpec change
+## Step 5 — Commit closure changes
+
+Run `git status` to show the user what will be committed (includes the todo file update and any retrospective spec/doc edits). Then commit:
+
+```bash
+git commit -m "chore: close {change-id}"
+```
+
+If there is nothing to commit (`git status` shows a clean tree), skip silently and note "Nothing to commit."
+
+Do not push — that remains the user's explicit action.
+
+---
+
+## Step 6 — Archive OpenSpec change
 
 Run:
 
@@ -98,7 +114,7 @@ If the command fails, report the error and stop — do not proceed to Step 6 unt
 
 ---
 
-## Step 6 — Close Jira ticket
+## Step 7 — Close Jira ticket
 
 Only run this step if the todo file has a `ticket:` field.
 
@@ -130,6 +146,7 @@ If no `ticket:` is present: skip this step silently (report "No Jira ticket link
 
 ### Closure
 ✓ todo/{slug}.md              → status: complete
+✓ git commit                  → chore: close {change-id}
 ✓ openspec/changes/{id}/      → archived
 {✓ PROJ-123                   → Done     | — No Jira ticket linked}
 
