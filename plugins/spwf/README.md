@@ -26,7 +26,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation: where am I, what's next |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from Jira |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch |
-| `challenge` | `/spwf:challenge [file]` | Gate — Surface gaps before committing to spec |
+| `challenge` | `/spwf:challenge [file]` | Gate — Interview until all questions resolved; scope-sizing check recommends splitting or proceeding as one change |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
 | `spec` | `/spwf:spec` | 1 — Convert ideation file into full OpenSpec change proposal |
 | `approve-plan` | `/spwf:approve-plan` | 2 — Quality-check task list; human sign-off gate |
