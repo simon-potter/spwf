@@ -214,11 +214,12 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 
 ## What's included
 
-### `spwf` — 28 workflow skills
+### `spwf` — 29 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
 | `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation |
+| `pause` | `/spwf:pause [next-ref]` | Interrupt — Mid-flight context switch: document state in active todo file, commit + push in-flight work, switch to main ready for next capture |
 | `capture` | `/spwf:capture [source]` | Pre — Capture (orchestrator); auto-classifies bugs vs changes |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (atomic; YouTrack default) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch (atomic) |

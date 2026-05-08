@@ -24,6 +24,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
 | `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation: where am I, what's next |
+| `pause` | `/spwf:pause [next-ref]` | Interrupt — Document state, commit + push in-flight work, switch to main ready for the next capture |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (YouTrack default; Jira and others supported) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch |
 | `challenge` | `/spwf:challenge [file]` | Gate — Interview until all questions resolved; scope-sizing check recommends splitting or proceeding as one change |
