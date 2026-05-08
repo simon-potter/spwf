@@ -36,7 +36,8 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `simplify` | `/spwf:simplify` | 4 — Remove dead code and unnecessary complexity |
 | `pr-create` | `/spwf:pr-create` | 5 — Pre-flight checks then PR creation |
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — Fetch and review a PR; structured report |
-| `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Extract learnings from commits |
+| `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Extract learnings from commits (rules for the project) |
+| `recap` | `/spwf:recap [change-id]` | Post — Teaching summary for the user: concepts touched, decisions made, surprises, growth pointers |
 | `changelog` | `/spwf:changelog [ref]` | Post — Release notes from conventional commits |
 
 ## Quality tools
@@ -145,6 +146,28 @@ multi-instance routing live in user-level Claude Code MCP settings — never in 
 Full reference: `skills/_shared/tracker-dispatch.md` (covers YouTrack setup, the
 multi-instance `mcp_server:` override, the discovery session for pinning tool names,
 and how to add Linear or other trackers).
+
+## Learning modes (in-session)
+
+Claude Code ships two output styles that change how Claude *thinks* during a
+session, not just how it writes:
+
+- **`Explanatory`** — Claude states *why* it's making each change as it works.
+  Useful when onboarding to an unfamiliar codebase or when a teammate will
+  read the diff cold and shouldn't have to reconstruct your reasoning.
+- **`Learning`** — Claude coaches you through the change rather than making
+  it for you. Useful when you want to grow expertise on the topic at hand,
+  not just ship.
+
+These are most valuable during **capture**, **challenge**, and early **build**
+when forming understanding. The TDD-disciplined `build` loop runs faster in
+the default style.
+
+The post-hoc complement is `/spwf:recap` — at close, it crystallises concepts
+and decisions from a change you've already shipped.
+
+Set with the `--output-style` flag at launch, or `outputStyle` in
+`settings.json`. See [Claude Code output styles](https://docs.claude.com/en/docs/claude-code/output-styles).
 
 ## Attribution
 

@@ -1,6 +1,6 @@
 ---
 name: retrospective
-description: Post-ship orchestrator — Three-part retrospective after completing a change. (1) Extract learnings from commits via learn-from-mistakes. (2) Audit the current change's OpenSpec artefacts against what was actually built — flags spec drift, undocumented decisions, orphaned requirements. (3) Broad doc-lint pass across project docs for general drift and quality degradation.
+description: Post-ship orchestrator — Six-part retrospective after completing a change. (1) Extract learnings from commits via learn-from-mistakes. (2) Audit the current change's OpenSpec artefacts against what was actually built. (3) Broad doc-lint pass. (4) workflow-lint sweep. (5) Recap — teaching summary for the human (default on, one-key skip). (6) Changelog — release notes (default off, opt-in for releases).
 disable-model-invocation: true
 allowed-tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---
@@ -14,7 +14,8 @@ Part 1 → learn-from-mistakes     (extract learnings from recent commits)
 Part 2 → change spec audit       (align OpenSpec artefacts with what was built)
 Part 3 → doc-lint                (broad project docs drift check)
 Part 4 → workflow-lint           (full golden path coherence sweep)
-Part 5 → changelog               (optional — only when preparing a release)
+Part 5 → recap                   (teaching summary for the user; default on, one-key skip)
+Part 6 → changelog               (release notes; default off, opt-in for releases)
 ```
 
 ---
@@ -91,7 +92,35 @@ This is a full sweep. Do not scope it to the current change only — the point i
 
 ---
 
-## Part 5 — Changelog (release only)
+## Part 5 — Recap (teaching summary for the user)
+
+Default on, one-key skip. Ask:
+
+```
+Generate recap? [Y/n]
+```
+
+Pressing enter accepts. If the user says "n" / "no", skip and note "Part 5 skipped (recap declined)" in the retrospective report.
+
+If yes, invoke `spwf:recap` with the change-id passed explicitly and a marker
+indicating Part-5 invocation (so the skill renders at `####` heading depth
+nested under `### Part 5 — Recap`). The recap mines five sources (todo file,
+proposal, design, specs, git log) and produces 5 sections: What changed,
+Concepts touched, Decisions, What surprised us, Read next. Anti-padding rules
+ensure empty sections are skipped rather than filled.
+
+After the recap is printed, the skill offers to save it to
+`openspec/changes/{change-id}/recap.md` (default no). If saved, the file
+travels with the change into the OpenSpec archive automatically when `close`
+runs `opsx:archive` later.
+
+This is **distinct from `learn-from-mistakes`** in Part 1: that captures rules
+for the project (added to `docs/`); this captures takeaways for the user
+(printed in-session, optionally saved).
+
+---
+
+## Part 6 — Changelog (release only)
 
 **Only run this part if the user is preparing a release.** Ask explicitly before proceeding:
 
@@ -106,7 +135,7 @@ If yes, invoke `spwf:changelog`. The skill will:
 - Draft a changelog section in Keep a Changelog format
 - Present for approval before writing to `CHANGELOG.md`
 
-If no, skip silently — the retrospective report notes "Part 5 skipped (no release)".
+If no, skip silently — the retrospective report notes "Part 6 skipped (no release)".
 
 ---
 
@@ -127,7 +156,10 @@ If no, skip silently — the retrospective report notes "Part 5 skipped (no rele
 ### Part 4 — workflow-lint
 {✓ Coherent | P1/P2/P3 findings from workflow-lint}
 
-### Part 5 — Changelog
+### Part 5 — Recap
+{skipped (declined) | full recap inline as #### sub-sections; "✓ Saved to {path}" or "— Not saved" footer}
+
+### Part 6 — Changelog
 {skipped (no release) | ✓ CHANGELOG.md updated — v{version}, {N} entries}
 
 ### Recommended actions

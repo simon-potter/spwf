@@ -1,6 +1,6 @@
 ---
 name: close
-description: Final-phase orchestrator — wraps the full retrospective then permanently closes the change. Invokes /spwf:retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, optional changelog), then — after explicit confirmation — marks the todo file complete, archives the OpenSpec change, and transitions the linked issue tracker ticket to its done state (YouTrack default; Jira and others supported).
+description: Final-phase orchestrator — wraps the full retrospective then permanently closes the change. Invokes /spwf:retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, recap teaching summary, optional changelog), then — after explicit confirmation — marks the todo file complete, archives the OpenSpec change, and transitions the linked issue tracker ticket to its done state (YouTrack default; Jira and others supported).
 disable-model-invocation: true
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_update_issue]
 ---

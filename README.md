@@ -22,7 +22,7 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 | **Simplify** (TDD Refactor) | `/spwf:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
 | **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; CI/CD owns the rest | PR / MR URL |
 | **PR / MR Review** | `/spwf:pr-review <ref>` | forge CLI (`glab mr view/diff` default; `gh pr view/diff` supported) | Structured review before merge; catches regressions and drift | Review report with verdict |
-| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Issue tracker MCP | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, optional changelog), then after explicit confirmation marks the todo file complete, archives the OpenSpec change, and transitions the linked tracker ticket to its done state (per `.spwf/tracker.yaml`) | Closed todo, archived change, tracker ticket marked done |
+| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Issue tracker MCP | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, **recap** teaching summary, optional changelog), then after explicit confirmation marks the todo file complete, archives the OpenSpec change, and transitions the linked tracker ticket to its done state (per `.spwf/tracker.yaml`) | Closed todo, archived change, optional `recap.md` saved alongside, tracker ticket marked done |
 
 ## Quality tools
 
@@ -214,7 +214,7 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 
 ## What's included
 
-### `spwf` — 27 workflow skills
+### `spwf` — 28 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
@@ -233,8 +233,9 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 | `simplify` | `/spwf:simplify` | 4 — Simplify |
 | `pr-create` | `/spwf:pr-create` | 5 — PR Create |
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — PR Review |
-| `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Retrospective (atomic) |
-| `changelog` | `/spwf:changelog [ref]` | Post — Release notes from conventional commits (atomic) |
+| `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Retrospective Part 1 (rules for the project; atomic) |
+| `recap` | `/spwf:recap [change-id]` | Post — Retrospective Part 5 (teaching summary for the user; atomic) |
+| `changelog` | `/spwf:changelog [ref]` | Post — Retrospective Part 6 (release notes from conventional commits; atomic) |
 | `retrospective` | `/spwf:retrospective` | Post — Retrospective (orchestrator) |
 | `workspace-health` | `/spwf:workspace-health` | Cross-cutting — periodic health check |
 | `claudemd-curator` | `/spwf:claudemd-curator` | Cross-cutting — instruction file audit and sync |
