@@ -13,6 +13,79 @@ allowed-tools: [Read, Write, Glob, Grep, Bash, mcp__youtrack__*, mcp__atlassian_
 
 Accept any input, classify it, and produce an ideation file ready for `/spwf:challenge`.
 
+## Step 0 — Git context check
+
+Lightweight scan of the current git state. Hard warnings interrupt with one
+confirmation; soft notes print inline and continue. Clean state produces no
+output — pristine repos see nothing.
+
+### Collect
+
+```bash
+BRANCH=$(git branch --show-current)
+DEFAULT_BASE=${DEFAULT_BASE:-main}
+HAS_BASE=$(git show-ref --verify --quiet "refs/heads/$DEFAULT_BASE" && echo yes || echo no)
+DIRTY_COUNT=$(git status --porcelain | wc -l | tr -d ' ')
+LAST_COMMIT_DAYS=$(( ($(date +%s) - $(git log -1 --format=%ct 2>/dev/null || date +%s)) / 86400 ))
+BEHIND=0
+AHEAD=0
+ALREADY_MERGED=no
+if [ "$HAS_BASE" = "yes" ] && [ "$BRANCH" != "$DEFAULT_BASE" ] && [ "$BRANCH" != "master" ]; then
+  BEHIND=$(git rev-list --count "HEAD..$DEFAULT_BASE" 2>/dev/null || echo 0)
+  AHEAD=$(git rev-list --count "$DEFAULT_BASE..HEAD" 2>/dev/null || echo 0)
+  git merge-base --is-ancestor HEAD "$DEFAULT_BASE" 2>/dev/null && ALREADY_MERGED=yes || true
+fi
+```
+
+If the repo has no commits at all (`git log` fails), skip this step entirely.
+
+### Smell rules
+
+| Smell | Detection | Severity |
+|---|---|---|
+| Working tree has uncommitted changes | `DIRTY_COUNT > 0` | **Hard** |
+| Branch is already merged into base (and isn't the base) | `ALREADY_MERGED == yes` and `AHEAD == 0` | **Hard** — the branch is leftover; new work should probably start fresh |
+| Branch is very stale | `LAST_COMMIT_DAYS > 30` AND `BEHIND > 50` | **Hard** |
+| Currently on `main` / `master` / base | `BRANCH == DEFAULT_BASE` or `master` | Soft note — capture writes ideation only; branching happens at spec/build |
+| Branch is behind base | `BEHIND > 0` (and not already covered by stale rule) | Soft note |
+
+### Hard warnings (interrupt with single confirmation)
+
+If any hard smells fire, print them stacked under one warning header and ask
+once:
+
+```
+⚠ Git smells detected:
+  • Working tree has 3 uncommitted changes
+  • Branch `old-feature` is already merged into main (29 commits behind)
+
+Continue capture anyway? [Y/n]
+```
+
+Press enter / 'y' to proceed. 'n' aborts capture cleanly with no file
+written. The warning is one prompt regardless of how many smells fired —
+don't ask repeatedly.
+
+### Soft notes (informational, no prompt)
+
+For each soft note, print one line and continue:
+
+```
+ℹ On `main` — capture writes the ideation file; spec or build will branch.
+ℹ Branch `feature/x` is 4 commits behind `main`.
+```
+
+### Skip conditions
+
+Skip Step 0 entirely (no output, no checks) if:
+- Not in a git repo (`git rev-parse --is-inside-work-tree` non-zero), OR
+- The repo has no commits yet
+
+This keeps brand-new projects and non-git contexts from tripping the smell
+checks.
+
+---
+
 ## Step 1 — Fetch input
 
 Read `$ARGUMENTS`:

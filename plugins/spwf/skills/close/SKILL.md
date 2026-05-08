@@ -10,12 +10,13 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atla
 Final phase of the SPWorkflow golden path. Retrospect, confirm, then permanently close the change.
 
 ```
-Step 1 → retrospective       (all 5 parts)
+Step 1 → retrospective       (all 6 parts)
 Step 2 → confirm closure     (explicit human gate)
 Step 3 → mark todo done      (status: complete)
 Step 4 → commit changes      (git commit with confirmation)
 Step 5 → archive OpenSpec    (opsx:archive)
 Step 6 → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
+Step 7 → delete local branch  (default on, conscious skip with [Y/n])
 ```
 
 ---
@@ -68,6 +69,7 @@ The following will happen:
   2. git commit              → "chore: close {change-id}" (staged files + todo update)
   3. openspec/changes/{id}/  → archived (opsx:archive)
   4. {ACAD-42}               → tracker state: {done_state}   ← only if ticket is linked
+  5. local branch `{name}`   → deleted (with safety checks; conscious skip available)
 
 Type "yes" to close, anything else to stop.
 ```
@@ -148,6 +150,156 @@ ticket-transition row as failed.
 
 ---
 
+## Step 8 — Delete local feature branch
+
+Final cleanup step. Default behaviour is to delete; skipping requires a
+conscious 'n'.
+
+### Identify the feature branch
+
+```bash
+CURRENT=$(git branch --show-current)
+DEFAULT_BASE=${DEFAULT_BASE:-main}
+```
+
+| Situation | Candidate branch |
+|---|---|
+| `CURRENT` is not `main`/`master`/`DEFAULT_BASE` | `CURRENT` is the candidate. |
+| `CURRENT` is `main`/`master` | Look at `git branch --merged main` for branches related to the change-id slug (substring match). If multiple, list and ask. |
+| No candidates found | Skip this step silently. Note "No feature branch identified." in the report. |
+
+### Safety checks (halt or warn on each)
+
+Run in order. Halt on any failure unless noted.
+
+1. **Working tree clean?**
+
+   ```bash
+   test -z "$(git status --porcelain)"
+   ```
+
+   If dirty: halt with *"Working tree has uncommitted changes — commit or
+   stash before deleting branch. Step 8 skipped."* The other closure steps
+   already ran; only branch deletion is skipped.
+
+2. **Currently on the branch we'd delete?**
+
+   If `CURRENT == candidate`: ask before switching.
+
+   ```
+   You are currently on `{candidate}`. To delete it I need to switch to
+   `{DEFAULT_BASE}` and pull latest. Switch and pull? [Y/n]
+   ```
+
+   If 'n': skip Step 8 silently. The branch stays.
+   If 'y' (or enter): `git checkout {DEFAULT_BASE} && git pull --ff-only`.
+   If pull fails (diverged, conflicts): halt with the error and skip Step 8.
+
+3. **Branch is merged?**
+
+   Try ancestor check first (works for merge-commit and rebase-merge):
+
+   ```bash
+   git merge-base --is-ancestor {candidate} {DEFAULT_BASE}
+   ```
+
+   If exit 0: merged. Proceed to safety check 4.
+
+   If non-zero: ancestor check failed (likely squash-merge). Try the forge
+   in order:
+   - If a tracker `ticket:` is present and a forge CLI is configured per
+     `_shared/forge-dispatch.md`, run `{cli} pr/mr list --head {candidate}`
+     to find the most recent PR/MR for this branch.
+     - If state is `merged`: treat as merged (squash-merge case).
+     - If state is `open`: halt with *"PR/MR for `{candidate}` is still open
+       — branch deletion skipped."*
+     - If state is `closed-not-merged`: halt with *"PR/MR for `{candidate}`
+       was closed without merging — branch deletion skipped to preserve
+       work."*
+   - If forge CLI is not available: ask the user
+
+     ```
+     Cannot auto-detect merge status of `{candidate}`. Has the change been
+     merged? [y/N]
+     ```
+
+     Default no (preserve the branch on uncertainty). If 'y': proceed
+     treating as merged.
+
+4. **No unpushed commits?**
+
+   ```bash
+   git rev-list --count {candidate}@{u}..{candidate} 2>/dev/null
+   ```
+
+   If `> 0` (branch has commits not on its upstream): warn with the count
+   and ask:
+
+   ```
+   ⚠ `{candidate}` has {N} commit(s) not pushed to its upstream. These
+   will be lost if you delete the branch. Continue with deletion anyway?
+   [y/N]
+   ```
+
+   Default no.
+
+   If the branch has no upstream tracking ref at all, treat that as
+   "nothing to push" and proceed silently — local-only branches don't have
+   anything to lose at the remote level.
+
+### Confirm and delete
+
+Print a summary and confirm:
+
+```
+Branch: {candidate}
+Tip:    {short-hash} {subject} ({relative-date})
+Status: {merged via ancestor | merged via PR | user-confirmed merged}
+
+Delete local branch `{candidate}`? [Y/n]
+```
+
+If 'n': skip silently. The branch stays. Note "Branch kept" in the report.
+
+If 'y' or enter:
+
+```bash
+git branch -d {candidate}
+```
+
+If git refuses (squash-merge and the local view doesn't see ancestry):
+
+```
+git branch -d` refused: `{candidate}` is not ancestor-merged in the local
+view. This is normal for squash-merged PRs where the merge commit on
+{DEFAULT_BASE} doesn't share ancestry with the branch tip.
+
+Force delete with `git branch -D`? [y/N]
+```
+
+Default no. If 'n': keep the branch and report "Branch kept (force delete
+declined)". If 'y': run `git branch -D {candidate}`.
+
+### Remote tracking branch
+
+After successful local delete, check whether a stale remote-tracking ref
+exists:
+
+```bash
+git ls-remote --exit-code origin {candidate} 2>/dev/null
+```
+
+- If `exit 0` (remote branch still exists): note in the report
+  *"Remote branch `origin/{candidate}` still exists. Delete with `git push origin --delete {candidate}` if desired."* Do not delete remote
+  automatically — that's a destructive shared-state action and stays in the
+  user's hands.
+- If non-zero (remote already gone): silent.
+
+Run `git remote prune origin` after a successful local delete to clean up
+stale remote-tracking refs locally.
+
+---
+
 ## Report
 
 ```
@@ -161,6 +313,8 @@ ticket-transition row as failed.
 ✓ git commit                  → chore: close {change-id}
 ✓ openspec/changes/{id}/      → archived
 {✓ {ticket}                   → {done_state}     | — No tracker ticket linked}
+{✓ branch `{name}`            → deleted     | ⊘ branch `{name}` kept ({reason}) | — No feature branch identified}
+{ℹ Remote `origin/{name}` still exists. Delete with `git push origin --delete {name}` if desired.}
 
 ### Recommended actions
 {any unresolved items from retrospective that need follow-up}
