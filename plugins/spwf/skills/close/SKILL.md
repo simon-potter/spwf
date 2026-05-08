@@ -65,8 +65,8 @@ Present a summary of what will be permanently changed, then ask for a single yes
 Retrospective complete. Ready to close this change permanently.
 
 The following will happen:
-  1. todo/{slug}.md          → status: complete
-  2. git commit              → "chore: close {change-id}" (staged files + todo update)
+  1. todo/{slug}.md          → status: complete, moved to todo/_done/{slug}.md
+  2. git commit              → "chore: close {change-id}" (staged files + todo update + move)
   3. openspec/changes/{id}/  → archived (opsx:archive)
   4. {ACAD-42}               → tracker state: {done_state}   ← only if ticket is linked
   5. local branch `{name}`   → deleted (with safety checks; conscious skip available)
@@ -78,7 +78,9 @@ If the user does not say "yes" (or "y"): stop and report "Closure cancelled — 
 
 ---
 
-## Step 4 — Mark todo complete
+## Step 4 — Mark todo complete and move to `todo/_done/`
+
+### 4a. Edit status
 
 Edit the todo file. Change the frontmatter field:
 
@@ -87,6 +89,37 @@ status: ideation  →  status: complete
 ```
 
 or whatever the current value is. Set it to `complete`. Do not touch any other frontmatter fields or body content.
+
+### 4b. Move to `todo/_done/`
+
+Once the status edit is made, move the file out of the active todo
+directory and into the completed archive:
+
+```bash
+mkdir -p todo/_done
+git mv {todo-path} todo/_done/{filename}
+```
+
+Where `{todo-path}` is the file's current location (e.g. `todo/{slug}.md`
+or `todo/BUG-{slug}.md`) and `{filename}` is its basename.
+
+**Collision check before moving.** If `todo/_done/{filename}` already
+exists (prior failed close, or duplicate slug across changes), halt with:
+
+> *"Collision: `todo/_done/{filename}` already exists. Resolve manually
+> (rename or delete the older file) and re-run /spwf:close."*
+
+Do not auto-resolve — the existing file may be load-bearing context the
+user needs to inspect.
+
+The status edit and the move both land in Step 5's closure commit
+atomically (`git mv` stages both the deletion of the old path and the
+addition of the new path; `git commit` records them together with the
+status change).
+
+If the file is not tracked by git for some reason
+(`git ls-files --error-unmatch {todo-path}` fails), fall back to plain
+`mv` and warn that the move isn't recorded in git history.
 
 ---
 
@@ -309,7 +342,7 @@ stale remote-tracking refs locally.
 {brief summary of retrospective findings — learnings count, drift items, doc issues, workflow issues}
 
 ### Closure
-✓ todo/{slug}.md              → status: complete
+✓ todo/{slug}.md              → status: complete, moved to todo/_done/{slug}.md
 ✓ git commit                  → chore: close {change-id}
 ✓ openspec/changes/{id}/      → archived
 {✓ {ticket}                   → {done_state}     | — No tracker ticket linked}

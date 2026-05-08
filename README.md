@@ -22,7 +22,7 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 | **Simplify** (TDD Refactor) | `/spwf:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
 | **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; CI/CD owns the rest | PR / MR URL |
 | **PR / MR Review** | `/spwf:pr-review <ref>` | forge CLI (`glab mr view/diff` default; `gh pr view/diff` supported) | Structured review before merge; catches regressions and drift | Review report with verdict |
-| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Issue tracker MCP → branch cleanup | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, **recap** teaching summary, optional changelog), then after explicit confirmation marks the todo file complete, archives the OpenSpec change, transitions the linked tracker ticket to its done state, and deletes the local feature branch with safety checks (clean tree, merged state via ancestor check + forge CLI fallback, no unpushed commits; `[Y/n]` default-delete with conscious skip) | Closed todo, archived change, optional `recap.md`, tracker done, local feature branch deleted |
+| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Issue tracker MCP → branch cleanup | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, **recap** teaching summary, optional changelog), then after explicit confirmation marks the todo `status: complete`, **moves it to `todo/_done/`**, archives the OpenSpec change, transitions the linked tracker ticket, and deletes the local feature branch with safety checks (clean tree, merged via ancestor check + forge CLI fallback, no unpushed commits; `[Y/n]` default-delete with conscious skip) | `todo/_done/{slug}.md`, archived change, optional `recap.md`, tracker done, local branch deleted |
 
 ## Quality tools
 
@@ -39,6 +39,7 @@ A second class of skills sits outside the main workflow. These are cross-cutting
 | `workflow-lint` | `/spwf:workflow-lint` | Golden path feels out of sync — skill names changed, agents don't cover a phase, a cross-reference is broken. Sweeps the full plugin tree for coherence issues. |
 | `agent-optimise` | `/spwf:agent-optimise` | Lightweight agent/skill audit without external dependencies. Audits both plugin-scoped and user-scoped agents for description quality, tool scope, and model assignment. Use when agentlint is not available or as a quick spot-check. |
 | `doc-lint` | `/spwf:doc-lint` | Documentation has accumulated drift — stale READMEs, broken links, misaligned specs. |
+| `migrate-todo` | `/spwf:migrate-todo [path]` | Audit `todo/` for legacy files (no frontmatter, missing fields, completed-but-still-in-active-pool). Mirrors doc-lint flags. Pair with `/spwf:close` which prospectively moves completed todos to `todo/_done/`; this skill catches the retroactive backlog. |
 
 ### `claudemd-curator` in depth
 
@@ -214,7 +215,7 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 
 ## What's included
 
-### `spwf` — 29 workflow skills
+### `spwf` — 30 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
@@ -243,6 +244,7 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 | `workflow-lint` | `/spwf:workflow-lint` | Cross-cutting — golden path coherence audit |
 | `agent-optimise` | `/spwf:agent-optimise` | Cross-cutting — agent/skill audit |
 | `doc-lint` | `/spwf:doc-lint` | Cross-cutting — documentation drift check |
+| `migrate-todo` | `/spwf:migrate-todo [path]` | Cross-cutting — bring legacy todo files into the convention; move completed work to `todo/_done/` |
 | `security-scan` | `/spwf:security-scan [path]` | On-demand — OWASP Top 10 + deep SQL injection review |
 | `dep-audit` | `/spwf:dep-audit` | On-demand / pre-PR — dependency CVE audit, Docker-aware |
 | `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | On-demand — PHP safe refactor |

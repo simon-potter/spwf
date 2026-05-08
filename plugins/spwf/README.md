@@ -52,6 +52,7 @@ Cross-cutting maintenance tools — run between sessions, on a cadence, or when 
 | `workflow-lint` | `/spwf:workflow-lint` | Golden path coherence audit: step↔skill coverage, agent coverage, cross-reference validity. |
 | `agent-optimise` | `/spwf:agent-optimise` | Lightweight agent/skill audit. Use when agentlint is unavailable or as a quick spot-check. |
 | `doc-lint` | `/spwf:doc-lint` | Documentation drift check: stale READMEs, broken links, misaligned specs. |
+| `migrate-todo` | `/spwf:migrate-todo [path]` | Audit `todo/` for legacy files. Compliant frontmatter is skipped; partial/legacy files get normalised; `status: complete` files move to `todo/_done/`. Mirrors doc-lint flags (`--fix` interactive, `--auto-fix` batch). |
 | `security-scan` | `/spwf:security-scan [path]` | Deep security review: OWASP Top 10 + SQL injection across PHP, Python, JS, Go. |
 | `dep-audit` | `/spwf:dep-audit` | Multi-ecosystem dependency CVE audit (npm, Composer, pip, cargo, govulncheck, bundle). Docker Compose-aware. |
 | `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | PHP-aware safe refactor: guard clauses, match, nullsafe, null coalescing, debug removal. |
