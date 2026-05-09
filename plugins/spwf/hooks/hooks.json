@@ -10,6 +10,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__youtrack__.*|mcp__atlassian__jira_create_issue|mcp__atlassian__jira_update_issue|mcp__atlassian__jira_add_comment",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/tracker-comment-nudge.sh\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write",

@@ -228,7 +228,7 @@ These are not required to use the workflow but enable the security pre-flight ga
 
 ## Hooks
 
-Four hooks ship with the `spwf` plugin and register automatically on install. All are advisory — they exit 0 and never block tool execution.
+Five hooks ship with the `spwf` plugin and register automatically on install. All are advisory — they exit 0 and never block tool execution. See `plugins/spwf/hooks/README.md` for conventions.
 
 | Hook | Fires on | What it does |
 |---|---|---|
@@ -236,6 +236,7 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 | `plugin-version-check` | `Write` or `Edit` on any `plugin.json` | Compares the version field against the last commit; warns if it was not bumped so downstream `/ plugin update` calls will pick up the change |
 | `todo-frontmatter-check` | `Write` or `Edit` on `todo/*.md` | Checks that the required frontmatter fields (`source`, `status`, `created`) are present — catches malformed capture output immediately |
 | `openspec-validate-nudge` | `Write` or `Edit` on `openspec/changes/**/tasks.md` | Prints the `openspec validate {change-id} --strict` command after tasks.md is written or updated |
+| `tracker-comment-nudge` | `PreToolUse` on tracker write tools | Before a tracker comment/issue write, warns if the body looks heavy-technical (multi-block + long, or code + ≥5 file refs) and suggests `/spwf:tracker-comment` for audience-aware rewriting. Advisory only |
 
 **Prerequisites:** `git` must be in PATH. JSON parsing requires `jq` or `python3` — if neither is present the hook prints a named warning and skips.
 
@@ -243,7 +244,7 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 
 ## What's included
 
-### `spwf` — 30 workflow skills
+### `spwf` — 31 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
@@ -265,6 +266,7 @@ Four hooks ship with the `spwf` plugin and register automatically on install. Al
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — PR Review |
 | `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Retrospective Part 1 (rules for the project; atomic) |
 | `recap` | `/spwf:recap [change-id]` | Post — Retrospective Part 5 (teaching summary for the user; atomic) |
+| `tracker-comment` | `/spwf:tracker-comment [issue-id]` | On-demand — Audience-aware comment to a tracker issue (human-targeted: plain English, ≤150 words, one clear ask; record-targeted: light cleanup, full detail allowed) |
 | `changelog` | `/spwf:changelog [ref]` | Post — Retrospective Part 6 (release notes from conventional commits; atomic) |
 | `retrospective` | `/spwf:retrospective` | Post — Retrospective (orchestrator) |
 | `workspace-health` | `/spwf:workspace-health` | Cross-cutting — periodic health check |
@@ -326,10 +328,12 @@ spwf/
 │   │   │   └── plugin.json                # name, version, author
 │   │   ├── hooks/                         # auto-registered on plugin install
 │   │   │   ├── hooks.json                 # hook event wiring
+│   │   │   ├── README.md                  # conventions and how to add a hook
 │   │   │   ├── uncommitted-changes.sh     # Stop: warn on dirty working tree
 │   │   │   ├── plugin-version-check.sh    # Write|Edit: warn if plugin.json version unchanged
 │   │   │   ├── todo-frontmatter-check.sh  # Write|Edit: validate todo/*.md frontmatter
-│   │   │   └── openspec-validate-nudge.sh # Write|Edit: nudge openspec validate after tasks.md
+│   │   │   ├── openspec-validate-nudge.sh # Write|Edit: nudge openspec validate after tasks.md
+│   │   │   └── tracker-comment-nudge.sh   # PreToolUse: warn if tracker write looks heavy-technical
 │   │   ├── skills/
 │   │   │   └── {skill-name}/
 │   │   │       ├── SKILL.md               # skill definition (disable-model-invocation: true)

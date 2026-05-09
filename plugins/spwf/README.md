@@ -39,6 +39,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — Fetch and review a PR; structured report |
 | `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Extract learnings from commits (rules for the project) |
 | `recap` | `/spwf:recap [change-id]` | Post — Teaching summary for the user: concepts touched, decisions made, surprises, growth pointers |
+| `tracker-comment` | `/spwf:tracker-comment [issue-id]` | On-demand — Post an audience-aware comment to the linked tracker issue. Classifies as human (rewrites for plain English, ≤150 words, one clear ask) or record (light cleanup, full technical detail allowed). |
 | `changelog` | `/spwf:changelog [ref]` | Post — Release notes from conventional commits |
 
 ## Quality tools
@@ -60,7 +61,7 @@ Cross-cutting maintenance tools — run between sessions, on a cadence, or when 
 
 ## Hooks
 
-Four hooks ship with the plugin and register automatically on install. All are advisory — they exit 0 and never block tool execution.
+Five hooks ship with the plugin and register automatically on install. All are advisory — they exit 0 and never block tool execution. See `hooks/README.md` for conventions and how to add a new one.
 
 | Hook | Event | What it does |
 |---|---|---|
@@ -68,6 +69,7 @@ Four hooks ship with the plugin and register automatically on install. All are a
 | `plugin-version-check` | `PostToolUse Write\|Edit` | When `plugin.json` is modified, warns if the version field was not incremented |
 | `todo-frontmatter-check` | `PostToolUse Write\|Edit` | When a `todo/*.md` file is written, validates `source`, `status`, and `created` frontmatter fields are present |
 | `openspec-validate-nudge` | `PostToolUse Write\|Edit` | When `openspec/changes/**/tasks.md` is written, prints the `openspec validate {id} --strict` command |
+| `tracker-comment-nudge` | `PreToolUse` (tracker write tools) | Before a tracker write (`mcp__youtrack__*`, Jira create/update/add_comment), warns if the body looks heavy-technical (≥2 code blocks + >600 chars, or ≥1 code block + ≥5 file refs) and suggests `/spwf:tracker-comment` for audience-aware rewriting. Advisory only — never blocks. |
 
 **Prerequisites:** `git` must be in PATH. JSON parsing requires `jq` or `python3` — if neither is present the hook prints a named warning and skips rather than silently doing nothing.
 

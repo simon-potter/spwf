@@ -69,18 +69,24 @@ Setting `tracker:` explicitly skips the probe and forces a single tracker.
 
 ## Operation contract
 
-Every tracker-touching skill needs at most four logical operations.
+Every tracker-touching skill needs at most five logical operations.
 
 | Operation | What it returns | Used by |
 |---|---|---|
-| `get_issue(id)` | id, title, description, type, state, labels | `capture`, `issue-to-task`, `close` |
+| `get_issue(id)` | id, title, description, type, state, labels, recent commenters | `capture`, `issue-to-task`, `close`, `tracker-comment` |
 | `search_issues(query)` | list of `{id, title}` | `capture`, `issue-to-task` |
 | `create_issue(project, title, body)` | new issue id | `capture` (when source was not a tracker) |
 | `set_state(id, state)` | confirmation of new state | `close` |
+| `add_comment(id, body)` | new comment id or confirmation | `tracker-comment` |
 
 YouTrack uses **field-set commands** to change state (`State Done`); Jira uses **named
 transitions** (`Done`, `Closed`). Both fall under the abstract `set_state` — the
 dispatch row hides the difference.
+
+`add_comment` posts a comment on an existing issue thread. Distinct from
+`create_issue` (which records a new issue) and from `set_state` (which has no
+body). Used by `tracker-comment` for audience-aware status updates and feedback
+requests.
 
 ---
 
@@ -92,9 +98,14 @@ dispatch row hides the difference.
 | `search_issues` | `mcp__youtrack__*` (YouTrack query DSL) | `mcp__atlassian__jira_search_issues` |
 | `create_issue` | `mcp__youtrack__*` (create in `project`) | `mcp__atlassian__jira_create_issue` |
 | `set_state` | `mcp__youtrack__*` (apply state field command) | `mcp__atlassian__jira_update_issue` (transition by name) |
+| `add_comment` | `mcp__youtrack__*` (comment-posting tool advertised at handshake) | `mcp__atlassian__jira_add_comment` |
 
-Exact YouTrack tool names are advertised by the JetBrains MCP server at handshake.
-Capture them once via a discovery session and pin them here.
+YouTrack tool names are advertised by the JetBrains MCP server at handshake. The
+default approach is **runtime resolution via the `mcp__youtrack__*` glob** in each
+skill's `allowed-tools` — the model picks the right tool when it makes the call.
+Teams that prefer concrete pins (for stricter `allowed-tools` scoping or for
+visibility) can capture names via a one-time discovery session and replace this
+column with the pinned values.
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "name": "spwf",
-  "description": "30 workflow skills covering the full engineering cycle: capture, challenge, spec, plan, build, test, review, simplify, ship, learn, recap, pause, migrate-todo, and quality maintenance",
-  "version": "1.10.1",
+  "description": "31 workflow skills covering the full engineering cycle: capture, challenge, spec, plan, build, test, review, simplify, ship, learn, recap, pause, migrate-todo, tracker-comment, and quality maintenance",
+  "version": "1.11.0",
   "author": { "name": "Simon Potter" }
 }

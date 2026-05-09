@@ -19,6 +19,7 @@ land proposals and small alignments.
 | `6908552` | Branch cleanup at close + git-smell check at capture |
 | `9dc6f1a` | `/spwf:pause` — interrupt-safe context switch |
 | `b1fa731` | `/spwf:migrate-todo` + close moves completed todos to `todo/_done/` |
+| (this commit) | `/spwf:tracker-comment` audience-aware comment + `tracker-comment-nudge.sh` advisory hook + `add_comment` contract op |
 
 If you're maintaining a sibling workflow plugin, reading this in order should
 give you the architectural patterns and let you adopt selectively.
@@ -376,6 +377,121 @@ judgement-dependent ones — the latter stay interactive in any mode.
 
 ---
 
+## 7. `/spwf:tracker-comment` — audience-aware comment + advisory hook
+
+**Request.** *"A quality of life hook (I think) and a skill, that catches
+when a comment/issue is being sent back to Jira/YouTrack, and evaluates if
+it is intended for a human or just as a record for future references … we
+need a 'is this for a real person' filter when the comments are going to be
+read by someone who may not be technical and doesn't have hours to read
+through AI verbosity."*
+
+**Problem.** Tracker writes (Jira/YouTrack issue comments) went straight
+from the model to the tracker without audience filtering. When the
+recipient was non-technical — a product manager, a stakeholder, a
+customer-facing colleague — they got a wall of LLM output: code blocks,
+file references, hedging phrases, and 800-word comments that took twenty
+minutes to read for two minutes of actual signal. There was also a real
+gap in the tracker contract: no `add_comment` operation existed. No skill
+posted comments on existing issues at all.
+
+**What shipped.**
+
+*New skill `/spwf:tracker-comment [issue-id]`:*
+- Resolves the issue id (3-form: `$ARGUMENTS`, `ticket:` from active todo
+  file, or ask). Fail-fast if no tracker MCP is configured.
+- Fetches the issue via `get_issue` for context (title, type, recent
+  commenters) — grounds audience classification.
+- Classifies audience using **natural-language reasoning in the skill
+  body** (not regex). Cues: `@-mentions` and direct questions → human;
+  "for the record" / "documenting" / heavy code without addressing
+  anyone → record; mixed signals → ask the user explicitly.
+- **Cost-asymmetric default when unsure: human.** Rewriting a record-style
+  comment to plain English is cheap; posting a wall of code to a PM is
+  expensive.
+- If `human`: rewrite per anti-padding rules (max ~150 words, plain
+  language in the draft's working language, at most one short code block,
+  at most one file reference, **one clear ask at the end**, friendly tone,
+  banned hedging phrases reused from `recap`, preserve `@-mentions`).
+- If `record`: light cleanup only (whitespace, code-fence normalisation,
+  obvious typos); allow technical detail and full length.
+- Length sanity check (Jira ~32KB max) — halt with clear message rather
+  than letting the MCP call fail opaquely.
+- Show prepared comment alongside original; `[Y/n/edit]` confirm; `--draft`
+  flag saves to `todo/.tracker-drafts/{id}-{timestamp}.md` instead of
+  posting; `--for=human|record` overrides classification.
+
+*New PreToolUse hook `tracker-comment-nudge.sh`:*
+- Fires before any tracker write tool call (`mcp__youtrack__*` glob plus
+  named Jira write tools).
+- Short-circuits silently for read-shape YouTrack tools (any name
+  containing `get_`, `search_`, `list_`, `find_`, `read_`).
+- Tightened **AND-logic thresholds** to avoid crying wolf: fires only when
+  `(code blocks ≥ 2 AND length > 600)` OR `(code blocks ≥ 1 AND file refs
+  ≥ 5)`. Real engineering comments often have one code block — a hook that
+  fires on every such comment trains users to ignore it.
+- Always `exit 0` — advisory only, never blocks. **First PreToolUse hook
+  in the plugin**, but uses the existing advisory-only-by-convention
+  pattern (every spwf hook still exits 0).
+
+*Tracker contract extension:*
+- `_shared/tracker-dispatch.md` adds `add_comment(id, body)` as the fifth
+  operation in the contract; dispatch table extended with YouTrack glob
+  resolution and `mcp__atlassian__jira_add_comment`. Documents
+  "verified at first use" semantics — the `mcp__youtrack__*` glob in
+  `allowed-tools` lets the model resolve the actual YouTrack tool name at
+  runtime; pinning is optional and team-specific.
+
+*Hook README (new):*
+- `plugins/spwf/hooks/README.md` documents the three event types now in
+  use (`Stop`, `PostToolUse`, `PreToolUse`), the advisory-only-by-
+  convention rule, the named-warning fallback for missing JSON parsers,
+  the naming convention, and how to add a new hook. Previously absent;
+  added because PreToolUse joining the vocabulary deserved a written
+  record so future hooks follow the same convention.
+
+**Architectural patterns to copy.**
+
+- *Audience-aware writing as a transferable primitive.* `recap` and
+  `tracker-comment` share the anti-padding regime — banned phrases,
+  banned vocabulary, length caps, "skip empty rather than fill" — adapted
+  per audience. The same primitive applies anywhere an LLM writes for a
+  specific reader: stakeholder updates, customer responses, release
+  notes, exec summaries. Encode the audience constraints as natural-
+  language rules in the skill prompt; don't try to enforce in code.
+- *Hook + skill complement.* Hooks are cheap nudges in shell; skills are
+  rich rewriters using model reasoning. When the model has agency
+  (autonomous tool calls), the hook gates; when the user has agency
+  (deliberate skill invocation), the skill rewrites. Two-layer defence
+  with clean separation: regex stays in the hook, NL reasoning stays in
+  the skill.
+- *PreToolUse joins the vocabulary, advisory-only by convention.* Adding
+  a new event type without breaking the convention means every hook still
+  `exit 0`. Pattern: hook event type = mechanical layer; advisory-only =
+  policy layer; the two can change independently. Documented explicitly
+  in `hooks/README.md` so future PreToolUse additions don't drift.
+- *AND-logic on hook thresholds.* The hook that fires on every plausible
+  match gets ignored. Tighten with AND not OR even if you miss legitimate
+  cases. A few false negatives is recoverable; a deluge of false
+  positives trains the user to mute the channel.
+- *Cost-asymmetric defaults.* When a classification is genuinely
+  ambiguous, default to the option whose mistake is cheaper to undo. For
+  audience: default `human` because over-rewriting a record-style comment
+  is cheap, but posting a code-wall to a PM is expensive. For branch
+  deletion (Section 4): default safe-delete because the cleanup is wanted
+  most of the time, force-delete is the conscious decision. Same shape:
+  pick the default whose worst-case cost is smaller.
+
+**How to adopt.** Any team where AI-generated text leaks to non-technical
+readers benefits from this layered approach. Build the rewriter as a
+skill (model-powered, NL anti-padding rules, audience classification by
+cues + cost-asymmetric default + ask-when-genuinely-ambiguous). Build a
+PreToolUse advisory hook that nudges toward the skill when the heuristic
+detects a high-risk write. Tighten the heuristic with AND-logic. Keep
+both advisory; don't block.
+
+---
+
 ## Cross-cutting patterns
 
 These five patterns recurred across the session and are the load-bearing
@@ -405,13 +521,28 @@ it's not configured, halt with a clear, actionable message. **No silent
 fallback to a different mode** — silence creates surprises. The actionable
 message names the configuration step needed.
 
-### Default-on with conscious skip
+### Default-on with conscious skip / cost-asymmetric defaults
 
-Default-on with one-key skip beats opt-in for cleanup operations. The user
-asked for `[Y/n]` (default delete) on branch cleanup, mirroring the same
-shape elsewhere. Both 'y' and 'n' are conscious; the default biases toward
-the cleaner outcome. Force-delete and similar destructive variants flip
-the default to `[y/N]` — different decision, different default.
+Default-on with one-key skip beats opt-in for cleanup operations. Both 'y'
+and 'n' are conscious; the default biases toward the cleaner outcome.
+Force-delete and similar destructive variants flip the default to `[y/N]`
+— different decision, different default.
+
+The general principle behind this is **cost-asymmetric defaults**: when a
+choice is ambiguous, default to the option whose mistake is cheaper to
+undo. Examples in this session:
+
+- **Safe-delete `[Y/n]` vs force-delete `[y/N]`** (close branch cleanup):
+  the over-cautious "yes please clean up" is cheap to reverse from git
+  reflog; the over-eager force-delete may not be.
+- **Audience classification defaults to human** (tracker-comment): rewriting
+  a record-style comment to plain English is cheap; posting a code-wall to
+  a PM is expensive.
+- **Save-on-recap defaults to no** (recap skill): printing again is cheap;
+  unintentional file pollution is harder to clean up.
+
+Pick the default whose worst-case cost is smaller — and make the other
+option a conscious keystroke away.
 
 ### Auto-detect from intrinsic signals before requiring config
 
@@ -425,11 +556,13 @@ Optional config file is the override, not the default.
 
 ## Versions at end of session
 
-- `spwf` plugin: `1.10.1` (was `1.4.2`)
+- `spwf` plugin: `1.11.0` (was `1.4.2`)
 - `spwf-agents` plugin: `1.2.0` (was `1.0.0`)
-- 30 workflow skills, 13 specialist subagents
-- 6 new shared reference documents in `plugins/spwf/skills/_shared/`
+- 31 workflow skills, 13 specialist subagents
+- 5 hooks (4 PostToolUse/Stop + 1 PreToolUse)
+- 2 shared reference documents in `plugins/spwf/skills/_shared/`
   (tracker-dispatch, forge-dispatch)
+- New `plugins/spwf/hooks/README.md` documenting hook conventions
 
 ## Pre-existing drift not addressed
 
@@ -448,4 +581,5 @@ that auto-syncs).
 | Branch hygiene | `plugins/spwf/skills/close/SKILL.md` Step 8, `plugins/spwf/skills/capture/SKILL.md` Step 0, commit `6908552` |
 | Pause skill | `plugins/spwf/skills/pause/SKILL.md`, commit `9dc6f1a` |
 | Migrate-todo + `_done/` | `plugins/spwf/skills/migrate-todo/SKILL.md`, `plugins/spwf/skills/close/SKILL.md` Step 4, commit `b1fa731` |
+| Tracker-comment + nudge hook | `plugins/spwf/skills/tracker-comment/SKILL.md`, `plugins/spwf/hooks/tracker-comment-nudge.sh`, `plugins/spwf/hooks/README.md`, `_shared/tracker-dispatch.md` (`add_comment` row) |
 | Original session proposals | `todo/Jira_to_youtrack.md`, `todo/Github_to_Gitlab.md`, `todo/learn-with-claude.md` |
