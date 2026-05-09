@@ -57,9 +57,29 @@ Requires `jq` for transcript mining (see Prerequisites).
 
 ## Install
 
+> ⚠ **Make sure you keep them separate.** Run these three commands one at a
+> time — do **not** paste all three lines together. Claude Code's
+> slash-command parser captures everything until the next newline as a
+> single argument, so a multi-line paste causes the second and third
+> commands to be appended to the first as a malformed clone URL (you'll
+> see something like `https://github.com/simon-potter/spwf /plugin install spwf.git`
+> with literal spaces). Run each, wait for it to finish, then run the next.
+
+Step 1 — register the marketplace:
+
 ```bash
 /plugin marketplace add simon-potter/spwf
+```
+
+Step 2 — install the workflow skills:
+
+```bash
 /plugin install spwf@spwf
+```
+
+Step 3 — install the specialist agents:
+
+```bash
 /plugin install spwf-agents@spwf
 ```
 
@@ -71,9 +91,17 @@ Requires `jq` for transcript mining (see Prerequisites).
 
 ## Local install (from this repo)
 
+Same pattern — **make sure you keep them separate** (see the gotcha note above):
+
 ```bash
 /plugin marketplace add ./
+```
+
+```bash
 /plugin install spwf@spwf
+```
+
+```bash
 /plugin install spwf-agents@spwf
 ```
 
