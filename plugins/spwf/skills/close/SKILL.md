@@ -1,6 +1,6 @@
 ---
 name: close
-description: Final-phase orchestrator — wraps the full retrospective then permanently closes the change. Invokes /spwf:retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, recap teaching summary, optional changelog), then — after explicit confirmation — marks the todo file complete, archives the OpenSpec change, and transitions the linked issue tracker ticket to its done state (YouTrack default; Jira and others supported).
+description: Final-phase orchestrator — wraps the full retrospective then permanently closes the change. Invokes /spwf:retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, recap teaching summary, optional changelog), then — after explicit confirmation — marks the todo file complete and moves it to todo/_done/, archives the OpenSpec change, transitions the linked issue tracker ticket to its done state (YouTrack default; Jira and others supported), and deletes the local feature branch with safety checks (default-on, conscious skip).
 disable-model-invocation: true
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_update_issue]
 ---
@@ -10,10 +10,10 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atla
 Final phase of the SPWorkflow golden path. Retrospect, confirm, then permanently close the change.
 
 ```
-Step 1 → retrospective       (all 6 parts)
+Step 1 → retrospective       (all 6 parts, including recap teaching summary)
 Step 2 → confirm closure     (explicit human gate)
-Step 3 → mark todo done      (status: complete)
-Step 4 → commit changes      (git commit with confirmation)
+Step 3 → mark todo done      (status: complete + git mv to todo/_done/)
+Step 4 → commit changes      (git commit captures status edit + path move atomically)
 Step 5 → archive OpenSpec    (opsx:archive)
 Step 6 → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
 Step 7 → delete local branch  (default on, conscious skip with [Y/n])
@@ -46,12 +46,13 @@ Confirm the OpenSpec change id: check `openspec/changes/` for a directory matchi
 
 Invoke `spwf:retrospective` with the change id.
 
-All five parts run as normal:
-1. learn-from-mistakes
-2. change spec audit
-3. doc-lint
-4. workflow-lint
-5. changelog (asks user — only if preparing a release)
+All six parts run as normal:
+1. learn-from-mistakes      (rules for the project — atomic)
+2. change spec audit         (align OpenSpec artefacts with what was built)
+3. doc-lint                  (broad project docs drift check)
+4. workflow-lint             (full golden path coherence sweep)
+5. recap                     (teaching summary for the user; default on, one-key skip)
+6. changelog                 (optional — only if preparing a release)
 
 Wait for retrospective to complete before proceeding.
 
