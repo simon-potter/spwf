@@ -5,9 +5,11 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 ## The workflow
 
 ```
-[status] → [Capture] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Close
- (orient)    (pre)      (gate)      (1)        (2)          (3)      (4)          (5)        (6)       (post)
+[status] → [Capture] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Address Review → Close
+ (orient)    (pre)      (gate)      (1)        (2)          (3)      (4)         (5)        (6)          (6.5)         (post)
 ```
+
+Simplify is a two-pass step: a mechanical cleanup (dead code, debug prints, unclear names) followed by a `reviewer` subagent dispatch against the pinned commit range for a deeper pre-PR read (correctness, security, missing tests). Address Review then turns either that report — or human comments on the open PR/MR — into committed fixes or reasoned push-backs. Both pre- and post- review passes are adapted from [obra/superpowers](https://github.com/obra/superpowers) — `requesting-code-review` (folded into Simplify) and `receiving-code-review` (Address Review).
 
 ## Golden path
 
@@ -19,9 +21,10 @@ Simon's engineering workflow, packaged as two installable Claude Code plugins.
 | **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
 | **Build** | `/spwf:build` | `write-tests` → `opsx:apply` → `run-tests` → `debug-recovery` → `opsx:verify` | Red-Green-Verify per task, loops until all done; spec sign-off after all tasks complete | All tasks complete, tests green, spec aligned |
-| **Simplify** (TDD Refactor) | `/spwf:simplify` | — | Clean up the implementation with tests as a safety net; flags judgment calls | Cleaner diff; flag list |
+| **Simplify** (TDD Refactor + Self-Review) | `/spwf:simplify` | `reviewer` agent (local-diff mode) | Two passes: (1) mechanical cleanup of dead code, debug prints, and unclear names with tests as a safety net; (2) dispatches the `reviewer` subagent against the pinned commit range with the openspec proposal + tasks as the intent baseline, applying Critical/Important/Minor tiering. Pass 2 short-circuits for trivial diffs. Adapted from obra/superpowers `requesting-code-review` | Cleaner diff + flag list + `{branch}-self-review.md` + verdict |
 | **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; CI/CD owns the rest | PR / MR URL |
 | **PR / MR Review** | `/spwf:pr-review <ref>` | forge CLI (`glab mr view/diff` default; `gh pr view/diff` supported) | Structured review before merge; catches regressions and drift | Review report with verdict |
+| **Address Review** | `/spwf:address-review [report.md \| <ref>]` | forge CLI for `list_comments` | Turns the review report — or human comments fetched from the open PR/MR — into committed fixes (or reasoned push-backs). Per item: READ → VERIFY → EVALUATE → implement-or-push-back. Forbids performative agreement. Adapted from obra/superpowers `receiving-code-review` | Updated report + commits + one structured reply per thread |
 | **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Issue tracker MCP → branch cleanup | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, **recap** teaching summary, optional changelog), then after explicit confirmation marks the todo `status: complete`, **moves it to `todo/_done/`**, archives the OpenSpec change, transitions the linked tracker ticket, and deletes the local feature branch with safety checks (clean tree, merged via ancestor check + forge CLI fallback, no unpushed commits; `[Y/n]` default-delete with conscious skip) | `todo/_done/{slug}.md`, archived change, optional `recap.md`, tracker done, local branch deleted |
 
 ## Quality tools
@@ -244,7 +247,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 
 ## What's included
 
-### `spwf` — 31 workflow skills
+### `spwf` — 32 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
@@ -261,9 +264,10 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `debug-recovery` | `/spwf:debug-recovery` | 3 — Build (atomic) |
 | `build` | `/spwf:build` | 3 — Build (orchestrator) |
 | `run-tests` | `/spwf:run-tests` | 3 — Build (atomic) |
-| `simplify` | `/spwf:simplify` | 4 — Simplify |
+| `simplify` | `/spwf:simplify` | 4 — Simplify (mechanical cleanup + reviewer subagent on local diff) |
 | `pr-create` | `/spwf:pr-create` | 5 — PR Create |
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — PR Review |
+| `address-review` | `/spwf:address-review [report \| ref]` | 6.5 — Address Review (apply feedback from report or PR comments) |
 | `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Retrospective Part 1 (rules for the project; atomic) |
 | `recap` | `/spwf:recap [change-id]` | Post — Retrospective Part 5 (teaching summary for the user; atomic) |
 | `tracker-comment` | `/spwf:tracker-comment [issue-id]` | On-demand — Audience-aware comment to a tracker issue (human-targeted: plain English, ≤150 words, one clear ask; record-targeted: light cleanup, full detail allowed) |

@@ -1,6 +1,6 @@
 # spwf
 
-28 engineering workflow skills covering the full cycle: capture, challenge, spec, plan, build, test, review, simplify, ship, learn, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
+32 engineering workflow skills covering the full cycle: capture, challenge, spec, plan, build, test, simplify (with self-review), ship, peer review, address review, learn, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
 
 ## Two-tier architecture
 
@@ -34,9 +34,10 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `write-tests` | `/spwf:write-tests` | 3 — Red phase: write failing tests before implementation |
 | `run-tests` | `/spwf:run-tests` | 3 — Run full test suite; stop on first failure |
 | `debug-recovery` | `/spwf:debug-recovery` | 3 — Diagnose failing test or broken build; minimal fix |
-| `simplify` | `/spwf:simplify` | 4 — Remove dead code and unnecessary complexity |
+| `simplify` | `/spwf:simplify` | 4 — Two-pass cleanup: (1) mechanical removal of dead code + unnecessary complexity; (2) `reviewer` subagent in local-diff mode against pinned commit range with openspec proposal + tasks as intent baseline (adapted from obra/superpowers `requesting-code-review`) |
 | `pr-create` | `/spwf:pr-create` | 5 — Pre-flight checks then PR creation |
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — Fetch and review a PR; structured report |
+| `address-review` | `/spwf:address-review [report \| ref]` | 6.5 — Turn review feedback (report file or fetched PR/MR comments) into commits or reasoned push-backs; forbids performative agreement (adapted from obra/superpowers `receiving-code-review`) |
 | `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Extract learnings from commits (rules for the project) |
 | `recap` | `/spwf:recap [change-id]` | Post — Teaching summary for the user: concepts touched, decisions made, surprises, growth pointers |
 | `tracker-comment` | `/spwf:tracker-comment [issue-id]` | On-demand — Post an audience-aware comment to the linked tracker issue. Classifies as human (rewrites for plain English, ≤150 words, one clear ask) or record (light cleanup, full technical detail allowed). |
@@ -175,7 +176,9 @@ Set with the `--output-style` flag at launch, or `outputStyle` in
 
 ## Attribution
 
-Five skills are seeded from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT licence). Each carries an attribution comment in its SKILL.md frontmatter.
+Several skills are seeded from external sources. Each carries an attribution comment in its SKILL.md frontmatter.
+
+From [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT licence):
 
 | Skill | Source |
 |---|---|
@@ -184,3 +187,12 @@ Five skills are seeded from [addyosmani/agent-skills](https://github.com/addyosm
 | `simplify` | `code-simplification` |
 | `pr-create` | `git-workflow-and-versioning` |
 | `build` | `incremental-implementation` (upstream orchestrator pattern) |
+
+From [obra/superpowers](https://github.com/obra/superpowers) (MIT licence; authors: Jesse Vincent and the Prime Radiant team):
+
+| Skill | Source |
+|---|---|
+| `simplify` (Pass 2) | `requesting-code-review` — folded into simplify as the post-cleanup reviewer dispatch against local diff |
+| `address-review` | `receiving-code-review` — verify-before-implement posture, no performative agreement |
+
+No SKILL.md content from either upstream source is reproduced verbatim — concepts (severity tiers, "review early, review often", READ → VERIFY → EVALUATE loop, the forbidden-phrase list) are adapted into our own prose with this codebase's conventions. Upstream copyright notices are preserved via the frontmatter comments in each affected SKILL.md.

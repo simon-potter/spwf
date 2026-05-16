@@ -84,6 +84,7 @@ Every forge-touching skill needs at most three logical operations.
 | `view_request(ref)` | id, title, body, base, head, state, author, file/line counts | `pr-review` |
 | `diff_request(ref)` | unified diff for the request | `pr-review` |
 | `create_request(title, body, base?)` | URL of the new request | `pr-create` |
+| `list_comments(ref)` | reviewer comments + review-thread line comments, normalised | `address-review` |
 
 `{ref}` is either a number (`42`) or a full URL — both CLIs accept both.
 
@@ -101,6 +102,7 @@ GitLab).
 | `view_request(ref)` | `gh pr view {ref} --json number,title,body,baseRefName,headRefName,state,author,additions,deletions,changedFiles` | `glab mr view {ref} --output json` (returns `iid`, `title`, `description`, `target_branch`, `source_branch`, `state`, `author.username`, `changes_count`) |
 | `diff_request(ref)` | `gh pr diff {ref}` | `glab mr diff {ref}` |
 | `create_request(title, body, base)` | `gh pr create --title "{title}" --body "{body}" [--base {base}]` | `glab mr create --title "{title}" --description "{body}" [--target-branch {base}]` |
+| `list_comments(ref)` | `gh pr view {ref} --comments` for issue-level comments **plus** `gh api repos/{owner}/{repo}/pulls/{ref}/comments --jq '.[] \| {path, line, body, user: .user.login}'` for review-thread line comments | `glab mr view {ref} --comments` (includes review threads as inline notes) |
 
 Self-hosted GitLab: prepend `GLAB_HOST={host}` to every `glab` invocation, or run
 `glab auth login --hostname {host}` once so the host is persisted in
