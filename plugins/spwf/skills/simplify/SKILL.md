@@ -74,6 +74,24 @@ Make each edit minimal — remove the exact line or block, nothing more.
 
 If nothing was applied and nothing was flagged, note "Pass 1: no mechanical simplifications found."
 
+### Step 4a: Frontend follow-up hint (optional, advisory only)
+
+If the changed-file list from Step 1 contains any of `.tsx`, `.jsx`, `.vue`, `.svelte`, `.css`, or `.scss`, append a single advisory line to the simplify report:
+
+```
+### Frontend follow-up (optional)
+
+The diff touches frontend files. For design polish / a11y / anti-pattern detection
+beyond mechanical cleanup, consider `/impeccable polish` (or `/impeccable audit`,
+`/impeccable critique`).
+
+If `impeccable` is not installed:
+  /plugin marketplace add pbakaus/impeccable
+  /plugin install impeccable@impeccable
+```
+
+Do not invoke `/impeccable polish` — it is a separate plugin owned by the user, run on their schedule. This step is informational only. If the diff has no frontend files, omit the section entirely.
+
 ### Step 5: Commit Pass 1 if anything was applied
 
 If any changes were applied in Step 3, show `git diff --stat` and propose a commit:

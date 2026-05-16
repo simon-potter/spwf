@@ -79,6 +79,19 @@ Five hooks ship with the plugin and register automatically on install. All are a
 | Skill | Source | When referenced |
 |---|---|---|
 | `semgrep` | `trailofbits/skills` | Invoked as `/trailofbits:semgrep`. Referenced by `pr-create` for deep SAST review and by `approve-plan` when security-sensitive tasks are flagged. |
+| `impeccable` | `pbakaus/impeccable` | Invoked as `/impeccable polish`, `/impeccable audit`, `/impeccable critique`. Referenced by `simplify` as a follow-up recommendation when the diff touches frontend files (`.tsx`, `.jsx`, `.vue`, `.svelte`, `.css`, `.scss`). Optional — `simplify` surfaces the suggestion in its report but never calls the command, so the skill is fine if `impeccable` is not installed. |
+
+Recommended external plugins are never bundled, never auto-installed, and never assumed-present by spwf skills. The skills that reference them surface the suggestion in their report output only — if the external plugin is not installed, the recommendation reads as informational. Install (per-user or per-project):
+
+```bash
+# Trail of Bits security skills
+/plugin marketplace add trailofbits/skills
+/plugin install semgrep@trailofbits
+
+# Impeccable design quality skill (frontend)
+/plugin marketplace add pbakaus/impeccable
+/plugin install impeccable@impeccable
+```
 
 ## Ideation file format
 
