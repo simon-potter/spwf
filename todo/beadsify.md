@@ -1,3 +1,11 @@
+---
+source: scratch
+created: 2026-05-17
+status: ideation
+---
+
+# Beadsify — Beads + OpenSpec integration
+
 what is the lightest open source bug tracker I can integrate to keep track of issues when agentic coding, I am looking for something that is agent native in Mat 2026
 
 If you are looking for an ultra-lightweight, open-source issue tracker that is genuinely agent-native, the tool you want is Beads (bd).
