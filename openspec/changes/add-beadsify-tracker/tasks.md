@@ -2,6 +2,8 @@
 
 > **Authoritative Reference:** [`todo/beadsify-tracker.md`](../../../todo/beadsify-tracker.md)
 > **Architecture Reference:** [`design.md`](./design.md) — particularly Decision 4 (dispatch wiring) and Decision 2 (replace-not-coexist).
+>
+> **Revisions from approve-plan:** Phase 2 / Phase 3 each gained a preflight investigation step; `reopen` dropped from 2.9 (out of v1 scope); old Phase 4 (per-skill verification) merged into Phase 5 acceptance to remove overlap with the full-lifecycle test.
 
 ## Phase 1 — Plugin scaffold
 
@@ -13,39 +15,49 @@
 
 ## Phase 2 — Dispatch backend module
 
-- [ ] 2.1 `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` exists with valid frontmatter (name, description, `disable-model-invocation: true`, `allowed-tools` covering Read/Bash)
-- [ ] 2.2 The backend module declares the dispatch operations it implements: `create_issue`, `get_issue`, `add_comment`, `transition`
-- [ ] 2.3 Backend's first operation invocation checks `.bd/` exists; if missing, emits `.bd/ not initialised. Run: bd init (in the project root) then retry.` and halts cleanly
-- [ ] 2.4 Backend's `create_issue` operation invokes `bd write "<title>"` and returns the resulting `bd-NNN` id parsed from stdout
-- [ ] 2.5 Backend's `get_issue` operation invokes `bd show bd-NNN` and returns the structured result (title, status, dependencies, recent insights)
-- [ ] 2.6 Backend's `add_comment` operation invokes `bd remember bd-NNN "<text>"` (default mapping per design.md open question 1; revise if build-phase investigation finds a closer match)
-- [ ] 2.7 Backend's `transition` operation supports close and reopen via `bd close bd-NNN` / `bd reopen bd-NNN`; rejects unknown transition names with a clear error
+**Preflight investigation (resolves design.md open questions before any operation is implemented):**
+
+- [ ] 2.1 Read `bd --help` and `bd <subcommand> --help` for `write`, `show`, `remember`, `close`. Confirm or revise the dispatch mapping table in `design.md` § "Open questions" — specifically: (a) the comment mapping (does a closer match than `bd remember` exist?), (b) Beads' status vocabulary (does the close transition need any flags beyond `bd close <id>`?), (c) whether `bd init` is required as a manual prerequisite or if the backend can auto-init safely.
+- [ ] 2.2 Pin the safe subprocess-invocation pattern and document it in `design.md` § "Open questions" (or under a new Decision 7). Pattern requirements: list-form arguments (no shell-string concatenation); explicit input validation for any value that originated from user input (titles, comment bodies, ids); ids matching Beads' documented format. All Phase 2 operations below use this pattern verbatim.
+
+**Backend skill scaffold:**
+
+- [ ] 2.3 `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` exists with valid frontmatter (name, description, `disable-model-invocation: true`, `allowed-tools` covering Read/Bash)
+- [ ] 2.4 The backend module declares the dispatch operations it implements: `create_issue`, `get_issue`, `add_comment`, `transition` (close only in v1)
+
+**Per-operation implementation (each uses the Phase 2.2 invocation pattern):**
+
+- [ ] 2.5 Backend's first operation invocation checks `.bd/` exists; if missing, emits `.bd/ not initialised. Run: bd init (in the project root) then retry.` and halts cleanly. (If Phase 2.1 resolved that auto-init is safe, replace this halt with the auto-init flow.)
+- [ ] 2.6 Backend's `create_issue` operation invokes `bd write "<title>"` and returns the resulting `bd-NNN` id parsed from stdout. Title passes through input validation before subprocess invocation.
+- [ ] 2.7 Backend's `get_issue` operation invokes `bd show bd-NNN` and returns the structured result (title, status, dependencies, recent insights). The id is format-validated before subprocess invocation.
+- [ ] 2.8 Backend's `add_comment` operation invokes the resolved comment-mapping CLI from Phase 2.1 (default: `bd remember bd-NNN "<text>"`). Both the id and the comment body pass through input validation.
+- [ ] 2.9 Backend's `transition` operation supports `close` only (`bd close bd-NNN`). Unknown transition names are rejected with a clear error. The id is format-validated before subprocess invocation. (`reopen` and richer transitions are deliberately deferred — no v1 success criterion requires them.)
 
 ## Phase 3 — Extend tracker-dispatch.md
 
-- [ ] 3.1 `plugins/spwf/skills/_shared/tracker-dispatch.md` recognises `tracker: beads` as a valid setting alongside `youtrack` / `jira` / `none`
-- [ ] 3.2 When `tracker: beads` is set, dispatch resolves the backend at `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md`
-- [ ] 3.3 If the backend file is not present (spwf-beadsify not installed), dispatch errors verbatim: `tracker: beads requested but spwf-beadsify plugin not installed. Install: /plugin install spwf-beadsify@spwf. Or change tracker in .spwf/tracker.yaml.`
-- [ ] 3.4 Existing `tracker: youtrack`, `tracker: jira`, and `tracker: none` paths through dispatch remain byte-identical (regression check)
+**Preflight refactor:**
 
-## Phase 4 — End-to-end skill integration (no skill body changes)
+- [ ] 3.1 Read the current `plugins/spwf/skills/_shared/tracker-dispatch.md`. If it does not already structure backends as a list extensible without refactor, refactor it first so the existing `youtrack` / `jira` / `none` cases are clearly listed and a fourth case can be added by adding a list entry. The refactor must produce byte-identical behaviour for existing backends — verify by mental diff or by running the existing capture/tracker-comment/close paths with `tracker: youtrack` before and after the refactor.
 
-- [ ] 4.1 With `tracker: beads` set and `spwf-beadsify` installed, running `/spwf:capture` with `source: scratch` produces a story via `bd write` and records `ticket: bd-NNN` in the ideation file frontmatter
-- [ ] 4.2 With the same setup, `/spwf:tracker-comment` invocations land in Beads (via the Phase 2.6 mapping) and the audit trail is visible in `bd show bd-NNN`
-- [ ] 4.3 With the same setup, `/spwf:close` transitions the Beads story to closed (`bd close bd-NNN`) before the OpenSpec archive step runs
-- [ ] 4.4 With `tracker: youtrack` set (existing default), the same skills continue to dispatch to YouTrack with no behavioural change
+**Extension:**
 
-## Phase 5 — Documentation
+- [ ] 3.2 `plugins/spwf/skills/_shared/tracker-dispatch.md` recognises `tracker: beads` as a valid setting alongside `youtrack` / `jira` / `none`
+- [ ] 3.3 When `tracker: beads` is set, dispatch resolves the backend at `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` and invokes the operation defined there
+- [ ] 3.4 If the backend file is not present (spwf-beadsify not installed), dispatch errors verbatim: `tracker: beads requested but spwf-beadsify plugin not installed. Install: /plugin install spwf-beadsify@spwf. Or change tracker in .spwf/tracker.yaml.`
+- [ ] 3.5 Existing `tracker: youtrack`, `tracker: jira`, and `tracker: none` paths through dispatch remain byte-identical (regression check — see Phase 5.3 for the integration-level verification)
 
-- [ ] 5.1 `plugins/spwf-beadsify/README.md` documents: install command, prerequisites (`bd` CLI installed, `bd init` run in the project), `.spwf/tracker.yaml` setting, `.gitignore` entry for `.bd/`
-- [ ] 5.2 `plugins/spwf-beadsify/README.md` includes an explicit "Do NOT run `bd setup claude`" section with the reasoning (SPWF provides its own Claude Code integration)
-- [ ] 5.3 Root `README.md` lists `spwf-beadsify` in the marketplace contents as an optional plugin
-- [ ] 5.4 `CLAUDE.md` mentions Beadsify under the dogfooding section (or links to a new `docs/beadsify.md`) noting the install path and the prerequisite warnings
-- [ ] 5.5 `plugins/spwf/.claude-plugin/plugin.json` version bumped (tracker-dispatch.md changed); changelog-style entry recorded in commit message
+## Phase 4 — Documentation
 
-## Phase 6 — Acceptance
+- [ ] 4.1 `plugins/spwf-beadsify/README.md` documents: install command, prerequisites (`bd` CLI installed, `bd init` run in the project per Phase 2.1's resolution), `.spwf/tracker.yaml` setting, `.gitignore` entry for `.bd/`
+- [ ] 4.2 `plugins/spwf-beadsify/README.md` includes an explicit "Do NOT run `bd setup claude`" section with the reasoning (SPWF provides its own Claude Code integration)
+- [ ] 4.3 Root `README.md` lists `spwf-beadsify` in the marketplace contents as an optional plugin
+- [ ] 4.4 `CLAUDE.md` mentions Beadsify under the dogfooding section (or links to a new `docs/beadsify.md`) noting the install path and the prerequisite warnings
+- [ ] 4.5 `plugins/spwf/.claude-plugin/plugin.json` version bumped (tracker-dispatch.md changed in Phase 3); the version-bump and a one-line summary land in the commit message. This task SHALL run after Phase 3 completes.
 
-- [ ] 6.1 Full lifecycle on a toy task with `tracker: beads`: capture → challenge → spec → build → close. Beads story created at capture, comments landed during the cycle, story closed at close.
-- [ ] 6.2 Regression: same lifecycle with `tracker: youtrack` (or `none`) produces the original behaviour with no Beads activity.
-- [ ] 6.3 Missing-plugin error path: with `tracker: beads` set but `spwf-beadsify` uninstalled, `/spwf:capture` errors with the verbatim message from Phase 3.3 and writes no files.
-- [ ] 6.4 `.gitignore` includes `.bd/`; `git status` is clean after a Beads-mode lifecycle run (no Beads DB churn tracked).
+## Phase 5 — Acceptance (full-lifecycle + per-operation + regression + safety)
+
+- [ ] 5.1 Full lifecycle on a toy task with `tracker: beads`: capture → challenge → spec → build → close. Beads story created at capture, comments landed during the cycle, story closed at close, OpenSpec change archived.
+- [ ] 5.2 Per-operation sanity check (failure here pinpoints which operation is broken before the full lifecycle masks it): with `tracker: beads`, each of `/spwf:capture` (exercising create_issue), `/spwf:tracker-comment` (exercising add_comment), and `/spwf:close`'s tracker-transition step (exercising transition) is invoked in isolation and produces the expected Beads state change visible via `bd show`.
+- [ ] 5.3 Regression: same lifecycle with `tracker: youtrack` (or `tracker: none`) produces the original behaviour with no Beads CLI activity. Verify by snapshotting tracker-dispatch.md behaviour before and after Phase 3 (Phase 3.1's preflight + Phase 3.5's check both feed this).
+- [ ] 5.4 Missing-plugin error path: with `tracker: beads` set but `spwf-beadsify` uninstalled, `/spwf:capture` errors with the verbatim message from Phase 3.4 and writes no files.
+- [ ] 5.5 `.gitignore` includes `.bd/`; `git status` is clean after a Beads-mode lifecycle run (no Beads DB churn tracked). Input-validation paths from Phase 2.2 hold for adversarial inputs (titles or comments containing shell metacharacters); `bd show` output reflects the literal input rather than interpreting it as shell.
