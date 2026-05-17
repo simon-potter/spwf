@@ -6,402 +6,51 @@ status: ideation
 
 # Beadsify — Beads + OpenSpec integration
 
-what is the lightest open source bug tracker I can integrate to keep track of issues when agentic coding, I am looking for something that is agent native in Mat 2026
+## Context
 
-If you are looking for an ultra-lightweight, open-source issue tracker that is genuinely agent-native, the tool you want is Beads (bd).
+Long-horizon agentic coding suffers from "context drift": agents lose their place in flat `tasks.md` files, overwrite plans, and miss dependencies between work items. SPWorkflow already pairs `/spwf:capture → challenge → spec → build → close` with OpenSpec as the spec layer, but the spec layer was designed around human-readable Markdown — not the dependency-aware graph that agents actually need to navigate without drift.
 
-Unlike traditional platforms (like Jira, Linear, or Bugzilla) that have had AI retrofitted into them, Beads was engineered specifically to solve the "context drift" problem in agentic coding workflows.
+[Beads (`bd`)](https://github.com/gastownhall/beads) is an open-source, ultra-lightweight tracker built specifically for agentic coding. It stores issues in a relational, version-controlled graph (Dolt) that lives inside the repo, exposes a CLI (`bd next`, `bd done`, `bd remember`, `bd failure`), and has out-of-the-box setup integrations for Claude Code, Codex, Cursor, and Cline. The user's mental model: **Beads is the epic/story layer (initiator); OpenSpec is the detailed specification layer; SPWorkflow is the orchestrator that hands work between them.**
 
-The Top Pick: Beads (bd)
-Beads is an open-source, ultra-lightweight distributed graph issue tracker powered by a relational, version-controlled database (Dolt). It acts as a lightweight tracking layer that sits inside your repository to provide a persistent, structured memory for coding agents.  
+## What we know
 
-Repository: [github.com/gastownhall/beads](https://github.com/gastownhall/beads)
+- **Hierarchy.** Beads = epics and stories (high-level, persistent, dependency-aware). OpenSpec = the specs, design decisions, and tasks for one change. One Beads node typically maps to one OpenSpec change.
+- **Initiation flow.** A new objective starts in Beads (`bd write "..."` → returns `bd-NNN`). When the work is ready for technical specification, an OpenSpec change is scaffolded under that node and the `bd-NNN` id is recorded in the change's `proposal.md` frontmatter.
+- **Execution flow.** During `/opsx:apply`, the agent does not edit `tasks.md` directly. It consults `bd next` for the next dependency-safe task, runs `bd remember "<insight>"` for architectural surprises, and `bd done <task-id>` on completion. A post-execution hook syncs status back into OpenSpec's `tasks.md` (the human-readable surface stays in sync).
+- **Custom OpenSpec schema is the integration point.** OpenSpec supports custom schemas via `openspec schema init <name>`. A `beads-driven` schema can require a `beads_story_id` in `proposal.md` frontmatter and rewrite the `apply` instruction so the agent uses `bd next` / `bd done` instead of editing `tasks.md`.
+- **Slash command surface.** Five proposed entry points: `/spwf:start` (creates Beads node + git branch + OpenSpec scaffold), `/spwf:propose` (agent fills specs.md, design.md), `/spwf:next` (loop through `bd next`), `/spwf:remember <insight>` (write to Beads memory), `/spwf:ship` (verify all Beads sub-tasks closed, archive OpenSpec change, close Beads story).
+- **Two architectural patterns** described in the raw notes: (1) Beads as ephemeral execution engine during `/opsx:apply` only; (2) Beads memory feeding back into OpenSpec design context. They are compatible — Pattern 2 reads from the same store Pattern 1 writes to.
+- **Existing SPWF skills overlap.** `/spwf:capture`, `/spwf:close`, `/spwf:learn-from-mistakes` already cover parts of this surface. Beads adds the *dependency graph* and *persistent memory*, not just another tracking layer.
 
-Tech Stack: Written primarily in Go (highly lightweight and fast).
+## Open questions
 
-License: Open-source.
+- **Scope of first cut.** Pattern 1 (execution-time Beads) is the smaller commitment and the higher-value win — does it ship first, or do we go for the full schema + slash command surface in one change?
+- **Coexistence with existing tracker MCPs.** SPWorkflow already supports YouTrack and Jira via tracker dispatch (`_shared/tracker-dispatch.md`). Beads sits at a different layer (in-repo graph for execution, not external workflow tracker). Is Beads a third dispatch target, or a separate concern entirely?
+- **Where does the Beads database live?** Per-project (`./bd/`) committed alongside `openspec/`, or per-machine (`~/.bd/`)? Affects multi-machine workflows and CI.
+- **`bd remember` vs `learn-from-mistakes`.** Both capture insights. Beads stores them in a queryable graph; `learn-from-mistakes` writes to project docs. Are they redundant, complementary, or layered (Beads short-term during execution → docs long-term at close)?
+- **`bd setup claude` interaction.** Beads ships with a Claude Code setup protocol. Does it install hooks/skills that conflict with SPWorkflow's own hooks?
+- **Custom schema risk.** OpenSpec's custom-schema API is still in flux. How stable is `openspec schema init` and the `apply.instruction` field?
+- **Sync semantics on failure.** If `bd done` succeeds but the post-execution hook fails to update `tasks.md`, the two systems disagree. Source-of-truth rules need to be explicit.
+- **Effort to ship.** Custom schema + 5 new slash commands + sync hooks is non-trivial. Is there a smaller "minimum viable Beads" — e.g. just `/spwf:remember <insight>` wrapping `bd remember`, deferring schema work?
 
-Why it’s Agent-Native
-Traditional bug trackers use Markdown files or markdown-based issue fields. For a human, a flat TODO.md file is easy to read. For an AI agent, it's a nightmare—agents frequently overwrite flat markdown plans, miss dependencies, and hit context limits during long-horizon coding tasks.  
+## Rough scope
 
-Beads fixes this by replacing text-based task tracking with a dependency-aware graph schema.  
+**In scope (working hypothesis):**
+- A `beads-driven` OpenSpec custom schema that requires `beads_story_id` in proposal frontmatter and rewires `apply` to use `bd next` / `bd done`.
+- New SPWF skills: `/spwf:start` (Beads node + branch + OpenSpec scaffold), `/spwf:next`, `/spwf:remember`, plus integration of Beads checks into `/spwf:close` (verify Beads sub-tasks closed before archive).
+- A sync hook from Beads → OpenSpec `tasks.md` so the human-readable surface stays current.
+- Documentation in `docs/` and `CLAUDE.md` describing the Beads + OpenSpec mental model.
 
-Key Features for Agentic Coding:
-No Heavy UI/Server Overhead: It lives locally in your workspace or environment (with options to isolate it in CI/CD or /tmp for ephemeral agent evaluations).
+**Out of scope (initial cut):**
+- Replacing tracker-dispatch with Beads. YouTrack/Jira/Linear stay as external workflow trackers; Beads is the in-repo execution layer.
+- Laminar / agent observability integration (the raw notes mention this as a separate tool, not an integrator).
+- Multi-machine Beads sync (single-machine first; Dolt's distributed mode is a later phase).
 
-Dependency-Aware Mapping: Agents don't just see a list of bugs; they see how those bugs relate to the codebase state and to other issues.
+**Decision points to settle in Challenge:**
+- Scope of first cut: Pattern 1 only, full slash command surface, or the schema first?
+- Beads DB location: per-project or per-machine?
+- Relationship to `learn-from-mistakes`.
 
-Native Integrations: It comes out of the box with setup protocols for the leading coding agents and IDEs (bd setup codex, bd setup claude, bd setup cursor, bd setup cline).
+## Raw research notes
 
-The bd remember command: Instead of dumping text into the codebase, agents can run bd remember "insight" to append persistent project memory straight into the tracking database.
-
-The Alternative: Laminar (If you need Trace Observability)
-If your definition of a "bug tracker" is less about logging task tickets and more about debugging why your agent failed a coding task, look at Laminar ([github.com/lmnr-ai/lmnr](https://github.com/lmnr-ai/lmnr)).
-
-Laminar is an open-source (Apache 2.0), OpenTelemetry-native agent observability platform.  
-
-The "Bug Tracker" Angle: It doesn't track human-written bugs; it tracks agent errors. It features an Agent Rollout (Debugger) where you can pause an agent’s execution trace, change the prompt, swap the model, fix the tool call, and resume execution.
-
-Ecosystem Fit: It natively hooks into modern agentic SDKs like the Anthropic Claude Agent SDK, AutoGen, and LangGraph.
-
-Summary
-For a lean, zero-bloat issue manager that your autonomous coding agents can read, write to, and self-assign without breaking, stick Beads in your toolkit. If you want to log execution failures during a run, spin up Laminar.
-
-beads is definitely the direction I'm thinking, how might it plug into something like https://openspec.dev/ for actual spec processing ?
-
-Plugging Beads (bd) into OpenSpec creates a powerful synergy for agentic workflows. OpenSpec excels at the macro-planning phase (turning natural language into structured files like proposal.md, design.md, and tasks.md), while Beads excels at the micro-execution phase (preventing agents from experiencing context drift or corrupting the task state while actively writing code).
-
-Because OpenSpec generates structured, predictable filesystem artifacts inside your openspec/changes/<change-id>/ directory, integrating Beads into the pipeline is incredibly straightforward.
-
-Here are the two best architectural patterns for plugging Beads directly into the OpenSpec workflow.
-
-Pattern 1: The Automated Pipeline (Via Git Hooks or an Orchestration Layer)
-The most elegant way to run this is to use Beads as an ephemeral, dependency-aware engine that handles OpenSpec's /opsx:apply phase under the hood.
-
-An adapter can ingest the tasks.md generated by OpenSpec, initialize a local Beads graph, and let the coding agent track state dynamically without touching the human-readable Markdown source file until completion.
-
-       [ /opsx:propose ]
-               │
-               ▼
-   openspec/changes/<id>/tasks.md
-               │
-               ▼  (Initialization Hook)
-       [ bd init / bd ingest ]
-               │
-               ▼
- ┌─────────────────────────────────────────┐
- │       Beads Local Graph Database        │
- │  - Tracks graph dependencies            │
- │  - Atomic transitions per agent task    │
- └─────────────────────────────────────────┘
-               │
-               ▼  (Execution Phase)
-       [ bd next / bd done ]
-               │
-               ▼  (Archive Hook)
-   Sync back to OpenSpec tasks.md & Git
-Step 1: Ingestion
-When OpenSpec scaffolds a new change proposal via /opsx:propose, it outputs openspec/changes/<change-id>/tasks.md. At this exact moment, you run an initialization script (or custom agent skill) to ingest those tasks into a local Beads graph:
-
-Bash
-# Initialize a pristine Beads environment for this change branch
-bd init --scope="openspec-change-id"
-
-# Ingest the flat tasks markdown file into a relational dependency graph
-bd ingest openspec/changes/add-remember-me/tasks.md
-Step 2: Agent Execution
-Instead of directing your coding agent (e.g., Claude Code, Cursor, or a local python-first agentic loop) to read and modify tasks.md directly—which risks the agent losing its place or modifying the file incorrectly—instruct the agent to use the Beads CLI to fetch and mark work:
-
-Bash
-# Agent asks Beads what to work on next based on graph dependencies
-bd next
-
-# Agent finishes the task, writes a persistent insight to DB memory, and marks it closed
-bd remember "Encountered a strict type error in PostgreSQL session schema; updated schema definition to handle UTC explicitly."
-bd done <task-id>
-Step 3: Upstream Synchronization
-Once the agent completes a phase or the entire task graph, a post-execution hook queries the Beads database state and updates OpenSpec's tasks.md format cleanly to reflect the - [x] status and append the generated pull request references.
-
-Pattern 2: Integrating Beads Memory Directly Into OpenSpec Design Context
-One of OpenSpec’s greatest strengths is its long-term context retention: when you start a new coding session, the agent reads openspec/specs/ to understand your codebase rules without needing a massive token-heavy codebase sweep.
-
-You can use Beads to capture runtime/agent execution context and feed it directly into OpenSpec's design.md or proposal.md files during the iteration phase.
-
-If your agent hits a blocker or uncovers an architectural mismatch during implementation:
-
-The agent runs bd failure "Database connection timed out because connection tracking is disabled globally in our EF Core settings."
-
-This creates a highly structured event node inside Beads.
-
-When you run your next proposal or refine a current design with OpenSpec, your orchestration layer injects recent Beads failure insights directly into the context stream of /opsx:propose:
-
-Bash
-# Feed local agent memory graph data back into the OpenSpec planning engine
-bd export --format=markdown --type=insights > temporary_context.md
-openspec propose tweak-session-timeout --context=temporary_context.md
-Implementing this as a Custom Developer Skill
-If you utilize custom agentic developer profiles or custom workspace tools, you can map these steps into a singular configuration file or CLI wrapper (ops-flow).
-
-For example, a quick shell function or python wrapper can combine the two tools into a seamless loop:
-
-Bash
-function agent-ship() {
-    local change_name=$1
-    
-    # 1. Generate the OpenSpec proposal
-    openspec propose $change_name
-    
-    # 2. Automatically sync the tasks into a tight Beads tracking loop
-    bd init
-    bd ingest openspec/changes/$change_name/tasks.md
-    
-    # 3. Hand off to the agent runner with a strict context boundary
-    echo "Beads graph ready. Run 'bd next' to execute implementation tasks."
-}
-By layering Beads underneath OpenSpec, you get the absolute best of both worlds: clean, human-reviewable Markdown specification changes at the top layer, and a bulletproof, agent-native relational database tracking the work steps underneath.
-
-For a deeper look into the practical mechanics of Spec-Driven Development (SDD) and how it organizes files like tasks.md to prevent agent misalignment, this breakdown covers the structural shift teams make when moving from ad-hoc prompts to strict behavioral contracts:
-
-Spec Driven Development with OpenSpec
-
-This video walks through setting up OpenSpec and illustrates the exact structure of the openspec/ folder, making it easy to see where to hook a local tracker like Beads into the pipeline.
-
-OpenSpec is Insane: Spec Driven Development is 100X Better Than Vibe Coding - YouTube
-AI Stack Engineer · 20k views
-
-
-could we use https://github.com/Fission-AI/OpenSpec/blob/main/docs/customization.md custom schemas somehow to integrate? Also typically I would see beads as the initiator, and openspec as more detail, so while not always the case beads would initiate a change, openspec would be the more detailed phase, beads is more aken to epics and stories, openspc is the actual specification docs
-
-You are spot on with this mental model. Treating Beads as the high-level initiator (handling the macro lifecycle, epic/story dependency graphs, and persistent agent memory nodes) while letting OpenSpec act as the detailed, architectural phase (the technical blueprints, invariant definitions, and source-of-truth delta specs) perfectly leverages the core strengths of both tools.
-
-This mirrors advanced patterns seen in production workflows (like OpenSpec's own linearized schema used for tracking backlogs via external project IDs).
-
-Using OpenSpec's custom schemas system (docs/customization.md), you can explicitly rewire the default flow to bind a change directory to a Beads node and hand over execution control to the Beads graph database.
-
-Here is how you can build a beads-driven custom schema to unify the two tools.
-
-1. Scaffold the Custom Schema
-Using the OpenSpec CLI, you can create a new schema folder in your repository. This isolates your custom workflow rules under version control:
-
-Bash
-openspec schema init beads-driven --description "Beads epic/story tracking with structural OpenSpec specs"
-This scaffolds the directory structure:
-
-Plaintext
-openspec/schemas/beads-driven/
-├── schema.yaml        # Defines the artifact sequence and instructions
-└── templates/         # Blueprint Markdown templates
-    ├── proposal.md
-    ├── specs.md
-    └── design.md
-2. Configure schema.yaml to delegate to Beads
-In your custom schema.yaml, you can define exactly what artifacts are required, how they depend on each other, and crucially, change the apply phase instructions to tell your coding agent to interact with the Beads CLI instead of a traditional flat tasks.md file.
-
-YAML
-name: beads-driven
-version: 1
-description: "Beads tracking engine + OpenSpec structural specifications"
-
-artifacts:
-  - id: proposal
-    generates: proposal.md
-    template: proposal.md
-    description: "High-level feature intent tied back to a parental Beads node"
-    requires: []
-
-  - id: specs
-    generates: "specs/**/*.md"
-    template: specs.md
-    description: "Authoritative behavioral specifications and invariants"
-    requires: [proposal]
-
-  - id: design
-    generates: design.md
-    template: design.md
-    description: "Optional architecture decisions and technical state mutations"
-    requires: [specs]
-
-# The execution hook that hooks into OpenSpec's apply phase
-apply:
-  requires: [specs] # Requires verified specifications before code changes begin
-  instruction: |
-    You are executing a change tracked by Beads.
-    1. Parse the `beads_story_id` from the frontmatter of `proposal.md`.
-    2. Synchronize your local tracking context by running: `bd show {{beads_story_id}}`.
-    3. Loop through implementation using the agent-native tracking graph:
-       - Run `bd next` to retrieve or assert the immediate sub-task block.
-       - If you discover architectural edge cases or type mismatches during execution, write them permanently to database memory using: `bd remember "<insight>"`
-       - Complete micro-tasks by invoking `bd done <task_id>`.
-    4. Do not complete the OpenSpec workflow until all related task nodes in the Beads graph report as resolved.
-3. Binding the Templates via Frontmatter
-To enforce that every OpenSpec change references its high-level creator in Beads, update the template file at openspec/schemas/beads-driven/templates/proposal.md to format a strict frontmatter constraint:
-
-Markdown
----
-title: "{{changeName}}"
-beads_story_id: "bd-XXXX" # REQUIRED: Bind this spec to its parent tracking epic/story
-status: proposed
----
-
-# High-Level Intent
-## Context & Scope
-4. Activating the Loop in Your Repository
-To set this as the standard engine for your project, activate it in your root openspec/config.yaml:
-
-YAML
-schema: beads-driven
-specsPath: openspec/specs
-context: |
-  We use Beads for epic/story management and localized micro-task assignment.
-  Always refer to `bd` database entries for execution order.
-Run openspec schema validate beads-driven to ensure the DAG links and constraints match up perfectly.
-
-The End-to-End Workflow in Practice
-With this schema in play, a clean, bidirectional loop emerges between high-level project management and detail-oriented technical execution:
-
-Inception (Beads): You or a high-level router issues a new objective:
-
-Bash
-bd write "Implement OAuth2 recipe localized pipeline middleware"
-# Output returns story node ID: bd-712
-Detailed Specification (OpenSpec): The feature is ready for deeper spec-driven planning. Initialize the OpenSpec workspace targeting your custom schema:
-
-Bash
-/opsx:new recipe-oauth --schema beads-driven
-Drafting Blueprints: The agent scaffolds proposal.md (putting bd-712 in the metadata), specs.md, and design.md. It models complex API signatures, data conversion boundaries, or database schemas without polluting the high-level story.
-
-Execution Layer Hand-off: When /opsx:apply fires, the agent doesn't write to a traditional flat Markdown file. It reads bd-712, breaks the specifications down into execution nodes via bd, runs bd next, handles implementation safely inside its runtime loop, and marks things complete via bd done.
-
-Archive: When the code passes verification, /opsx:archive runs, collapsing the detailed delta specs cleanly into your root openspec/specs/ directory as an enduring source of truth, while bd retains the relational timeline of how the agent navigated the code paths.
-
-ok so if we were to use slash commands or skills, what would the workflow be? I would like to integrate it into my existing workflow https://github.com/simon-potter/spwf
-
-Integrating this into your existing workflow framework (spwf) via custom agent skills or slash commands is the cleanest way to operationalize this setup. By treating spwf as the overarching command conductor, you can build custom agent tools (or a custom Model Context Protocol / MCP server if you're using tools like Claude Code or Cursor) that abstract the friction of moving between Beads and OpenSpec.
-
-Here is the exact architectural workflow and execution model for binding these three layers together.
-
-The Workflow Blueprint
-In this architecture, spwf handles the session state, bd (Beads) acts as the stateful memory/backlog graph, and openspec handles the architectural delta boundaries.
-
- 1. HIGH-LEVEL INTENT (Human)
-    └── `spwf start "Add billing webhook"`
-         ├── Spin up git branch
-         └── Write Epic/Story to Beads (`bd-102`)
-
- 2. ARCHITECTURAL SPEC (Agent/Human)
-    └── Agent receives `/spwf:propose`
-         └── Triggers `openspec new --schema beads-driven`
-         └── Agent writes proposal.md, specs.md, design.md
-
- 3. EXECUTION LOOP (Agent-Native CLI)
-    └── Agent loops on `/spwf:next`
-         ├── Reads `bd next` to get atomic coding step
-         ├── Runs code, verifies against OpenSpec invariants
-         ├── Logs blockers or quirks via `bd remember`
-         └── Closes sub-task via `bd done`
-
- 4. SHIP & ARCHIVE (Agent/Human)
-    └── `/spwf:ship`
-         ├── Verifies entire Beads subgraph is closed
-         ├── Commits code & compiles final changes
-         └── Triggers `openspec archive` to update permanent docs
-Custom Slash Commands / Agent Skills
-Depending on how your agent execution environment is set up, you can map these workflows to explicit slash commands (or JSON-RPC tools if exposing them as an agentic skill block).
-
-1. /spwf:start [story_title]
-Who runs it: Usually the human to initiate a task, or a high-level orchestration agent.
-
-What it does behind the scenes:
-
-Initializes a clean feature branch in git: feature/spwf-xyz.
-
-Runs bd write "<story_title>" to generate a state tracking node (e.g., bd-102).
-
-Runs openspec new <story_title> --schema=beads-driven to build the spec scaffold.
-
-Automatically injects the beads_story_id: bd-102 into the proposal.md frontmatter.
-
-2. /spwf:propose
-Who runs it: The coding agent.
-
-What it does behind the scenes:
-
-Directs the agent to scan the local codebase context and populate the OpenSpec specs.md and design.md.
-
-Runs a validation check (openspec validate) to ensure no breaking structural changes or broken dependency references exist before code execution starts.
-
-3. /spwf:next
-Who runs it: The coding agent iteratively.
-
-What it does behind the scenes:
-
-Executes bd next to see the exact relational sub-task stack.
-
-If no sub-tasks exist, it prompts the agent to parse the compiled OpenSpec specs.md file and dynamically break it down into atomic execution nodes via bd ingest.
-
-Serves the absolute next code block mutation target to the agent's immediate context window.
-
-4. /spwf:remember [insight]
-Who runs it: The coding agent when encountering edge cases.
-
-What it does behind the scenes:
-
-Directly invokes bd remember "<insight>". This acts as a circuit breaker for agent "hallucination loops." If an agent discovers a hidden architectural quirk (e.g., a specific database indexing rule or package version incompatibility), it logs it straight to the relational graph instead of hiding it in an ephemeral context window.
-
-5. /spwf:ship
-Who runs it: The agent or human to finalize the iteration.
-
-What it does behind the scenes:
-
-Checks if all Beads sub-tasks for the active story are marked as completed.
-
-Triggers your test suite pipeline via spwf.
-
-Invokes openspec archive to sweep the short-lived delta tracking files in openspec/changes/* and fold them cleanly into your permanent documentation directories (openspec/specs/*).
-
-Resolves the master story in Beads.
-
-Implementation: Integrating into spwf
-If you are expanding your spwf command footprint, you can drop in a clean shell or python wrapper to manage this state transition natively. Here is a structural example of how spwf can orchestrate the tool hand-offs smoothly:
-
-Bash
-#!/usr/bin/env bash
-# spwf extension for Beads + OpenSpec lifecycle management
-
-COMMAND=$1
-SHIFT_ARGS="${@:2}"
-
-case "$COMMAND" in
-    "start")
-        STORY_TITLE=$2
-        echo "Updating spwf local state..."
-        
-        # 1. Capture the structural story node inside Beads
-        BEADS_ID=$(bd write "$STORY_TITLE" | grep -o 'bd-[0-9]\+')
-        echo "Created tracking node: $BEADS_ID"
-        
-        # 2. Derive a safe branch name and split out git
-        BRANCH_NAME="feature/spwf-${BEADS_ID}"
-        git checkout -b "$BRANCH_NAME"
-        
-        # 3. Spin up the OpenSpec delta environment using your custom schema
-        openspec new "$STORY_TITLE" --schema=beads-driven
-        
-        # 4. Bind them together in the frontmatter context
-        sed -i "s/beads_story_id: \"bd-XXXX\"/beads_story_id: \"$BEADS_ID\"/g" openspec/changes/*/proposal.md
-        echo "Initialization complete. Ready for /spwf:propose"
-        ;;
-
-    "next")
-        # Ensure the agent stays on the rails by pulling directly from the DB layer
-        CURRENT_STORY=$(grep -m 1 "beads_story_id:" openspec/changes/*/proposal.md | awk '{print $2}' | tr -d '"')
-        echo "Active Story: $CURRENT_STORY"
-        
-        # Fetch the next dependency-safe implementation item
-        bd next --parent="$CURRENT_STORY"
-        ;;
-
-    "ship")
-        echo "Validating active task graphs before archiving..."
-        # Prevent shipping if the agent left dangling nodes open in Beads
-        if bd status | grep -q "pending"; then
-            echo "Error: Cannot ship. Unresolved micro-tasks exist in the Beads execution graph."
-            exit 1
-        fi
-        
-        # Finalize the OpenSpec delta state into the root directory
-        openspec archive
-        
-        # Mark story node complete in the database layer
-        CURRENT_STORY=$(grep -m 1 "beads_story_id:" openspec/specs/*/proposal.md | awk '{print $2}' | tr -d '"')
-        bd close "$CURRENT_STORY"
-        
-        echo "Feature successfully shipped and archived via spwf loop."
-        ;;
-        
-    *)
-        echo "Unknown spwf subcommand. Available hooks: start, next, ship"
-        exit 1
-        ;;
-esac
-This ensures that regardless of whether you are interacting with your workspace via a standard terminal matrix, an automated CLI hook, or exposing tools directly to an LLM runtime loop, the boundaries remain predictable and deterministic.
+Original research dump preserved at [`todo/_research/beadsify-raw.md`](_research/beadsify-raw.md).
