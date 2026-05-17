@@ -92,6 +92,37 @@ Step 3 — install the specialist agents:
 /plugin marketplace update spwf
 ```
 
+## Optional add-on: Beadsify (in development)
+
+SPWorkflow is **fully usable without** [Beads](https://github.com/gastownhall/beads).
+The base install (`spwf` + `spwf-agents` above) gives you the complete workflow
+backed by YouTrack / Jira / none as the issue tracker.
+
+For projects where you want an **in-repo, agent-native tracker** instead of an
+external service, an optional third plugin `spwf-beadsify` is being built. It
+plugs into the existing tracker-dispatch abstraction, so every `/spwf:*` skill
+keeps working unchanged — only the backend differs.
+
+### Two workflow profiles
+
+| Profile | Install | Tracker | When to choose |
+|---|---|---|---|
+| **SPWF only** (default) | `spwf` + `spwf-agents` | YouTrack / Jira / none, configured via MCP and `.spwf/tracker.yaml` | Client work, team workflows, anywhere an external tracker is required or already in use |
+| **SPWF + Beadsify** | `spwf` + `spwf-agents` + `spwf-beadsify`, plus the [Beads CLI](https://github.com/gastownhall/beads) | Beads — in-repo dependency graph at `./.bd/`, selected with `tracker: beads` in `.spwf/tracker.yaml` | Solo projects, agent-heavy workflows, anywhere you want persistent agent memory and dependency-aware tasks without an external service |
+
+Switching profiles per project is fine. The same skills, agents, and hooks run
+either way; only the tracker backend is swapped.
+
+### Status
+
+Beadsify is currently being built. Track progress:
+
+- Spec: [`openspec/changes/add-beadsify-tracker/`](openspec/changes/add-beadsify-tracker/) (proposal, design, tasks — 29-task plan)
+- Follow-up: [`todo/beadsify-build-loop.md`](todo/beadsify-build-loop.md) (build-loop integration, ships after the tracker layer)
+- You can install the Beads CLI today even without the plugin — it's harmless on its own: `bash scripts/install-beads.sh`
+
+When `spwf-beadsify` ships, this section gets updated with its install command and moves from "in development" to "available". The "SPWF only" profile remains the canonical default.
+
 ## Local install (from this repo)
 
 Same pattern — **make sure you keep them separate** (see the gotcha note above):
@@ -202,6 +233,10 @@ done_state: Done           # state name for close transition
 The file is optional. Absent fields are asked once on first need and offered for save.
 Auth tokens never live in this file. Full reference (including discovery session for
 pinning tool names): `plugins/spwf/skills/_shared/tracker-dispatch.md`.
+
+> **Beads** is coming as an optional fourth tracker via the `spwf-beadsify` add-on —
+> see "Optional add-on: Beadsify (in development)" earlier in this README. Not
+> required for normal SPWF use.
 
 ### 5. `jq` (for `claudemd-curator`, `workspace-health`, and hooks)
 
