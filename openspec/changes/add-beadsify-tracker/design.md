@@ -110,17 +110,32 @@ Configuration:
 
 Beads database:
 
-- `./.bd/` — Beads' on-disk store (Dolt format, opaque). Created by `bd init`, populated by `bd write` / `bd done` / `bd remember`.
+- `./.bd/` — Beads' on-disk store (Dolt format, opaque). Created by `bd init`, populated by `bd create` (or `bd q`) / `bd close` / `bd comment` / `bd remember`.
 
 Spec artefacts: standard SPWF / OpenSpec conventions, no new formats.
 
 ---
 
+## bd CLI mapping (resolved 2026-05-17 against bd 1.0.4)
+
+The mapping below is established by reading `bd --help` against the installed bd 1.0.4. The build phase's Phase 2.1 task confirms it still holds at implementation time.
+
+| Dispatch operation | bd CLI command | Notes |
+|---|---|---|
+| `create_issue` | `bd q "<title>"` | Quick capture; outputs only the issue id (e.g. `bd-a1b2`). Safer than `bd create` for programmatic dispatch — minimal output to parse. |
+| `get_issue` | `bd show <id>` | Returns issue details: title, status, dependencies, comments, labels. |
+| `add_comment` | `bd comment <id> "<text>"` | First-class command — earlier plan to use `bd remember` was based on incorrect research. `bd remember` is project-level persistent agent memory (loaded at `bd prime`), not per-issue commentary. |
+| `transition` (close) | `bd close <id>` | Confirmed. Reopen (`bd reopen <id>`) deferred — no v1 success criterion needs it. |
+
+Out-of-scope for this change but worth recording for `add-beadsify-build-loop`: `bd remember` is the **insights store** (loaded at session prime); it fits the build-loop change's `openspec/changes/{id}/insights.md` export story naturally. `bd note` is a per-issue append-only note, distinct from `bd comment` — its role in the workflow is TBD.
+
+Issue id format observed: `bd-<hash>` (alphanumeric, not `bd-<digit>`). Input validation in Phase 2.2 should use a permissive regex such as `^bd-[a-z0-9]+$` rather than `^bd-\d+$`.
+
+---
+
 ## Open questions (carried from Challenge, to settle during build)
 
-These do not block spec validation — they're decisions the build phase resolves by reading the `bd` CLI documentation or by running small experiments:
+These do not block spec validation. Two of the four original open questions (comment mapping, status vocab) are resolved above; the remaining two stay open:
 
-1. **`bd remember` vs other for comments.** Does `bd` have a closer match than `bd remember` for a "comment on a story" concept? Default plan: use `bd remember bd-N "<text>"`. Verify against `bd --help` during build; revise if a better match exists.
-2. **Status vocabulary mapping table.** What Beads state does `/spwf:close` set? Default plan: `bd close <id>`. Confirm Beads has no richer "done with archive reference" state we should use.
-3. **`bd init` bootstrap UX.** Auto-init from the backend on first failed dispatch, or require manual `bd init`? Default plan: manual with a clear error. Revisit if friction is high.
-4. **Dispatch backend file layout.** Default plan: single `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` with branching logic per operation. Revisit if it grows past 300 lines.
+1. **`bd init` bootstrap UX.** Auto-init from the backend on first failed dispatch, or require manual `bd init`? Default plan: manual with a clear error. Revisit if friction is high.
+2. **Dispatch backend file layout.** Default plan: single `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` with branching logic per operation. Revisit if it grows past 300 lines.

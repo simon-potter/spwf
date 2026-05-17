@@ -17,7 +17,7 @@
 
 **Preflight investigation (resolves design.md open questions before any operation is implemented):**
 
-- [ ] 2.1 Read `bd --help` and `bd <subcommand> --help` for `write`, `show`, `remember`, `close`. Confirm or revise the dispatch mapping table in `design.md` § "Open questions" — specifically: (a) the comment mapping (does a closer match than `bd remember` exist?), (b) Beads' status vocabulary (does the close transition need any flags beyond `bd close <id>`?), (c) whether `bd init` is required as a manual prerequisite or if the backend can auto-init safely.
+- [ ] 2.1 Confirm the dispatch mapping in `design.md` § "bd CLI mapping" still holds against the installed bd version (resolved against bd 1.0.4 on 2026-05-17 — see design.md). Specifically: run `bd q --help`, `bd show --help`, `bd comment --help`, `bd close --help`; if any subcommand has moved, gained required flags, or changed output format, update the mapping table and the corresponding Phase 2.6–2.9 tasks before implementing them. Also resolve the remaining open question on `bd init` bootstrap UX (auto-init vs manual prerequisite).
 - [ ] 2.2 Pin the safe subprocess-invocation pattern and document it in `design.md` § "Open questions" (or under a new Decision 7). Pattern requirements: list-form arguments (no shell-string concatenation); explicit input validation for any value that originated from user input (titles, comment bodies, ids); ids matching Beads' documented format. All Phase 2 operations below use this pattern verbatim.
 
 **Backend skill scaffold:**
@@ -28,10 +28,10 @@
 **Per-operation implementation (each uses the Phase 2.2 invocation pattern):**
 
 - [ ] 2.5 Backend's first operation invocation checks `.bd/` exists; if missing, emits `.bd/ not initialised. Run: bd init (in the project root) then retry.` and halts cleanly. (If Phase 2.1 resolved that auto-init is safe, replace this halt with the auto-init flow.)
-- [ ] 2.6 Backend's `create_issue` operation invokes `bd write "<title>"` and returns the resulting `bd-NNN` id parsed from stdout. Title passes through input validation before subprocess invocation.
-- [ ] 2.7 Backend's `get_issue` operation invokes `bd show bd-NNN` and returns the structured result (title, status, dependencies, recent insights). The id is format-validated before subprocess invocation.
-- [ ] 2.8 Backend's `add_comment` operation invokes the resolved comment-mapping CLI from Phase 2.1 (default: `bd remember bd-NNN "<text>"`). Both the id and the comment body pass through input validation.
-- [ ] 2.9 Backend's `transition` operation supports `close` only (`bd close bd-NNN`). Unknown transition names are rejected with a clear error. The id is format-validated before subprocess invocation. (`reopen` and richer transitions are deliberately deferred — no v1 success criterion requires them.)
+- [ ] 2.6 Backend's `create_issue` operation invokes `bd q "<title>"` and returns the resulting `bd-<hash>` id parsed from stdout (per design.md § "bd CLI mapping"). Title passes through input validation before subprocess invocation.
+- [ ] 2.7 Backend's `get_issue` operation invokes `bd show <id>` and returns the structured result (title, status, dependencies, comments). The id is format-validated (`^bd-[a-z0-9]+$`) before subprocess invocation.
+- [ ] 2.8 Backend's `add_comment` operation invokes `bd comment <id> "<text>"` (per design.md § "bd CLI mapping" — NOT `bd remember`, which is project-level persistent memory used elsewhere). Both the id and the comment body pass through input validation.
+- [ ] 2.9 Backend's `transition` operation supports `close` only (`bd close <id>`). Unknown transition names are rejected with a clear error. The id is format-validated (`^bd-[a-z0-9]+$`) before subprocess invocation. (`reopen` and richer transitions are deliberately deferred — no v1 success criterion requires them.)
 
 ## Phase 3 — Extend tracker-dispatch.md
 
