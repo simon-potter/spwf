@@ -1,0 +1,8 @@
+# IDE local history (VS Code Local History extension and similar)
+.history/
+
+# Skill installer cache (managed by skills-lock.json)
+.agents/
+
+# Per-user Claude Code settings — not shared
+.claude/settings.local.json
