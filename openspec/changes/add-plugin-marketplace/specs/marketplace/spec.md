@@ -1,17 +1,17 @@
 # Spec: marketplace
 
-> **Authoritative Reference:** [`todo/Marketplace_setup.md`](../../../../../todo/Marketplace_setup.md) contains the full skill inventory, agent table, workflow coverage map, and acceptance criteria.
+> **Authoritative Reference:** [`todo/Marketplace_setup.md`](../../../../../todo/Marketplace_setup.md) records the original setup decisions; this spec describes the shipped marketplace as it exists at archive.
 
 ## ADDED Requirements
 
 ### Requirement: Marketplace catalog
 
-The repo SHALL contain a `.claude-plugin/marketplace.json` at its root that is valid JSON conforming to the Claude Code marketplace schema, with name `simon-marketplace`, three plugins (workflow-core, workflow-tools, workflow-agents), and `pluginRoot` set to `./plugins`.
+The repo SHALL contain a `.claude-plugin/marketplace.json` at its root that is valid JSON conforming to the Claude Code marketplace schema, with name `spwf`, two plugins (`spwf`, `spwf-agents`), and `pluginRoot` set to `./plugins`.
 
 #### Scenario: Install from GitHub
 
-- **WHEN** a user with Academy-Plus org access runs `/plugin marketplace add Academy-Plus/spwf`
-- **THEN** Claude Code SHALL read `.claude-plugin/marketplace.json` and register `simon-marketplace` as an available source
+- **WHEN** a user runs `/plugin marketplace add simon-potter/spwf`
+- **THEN** Claude Code SHALL read `.claude-plugin/marketplace.json` and register `spwf` as an available source
 
 #### Scenario: Install from local path
 
@@ -20,175 +20,153 @@ The repo SHALL contain a `.claude-plugin/marketplace.json` at its root that is v
 
 ---
 
-### Requirement: workflow-core covers all seven phases
+### Requirement: spwf plugin covers the engineering cycle
 
-The `workflow-core` plugin SHALL provide exactly 8 skills: `spec`, `approve-plan`, `build`, `write-tests`, `pr-review`, `simplify`, `pr-create`, `debug-recovery`. Each SHALL be invocable as `/workflow-core:<name>`.
+The `spwf` plugin SHALL provide the skills that implement the full SPWorkflow engineering cycle. Every skill SHALL be invocable as `/spwf:<name>`. The plugin description in `plugin.json` SHALL state the skill count accurately.
 
 #### Scenario: Invoke a phase skill
 
-- **WHEN** a user types `/workflow-core:approve-plan`
+- **WHEN** a user types `/spwf:approve-plan`
 - **THEN** the approve-plan skill SHALL execute, read the current OpenSpec `tasks.md`, assess task quality, and present the plan for human approval
 
-#### Scenario: All eight skills listed
+#### Scenario: Skill discovery after install
 
-- **WHEN** a user runs `/plugin list workflow-core`
-- **THEN** exactly 8 skills SHALL appear: spec, approve-plan, build, write-tests, pr-review, simplify, pr-create, debug-recovery
-
----
-
-### Requirement: workflow-tools covers all extended phases
-
-The `workflow-tools` plugin SHALL provide skills including: `issue-to-task`, `new-task`, `challenge`, `doc-lint`, `agent-optimise`, `learn-from-mistakes`, `workflow-lint`. Each SHALL be invocable as `/workflow-tools:<name>`. A deprecated `grill-me` stub SHALL redirect to `challenge`.
-
-#### Scenario: Invoke the challenge skill
-
-- **WHEN** a user types `/workflow-tools:challenge todo/my-feature.md`
-- **THEN** the challenge skill SHALL read the specified file and begin the challenge interview
-
-#### Scenario: Deprecated grill-me stub redirects
-
-- **WHEN** a user types `/workflow-tools:grill-me todo/my-feature.md`
-- **THEN** a one-line deprecation message SHALL appear directing the user to use `/workflow-tools:challenge`
+- **WHEN** a user runs `/plugin list` after installing `spwf@spwf`
+- **THEN** the plugin SHALL be listed
+- **AND** every skill directory under `plugins/spwf/skills/` containing a `SKILL.md` SHALL be available as `/spwf:<name>`
 
 ---
 
-### Requirement: workflow-agents provides all twelve agents
+### Requirement: spwf-agents plugin provides paired subagents
 
-The `workflow-agents` plugin SHALL provide exactly 12 agents: capturer, debugger, challenger, specifier, approver, builder, tester, tdd-expert, reviewer, simplifier, pr-creator, retrospector. Each SHALL appear in `/agents` with a trigger description matching its phase.
+The `spwf-agents` plugin SHALL provide specialist subagents paired to the workflow phases. Each agent SHALL appear in `/agents` with a trigger description that explains when the agent fires.
 
 #### Scenario: Agents appear in list
 
-- **WHEN** a user opens `/agents`
-- **THEN** all twelve agents SHALL be listed with their phase labels and brief descriptions
+- **WHEN** a user opens `/agents` after installing `spwf-agents@spwf`
+- **THEN** all agent `.md` files under `plugins/spwf-agents/agents/` SHALL be listed with their descriptions
 
 ---
 
 ### Requirement: Phase skills do not auto-invoke
 
-All skills in `workflow-core` and `workflow-tools` SHALL set `disable-model-invocation: true` in their SKILL.md frontmatter. No workflow skill SHALL activate unless the user explicitly invokes it by name.
+Every skill in `plugins/spwf/skills/` whose role is a workflow phase SHALL set `disable-model-invocation: true` in its SKILL.md frontmatter. Phase skills SHALL NOT activate unless the user explicitly invokes them by name.
 
 #### Scenario: Skill does not auto-trigger
 
 - **WHEN** Claude Code is processing a response without an explicit skill invocation
-- **THEN** no workflow skill SHALL activate
+- **THEN** no `/spwf:<phase>` skill SHALL activate
 
 ---
 
 ### Requirement: spec halts without OpenSpec
 
-`spec` SHALL check for the presence of an `openspec/` directory in the project root before executing. If the directory is absent, it SHALL halt and output exactly: `OpenSpec not initialised. Run: openspec init`
+`/spwf:spec` SHALL check for the presence of an `openspec/` directory in the project root before executing. If the directory is absent, it SHALL halt and output exactly: `OpenSpec not initialised. Run: openspec init`
 
 #### Scenario: OpenSpec missing
 
-- **WHEN** a user runs `/workflow-core:spec` in a project without `openspec/`
+- **WHEN** a user runs `/spwf:spec` in a project without `openspec/`
 - **THEN** execution SHALL halt with the message `OpenSpec not initialised. Run: openspec init`
 - **AND** no files SHALL be modified
 
 #### Scenario: OpenSpec present
 
 - **WHEN** `openspec/` exists at the project root
-- **THEN** `spec` SHALL proceed normally with the provided ideation file
+- **THEN** `/spwf:spec` SHALL proceed normally with the provided ideation file
 
 ---
 
 ### Requirement: pr-review requires explicit PR reference
 
-`pr-review` SHALL require a PR number or URL as `$ARGUMENTS`. If no argument is provided, it SHALL halt with a usage hint. It SHALL NOT create PRs.
+`/spwf:pr-review` SHALL require a PR or MR reference as `$ARGUMENTS`. If no argument is provided, it SHALL halt with a usage hint. It SHALL NOT create PRs or MRs.
 
 #### Scenario: No argument given
 
-- **WHEN** a user runs `/workflow-core:pr-review` with no argument
-- **THEN** execution SHALL halt with: `Usage: /workflow-core:pr-review <PR-number-or-URL>`
+- **WHEN** a user runs `/spwf:pr-review` with no argument
+- **THEN** execution SHALL halt with a usage hint that names the expected argument
 
-#### Scenario: Valid PR number given
+#### Scenario: Valid PR reference given
 
-- **WHEN** a user runs `/workflow-core:pr-review 42`
-- **THEN** the skill SHALL fetch PR #42 via `gh pr view 42` and `gh pr diff 42`
-- **AND** produce a structured review with no edits to any file
+- **WHEN** a user runs `/spwf:pr-review 42`
+- **THEN** the skill SHALL fetch the PR via the active forge CLI (`glab` by default, `gh` supported)
+- **AND** produce a structured review with no edits to any file other than the review report
 
 ---
 
 ### Requirement: challenge defaults to most recent todo file
 
-`challenge` SHALL accept an optional file path as `$ARGUMENTS`. If no argument is given, it SHALL find the most recently modified file in `todo/` and use that as the interview target.
+`/spwf:challenge` SHALL accept an optional file path as `$ARGUMENTS`. If no argument is given, it SHALL find the most recently modified file in `todo/` and use that as the interview target.
 
 #### Scenario: File path argument provided
 
-- **WHEN** a user runs `/workflow-tools:challenge todo/my-feature.md`
+- **WHEN** a user runs `/spwf:challenge todo/my-feature.md`
 - **THEN** challenge SHALL read `todo/my-feature.md` and begin the challenge interview
 
 #### Scenario: No argument provided
 
-- **WHEN** a user runs `/workflow-tools:challenge` with no argument
+- **WHEN** a user runs `/spwf:challenge` with no argument
 - **THEN** challenge SHALL identify the most recently modified file in `todo/`
 - **AND** use that file as the interview target
 
 ---
 
-### Requirement: agent-optimise audits both scopes
+### Requirement: pr-create creates a request only
 
-`agent-optimise` SHALL always audit both the project-level `.claude/` directory and the personal `~/.claude/` directory in a single pass. No flag or argument SHALL be required to include either scope.
-
-#### Scenario: Full audit runs
-
-- **WHEN** a user runs `/workflow-tools:agent-optimise`
-- **THEN** the skill SHALL scan both `.claude/` and `~/.claude/`
-- **AND** produce a single prioritised fix list covering CLAUDE.md scope/length, agent descriptions, skill frontmatter, and settings.json conflicts across the combined surface
-
----
-
-### Requirement: pr-create creates PR only
-
-`pr-create` SHALL create a PR via `gh pr create` and report the PR URL. It SHALL NOT trigger deployment, wait for CI, or include deployment steps in its output.
+`/spwf:pr-create` SHALL create a pull request or merge request via the active forge CLI and report the resulting URL. It SHALL NOT trigger deployment, wait for CI, or include deployment steps in its output.
 
 #### Scenario: pr-create completes
 
-- **WHEN** a user runs `/workflow-core:pr-create`
-- **THEN** a PR SHALL be created and its URL SHALL be reported
+- **WHEN** a user runs `/spwf:pr-create`
+- **THEN** a PR or MR SHALL be created on the auto-detected forge and its URL SHALL be reported
 - **AND** no deployment action SHALL be taken
 
 ---
 
 ### Requirement: Ideation file format is shared
 
-Both `issue-to-task` and `new-task` SHALL produce files at `todo/{slug}.md` with YAML frontmatter (`source`, `ticket` [omit if scratch], `created`, `status: ideation`) and exactly four sections: Context, What we know, Open questions, Rough scope.
+Skills that produce ideation files (including `/spwf:capture`, `/spwf:new-task`, `/spwf:issue-to-task`) SHALL produce files at `todo/{slug}.md` with YAML frontmatter (`source`, `ticket` if applicable, `created`, `status: ideation` or `status: proposed`) and the four canonical sections: Context, What we know, Open questions, Rough scope.
 
-#### Scenario: new-task output consumed by challenge
+#### Scenario: capture output consumed by challenge
 
-- **WHEN** `/workflow-tools:new-task` creates `todo/my-idea.md`
-- **AND** a user runs `/workflow-tools:challenge todo/my-idea.md`
+- **WHEN** `/spwf:capture` creates `todo/my-idea.md`
+- **AND** a user runs `/spwf:challenge todo/my-idea.md`
 - **THEN** challenge SHALL read the file successfully without requiring adaptation
 
-#### Scenario: issue-to-task output consumed by spec
+#### Scenario: capture output consumed by spec
 
-- **WHEN** `/workflow-tools:issue-to-task` creates `todo/proj-123.md`
-- **AND** a user runs `/workflow-core:spec todo/proj-123.md`
+- **WHEN** `/spwf:capture` creates `todo/proj-123.md`
+- **AND** a user runs `/spwf:spec todo/proj-123.md`
 - **THEN** spec SHALL read the file successfully and begin OpenSpec generation
 
 ---
 
 ### Requirement: Seeded skills carry attribution
 
-Each skill in `workflow-core` seeded from `addyosmani/agent-skills` SHALL include `# Source: https://github.com/addyosmani/agent-skills — MIT licence` as a comment in its SKILL.md frontmatter. Affected skills: `approve-plan`, `build`, `simplify`, `pr-create`.
+Each skill seeded from `addyosmani/agent-skills` SHALL include `# Source: https://github.com/addyosmani/agent-skills — MIT licence` as a comment in its SKILL.md frontmatter.
 
-#### Scenario: Attribution present in approve-plan skill
+#### Scenario: Attribution present in a seeded skill
 
-- **WHEN** a developer reads `plugins/workflow-core/skills/approve-plan/SKILL.md`
-- **THEN** the frontmatter SHALL contain: `# Source: https://github.com/addyosmani/agent-skills — MIT licence`
+- **WHEN** a developer reads a SKILL.md known to derive from `addyosmani/agent-skills`
+- **THEN** the frontmatter SHALL contain the attribution comment
 
 ---
 
-### Requirement: Fresh machine install in four commands
+### Requirement: Fresh machine install in three commands
 
-A user with Academy-Plus org access and prerequisites installed (Claude Code, OpenSpec CLI, GitHub CLI) SHALL be able to install the complete marketplace with exactly four commands, after which all skills and agents are available.
+A user with the prerequisites installed (Claude Code, OpenSpec CLI, forge CLI) SHALL be able to install the complete marketplace with three commands, after which all skills and agents are available.
 
 #### Scenario: Fresh install sequence
 
-- **WHEN** a user runs the four install commands:
-  - `/plugin marketplace add Academy-Plus/spwf`
-  - `/plugin install workflow-core@simon-marketplace`
-  - `/plugin install workflow-tools@simon-marketplace`
-  - `/plugin install workflow-agents@simon-marketplace`
-- **THEN** all workflow skills SHALL be invocable via their namespaced commands
-- **AND** all twelve agents SHALL appear in `/agents`
+- **WHEN** a user runs the three install commands:
+  - `/plugin marketplace add simon-potter/spwf`
+  - `/plugin install spwf@spwf`
+  - `/plugin install spwf-agents@spwf`
+- **THEN** every skill in `plugins/spwf/skills/` SHALL be invocable as `/spwf:<name>`
+- **AND** every agent in `plugins/spwf-agents/agents/` SHALL appear in `/agents`
 - **AND** no additional steps SHALL be required
+
+#### Scenario: Local dogfooding install
+
+- **WHEN** a developer runs the install commands from the repo root with the marketplace path `./` instead of the GitHub source
+- **THEN** the install SHALL succeed identically
+- **AND** edits to `plugins/**` SHALL take effect after `/reload-plugins` without publishing

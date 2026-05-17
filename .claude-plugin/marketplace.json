@@ -12,13 +12,13 @@
     {
       "name": "spwf",
       "source": "./plugins/spwf",
-      "description": "28 workflow skills covering the full engineering cycle",
+      "description": "32 workflow skills covering the full engineering cycle",
       "version": "1.0.0"
     },
     {
       "name": "spwf-agents",
       "source": "./plugins/spwf-agents",
-      "description": "14 specialist subagents covering every phase of the SPWorkflow engineering cycle",
+      "description": "13 specialist subagents covering every phase of the SPWorkflow engineering cycle",
       "version": "1.0.0"
     }
   ]

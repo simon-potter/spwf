@@ -23,13 +23,15 @@ The Claude Code plugin system allows skills and agents to be installed from a Gi
 
 ## Decisions
 
-### 1. Two skill plugins, not one
+### 1. One skills plugin, agents kept separate
 
-**Decision:** `workflow-core` (seven canonical phases) and `workflow-tools` (extended phases + cross-cutting) are separate installable plugins.
+**Decision:** All skills ship as a single `spwf` plugin under the `spwf` marketplace. Agents ship as a separate `spwf-agents` plugin.
 
-**Rationale:** Team members may want only the canonical phases without Simon-specific tooling. Separate plugins allow selective installation. The agents plugin is also separate for the same reason.
+**Rationale:** During implementation the original `workflow-core` / `workflow-tools` split (see Decision 13) proved to be an *implementation* boundary leaking into the user-facing namespace — every cross-skill invocation had to hard-code `spwf:` or `workflow-tools:`, and there were 99 such references across 32 files at the time of the rename. Collapsing the two skill plugins into one `spwf` namespace eliminated that friction entirely. Agents stayed in a separate plugin so consumers can install skills without pulling in the agent definitions.
 
-**Alternative rejected:** Single `workflow` plugin — would bundle everything and prevent selective adoption.
+**Alternative rejected:** Three-plugin split (original design) — created two skill namespaces the user had to keep straight, with no offsetting benefit.
+
+**See also:** Decision 13 records the renamespace pivot in detail.
 
 ---
 
@@ -151,10 +153,10 @@ An orchestrator skill's body explicitly names the atomic skills it invokes:
 
 ```markdown
 To implement the current task:
-1. Invoke `workflow-core:incremental-implementation` — finds the first unchecked task,
+1. Invoke `spwf:incremental-implementation` — finds the first unchecked task,
    implements it, marks it complete.
-2. Next, run `workflow-core:test-creator` to write behaviour tests for the new code.
-3. If tests fail, invoke `workflow-core:debug-recovery`.
+2. Next, run `spwf:test-creator` to write behaviour tests for the new code.
+3. If tests fail, invoke `spwf:debug-recovery`.
 ```
 
 **What composes vs what stays atomic:**
@@ -181,7 +183,7 @@ To implement the current task:
 
 **Decision:** `build` invokes `write-tests` (Red: write failing tests) first, then `opsx:apply` (Green: make them pass), then `run-tests` (Verify: confirm full suite green), then `debug-recovery` on failure, then `opsx:verify` (spec sign-off). It recommends `simplify` (Refactor) on completion.
 
-**Rationale:** Red-Green-Refactor is the canonical TDD discipline. Tests must be written before implementation — not after — so the contract is defined before the code. `build` enforces this order: you cannot reach the Green phase without first completing Red. The `disable-model-invocation: true` constraint (Decision 6) still applies — the user explicitly invokes `/workflow-core:build` as the entry point, and the orchestrator directs the sub-steps declaratively. The user retains the option to invoke each atomic step individually for granular control.
+**Rationale:** Red-Green-Refactor is the canonical TDD discipline. Tests must be written before implementation — not after — so the contract is defined before the code. `build` enforces this order: you cannot reach the Green phase without first completing Red. The `disable-model-invocation: true` constraint (Decision 6) still applies — the user explicitly invokes `/spwf:build` as the entry point, and the orchestrator directs the sub-steps declaratively. The user retains the option to invoke each atomic step individually for granular control.
 
 **Composition in `build/SKILL.md`:**
 ```
@@ -214,3 +216,17 @@ See `todo/Marketplace_setup.md → Quick Reference` for the canonical format ref
 - **SKILL.md** — `<plugin-dir>/skills/<skill-name>/SKILL.md` — YAML frontmatter + markdown body
 - **Agent file** — `<plugin-dir>/agents/<agent-name>.md` — YAML frontmatter + system prompt
 - **Ideation file** — `todo/{slug}.md` — YAML frontmatter + four sections
+
+---
+
+### 13. Renamespace reconciliation (post-hoc)
+
+**Decision:** The original three-plugin split (`workflow-core` + `workflow-tools` + `workflow-agents` under `simon-marketplace`) was collapsed during implementation into a two-plugin layout (`spwf` + `spwf-agents` under the `spwf` marketplace).
+
+**Rationale:** The `core` vs `tools` split was an implementation boundary (OpenSpec-dependent vs not), not a user boundary. Users should not need to know which plugin a skill lives in to invoke it. There were 99 cross-namespace invocation references across 32 files; every new skill multiplied that overhead. Collapsing the two skill plugins to one `spwf` namespace removed the entire class of cross-namespace coupling.
+
+**Why agents stayed separate:** Some consuming projects may want the skills without the agents (or vice versa, though less likely). Keeping `spwf-agents` as its own plugin preserves selective install.
+
+**Trail:** [`todo/renamespace.md`](../../../todo/renamespace.md) (status: complete) holds the full execution plan, file change matrix, and verification checklist for the rename.
+
+**Implication for this change:** Decisions 1 and 11 originally framed the architecture in `workflow-core`/`workflow-tools` terms. Decision 1 has been rewritten in place; Decision 11's narrative and table still reflect the two-tier atomic/orchestrator architecture, which is independent of the namespace pivot and remains accurate. The Phase 0–4 task headings in `tasks.md` still name the old plugins because they describe historical work; Phase 5–7 describe what was actually executed against the renamed layout.

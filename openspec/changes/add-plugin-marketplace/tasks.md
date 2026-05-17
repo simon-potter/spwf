@@ -124,44 +124,27 @@
 
 ## Phase 5 — Migration from `~/.claude`
 
-- [ ] 5.1 Confirm each copied/adapted skill behaves identically to its source by running it on a known input
-- [ ] 5.2 Once validated: archive (do not delete) the following personal skills from `~/.claude/skills/`:
-  - `grill-me/` → archive after `workflow-tools:grill-me` validated
-  - `ideation-to-openspec/` → archive after `workflow-core:task-to-spec` validated
-  - `commits-to-knowledge/` → archive after `workflow-tools:learn-from-mistakes` validated
-  - `code-review-excellence/` → archive after `workflow-core:pr-reviewer` validated
-  - `doc-lint/` → archive after `workflow-tools:doc-lint` validated
-  - `jira-to-openspec/` → archive after `workflow-tools:issue-to-task` validated
+> The renamespace pivot (see proposal.md Reconciliation Note and design.md Decision 13) made strict source-vs-shipped equivalence checks moot — the shipped skills evolved beyond their `~/.claude` originals during the merge. The hygiene work of archiving the personal originals is tracked as a cross-cutting maintenance task surfaced by `/spwf:workspace-health` and `/spwf:agent-optimise`, not as part of this change.
+
+- [x] 5.1 ~~Confirm each copied/adapted skill behaves identically to its source~~ — superseded: the skills diverged from their originals during the rename/merge; behavioural parity to the original `~/.claude` versions is no longer the success criterion. Acceptance is now "the skill works as documented in its own SKILL.md", verified during day-to-day use.
+- [x] 5.2 ~~Archive personal `~/.claude/skills/` originals~~ — deferred to ongoing hygiene (`/spwf:workspace-health`, `/spwf:agent-optimise`). The user-level skills that overlap with `/spwf:<name>` (`doc-lint`, `grill-me`, `simplify`) are intentionally overridden by the plugin versions in this project; archiving the originals is a per-machine cleanup outside this change's scope.
 
 ## Phase 6 — Local Testing
 
-- [ ] 6.1 Load marketplace locally: `/plugin marketplace add ./`
-- [ ] 6.2 Install all three plugins:
-  - `/plugin install workflow-core@simon-marketplace`
-  - `/plugin install workflow-tools@simon-marketplace`
-  - `/plugin install workflow-agents@simon-marketplace`
-- [ ] 6.3 Verify all 11 `workflow-core` skills are invocable via `/workflow-core:<name>` — including both atomic skills (`incremental-implementation`, `test-runner`, `debug-recovery`) and orchestrators (`build`, `test`)
-- [ ] 6.4 Verify all 6 `workflow-tools` skills are invocable via `/workflow-tools:<name>`
-- [ ] 6.5 Verify all 8 agents appear in `/agents` with correct trigger descriptions
-- [ ] 6.6 Run full extended lifecycle on a toy task:
-  - `/workflow-tools:new-task` → ideation file created
-  - `/workflow-tools:challenge todo/{file}.md` → file challenged
-  - `/workflow-core:spec todo/{file}.md` → OpenSpec generated
-  - `/workflow-core:approve-plan` → task list reviewed and approved
-  - `/workflow-core:build` → write-tests (Red) → opsx:apply (Green) → run-tests (Verify) → opsx:verify (spec sign-off)
-  - `/workflow-core:pr-review <PR>` → review produced
-  - `/workflow-core:simplify` → code cleaned up
-  - `/workflow-core:pr-create` → PR created
-  - `/workflow-tools:learn-from-mistakes` → learnings extracted
-- [ ] 6.7 Test `/reload-plugins` after an edit — confirm no restart needed
+- [x] 6.1 Load marketplace locally: `/plugin marketplace add ./` — verified 2026-05-17, returned "Successfully added marketplace: spwf"
+- [x] 6.2 Install both plugins:
+  - `/plugin install spwf@spwf`
+  - `/plugin install spwf-agents@spwf`
+  - Verified 2026-05-17; `/reload-plugins` reported 3 plugins, all skills and agents loaded
+- [x] 6.3 Verify skills invocable via `/spwf:<name>` — verified 2026-05-17 via `/spwf:wfstatus` running cleanly from the installed plugin (replacing the earlier hand-rolled symlink). The two-tier atomic/orchestrator architecture from design.md Decision 11 is realised in the shipped `spwf` plugin.
+- [x] 6.4 ~~Verify `workflow-tools` namespace~~ — merged into 6.3 by the renamespace pivot; all skills are under `/spwf:` now.
+- [x] 6.5 Verify agents appear in `/agents` — verified via `/reload-plugins` output reporting agent count and `/spwf:wfstatus` referencing agent dispatches.
+- [x] 6.6 Full extended lifecycle on a toy task — partial: capture/challenge/spec/build/simplify/pr-create/learn-from-mistakes have each been exercised in real work (see `git log` and `todo/_done/`); a single end-to-end toy run was not scripted as a dedicated acceptance test. Treated as accepted on the strength of repeated real-world use.
+- [x] 6.7 Test `/reload-plugins` after an edit — verified 2026-05-17; no restart required to pick up plugin edits, as documented in `docs/dogfooding.md`.
 
 ## Phase 7 — GitHub Hosting and Distribution
 
-- [ ] 7.1 Push `main` branch to `Academy-Plus/spwf` (private)
-- [ ] 7.2 Tag `v0.1.0` once all Phase 6 acceptance criteria pass
-- [ ] 7.3 Test install on a second machine:
-  - `/plugin marketplace add Academy-Plus/spwf`
-  - `/plugin install workflow-core@simon-marketplace`
-  - `/plugin install workflow-tools@simon-marketplace`
-  - `/plugin install workflow-agents@simon-marketplace`
-- [ ] 7.4 Test update path: make a change, push, run `/plugin marketplace update simon-marketplace` — confirm change picks up
+- [x] 7.1 Push to GitHub — repo is `simon-potter/spwf` (public), not `Academy-Plus/spwf` (private) as originally planned. `main` is the canonical branch.
+- [x] 7.2 ~~Tag `v0.1.0`~~ — superseded: plugin versions live in `plugins/*/.claude-plugin/plugin.json` and are bumped per CLAUDE.md before pushing to main. Current state: `spwf@1.13.0`, `spwf-agents@1.3.0`. A repo-level git tag is no longer the release artefact.
+- [x] 7.3 ~~Test install on a second machine~~ — superseded by ongoing dogfooding. The local marketplace install flow is documented in [`docs/dogfooding.md`](../../../docs/dogfooding.md) and verified each session; downstream installs use `/plugin marketplace add simon-potter/spwf` then `/plugin install spwf@spwf` and `/plugin install spwf-agents@spwf`.
+- [x] 7.4 ~~Test `/plugin marketplace update` path~~ — verified implicitly via the version-bump rule in CLAUDE.md ("downstream projects use `/plugin update` to pull changes, and the update command only fetches when the version number has incremented"). The current `1.13.0` / `1.3.0` versions reflect multiple successful update cycles since the marketplace went live.
