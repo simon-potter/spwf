@@ -1,6 +1,7 @@
 {
   "enabledPlugins": {
     "spwf@spwf": true,
-    "spwf-agents@spwf": true
+    "spwf-agents@spwf": true,
+    "spwf-beadsify@spwf": true
   }
 }

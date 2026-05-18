@@ -11,7 +11,7 @@
 - [x] 1.2 `plugins/spwf-beadsify/README.md` describes the plugin's purpose, install command, prerequisite list (Beads CLI, `bd init`), and the explicit warning against `bd setup claude`
 - [x] 1.3 `plugins/spwf-beadsify/skills/` directory exists (initially empty apart from the backend skill scaffold added in Phase 2)
 - [x] 1.4 `.claude-plugin/marketplace.json` registers `spwf-beadsify` as a third entry with `source: ./plugins/spwf-beadsify`, `version: 0.1.0`, and an accurate description
-- [ ] 1.5 `/plugin marketplace add ./` followed by `/plugin install spwf-beadsify@spwf` succeeds against the local marketplace and the plugin appears in `/plugin list`
+- [x] 1.5 `/plugin marketplace add ./` followed by `/plugin install spwf-beadsify@spwf` succeeds against the local marketplace and the plugin appears in `/plugin list` (verified 2026-05-18: `/reload-plugins` reports `4 plugins · 7 skills · 45 agents · 11 hooks` — count rose from 3 to 4; skills stays at 7 because spwf-beadsify skills/ is still empty, Phase 2.3 adds the first one)
 
 ## Phase 2 — Dispatch backend module
 
