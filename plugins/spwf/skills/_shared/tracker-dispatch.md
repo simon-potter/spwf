@@ -37,7 +37,7 @@ project-specific defaults so skills don't have to ask every time.
 
 ```yaml
 # .spwf/tracker.yaml — all fields optional
-tracker: youtrack          # youtrack | jira | linear | none
+tracker: youtrack          # youtrack | jira | linear | beads | none
 project: ACAD              # default project key for `create_issue`
 done_state: Done           # state name `close` transitions to
 ```
@@ -126,6 +126,46 @@ skill's `allowed-tools` — the model picks the right tool when it makes the cal
 Teams that prefer concrete pins (for stricter `allowed-tools` scoping or for
 visibility) can capture names via a one-time discovery session and replace this
 column with the pinned values.
+
+---
+
+## Skill-based dispatch table
+
+For skill-based backends, each operation is implemented inside a SKILL.md owned by
+another plugin. Skills calling dispatch resolve to the backend module's path and
+delegate the operation there. The backend handles any CLI / DB / external-API work
+behind a uniform interface that returns the same five logical operations.
+
+| Tracker | Backend module path | Operations supported | Owning plugin (install required) |
+|---|---|---|---|
+| `beads` | `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` | `get_issue`, `create_issue`, `set_state` (close only), `add_comment` (no `search_issues` in v1 — defer) | [`spwf-beadsify`](../../../../spwf-beadsify/README.md) — opt-in third plugin; install via `/plugin install spwf-beadsify@spwf` |
+
+### Routing rules
+
+When `.spwf/tracker.yaml` contains `tracker: beads`, dispatch:
+
+1. **Verify the backend module exists** at the path above. If the file is not
+   loadable (the spwf-beadsify plugin is not installed in this Claude Code session),
+   halt with the verbatim error in the next subsection. Do not silently fall back to
+   another tracker.
+2. **Delegate the operation** to the backend by reading its SKILL.md and following
+   the operation-specific instructions there. The backend invokes the bd CLI on the
+   caller's behalf, handles input validation, and returns the result in the same
+   shape the MCP backends would.
+3. **Surface the backend's stderr verbatim** on non-zero exit. The backend follows
+   the Decision 7 safe-invocation pattern (see `openspec/changes/add-beadsify-tracker/design.md`),
+   so failures are bounded and the messages are useful.
+
+### Configured-but-not-installed error (verbatim)
+
+When `tracker: beads` is set in `.spwf/tracker.yaml` but `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` is not loadable:
+
+```
+tracker: beads requested but spwf-beadsify plugin not installed. Install: /plugin install spwf-beadsify@spwf. Or change tracker in .spwf/tracker.yaml.
+```
+
+This is the only failure mode dispatch raises on its own for skill-based backends —
+any other failure surfaces from the backend itself.
 
 ---
 

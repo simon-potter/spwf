@@ -41,10 +41,10 @@
 
 **Extension:**
 
-- [ ] 3.2 `plugins/spwf/skills/_shared/tracker-dispatch.md` recognises `tracker: beads` as a valid setting alongside `youtrack` / `jira` / `none`
-- [ ] 3.3 When `tracker: beads` is set, dispatch resolves the backend at `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` and invokes the operation defined there
-- [ ] 3.4 If the backend file is not present (spwf-beadsify not installed), dispatch errors verbatim: `tracker: beads requested but spwf-beadsify plugin not installed. Install: /plugin install spwf-beadsify@spwf. Or change tracker in .spwf/tracker.yaml.`
-- [ ] 3.5 Existing `tracker: youtrack`, `tracker: jira`, and `tracker: none` paths through dispatch remain byte-identical (regression check — see Phase 5.3 for the integration-level verification)
+- [x] 3.2 `plugins/spwf/skills/_shared/tracker-dispatch.md` recognises `tracker: beads` as a valid setting alongside `youtrack` / `jira` / `none` (enum updated; new "Skill-based dispatch table" section added)
+- [x] 3.3 When `tracker: beads` is set, dispatch resolves the backend at `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` and invokes the operation defined there (routing rules section added explaining verify-then-delegate flow)
+- [x] 3.4 If the backend file is not present (spwf-beadsify not installed), dispatch errors verbatim: `tracker: beads requested but spwf-beadsify plugin not installed. Install: /plugin install spwf-beadsify@spwf. Or change tracker in .spwf/tracker.yaml.` (verbatim error block added to the new section)
+- [x] 3.5 Existing `tracker: youtrack`, `tracker: jira`, and `tracker: none` paths through dispatch remain byte-identical (regression check — see Phase 5.3 for the integration-level verification) — mental regression verified: youtrack/jira rows in the MCP dispatch table are byte-identical; probe rules 1-3 unchanged; `tracker: none` silent-skip behaviour unchanged. Phase 5.3 will exercise these at integration level.
 
 ## Phase 4 — Documentation
 
