@@ -58,6 +58,45 @@ If `bd init` (plain) or `bd setup claude` was already run on this machine in you
 - Remove `.claude/settings.json` hook entries Beads added (`SessionStart`, `PreCompact` with bd-related commands)
 - Re-run `bd init --skip-agents --skip-hooks --non-interactive` to keep the `.beads/` database
 
+## Multi-session workflow (braindump while building)
+
+Beadsify supports running two Claude Code sessions in the same project simultaneously:
+one session running `/spwf:build` against an active change, a second session capturing
+new stories into Beads as ideas surface. Both sessions share `./.beads/` via the `bd`
+CLI; Beads is designed for multi-agent workflows (hash-based ids, designed-in
+concurrent writers).
+
+**The build session keeps focus.** When `/spwf:build` runs against a change whose
+`proposal.md` contains `beads_story_id: bd-<hash>`, the build hook scopes `bd next` to
+that story's subtree only. Stories created by another session land at the top level
+(or under a different parent) and remain invisible to the build session's task
+selection.
+
+**Patterns that work:**
+
+| Session A — building | Session B — braindump |
+|---|---|
+| `/spwf:build` (Beads-mode) | `/spwf:capture "rate-limit on /login"` — creates `bd-<hash>` via dispatch |
+| `/spwf:build` (Beads-mode) | `bd q "rotate JWT secrets weekly" -p bd-<existing>` — link as child of an existing epic |
+| `/spwf:build` (Beads-mode) | `bd remember "auth team prefers Argon2"` — write project-level agent memory (loaded at `bd prime` in future sessions) |
+
+**One sharp edge to know:** if the braindump session adds a *dependency edge* into an
+in-flight task (e.g. blocks the task the build session is currently implementing),
+the bd graph mutates mid-execution. The build session's next `bd next` call will
+return the new blocker. This is "you broke your own kneecap" territory — bd is doing
+the right thing; the human did the wrong thing. Avoid editing the active change's
+subtree from the braindump session.
+
+**For terminals (without Claude Code):**
+
+The braindump pattern also works from a plain terminal. `bd q "thought"` from the
+project root creates a story. `bd remember "<insight>"` writes to the persistent
+memory store. Useful when an idea surfaces while you're paged into something else
+entirely.
+
 ## Status
 
-In development. The full feature set lives in `openspec/changes/add-beadsify-tracker/`. This README will be expanded in Phase 4 tasks (4.1 + 4.2 + 4.5 multi-session workflow section).
+`spwf-beadsify` is shipped as v0.1.0 — Beads as a tracker-dispatch backend
+(`/spwf:capture`, `/spwf:tracker-comment`, `/spwf:close`). The build-loop integration
+(`/spwf:build` consulting `bd next`/`bd done` during task execution) ships in a
+follow-up change `add-beadsify-build-loop`.
