@@ -7,7 +7,11 @@
 # Per-user Claude Code settings — not shared
 .claude/settings.local.json
 
-# Beads / Dolt files (added by bd init)
+# Beads / Dolt files (added by bd init). Note: .beads/ itself is NOT
+# gitignored. Bd manages a partial gitignore via .beads/.gitignore —
+# config.yaml, metadata.json, README.md, interactions.jsonl travel
+# with the repo (shared across machines); the Dolt DB and runtime
+# files stay local. See plugins/spwf-beadsify/README.md.
 .dolt/
 *.db
 .beads-credential-key

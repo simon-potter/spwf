@@ -29,13 +29,7 @@ tracker: beads
 
    **Do not run plain `bd init`.** See the "Forbidden commands" section below for why.
 
-3. **`.gitignore` entries.** `bd init` adds `.dolt/`, `*.db`, and `.beads-credential-key` to `.gitignore` automatically (and auto-commits the change). Add `.beads/` yourself:
-
-   ```bash
-   echo ".beads/" >> .gitignore
-   ```
-
-   The Beads database is per-checkout execution state, not source-of-truth — OpenSpec is.
+3. **`.gitignore` entries.** `bd init` adds `.dolt/`, `*.db`, and `.beads-credential-key` to the project-root `.gitignore` automatically (and auto-commits the change). **Do NOT add `.beads/` yourself** — bd manages `.beads/` partially: the config, metadata, and project_id are committed (so a clone+init produces the same id namespace), while the Dolt DB and runtime files are gitignored via `.beads/.gitignore` (which bd creates). OpenSpec change directories remain source-of-truth for spec content; Beads is the execution-time scratchpad for issue tracking.
 
 ## Forbidden commands
 

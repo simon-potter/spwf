@@ -17,7 +17,7 @@ This backend implements the four dispatch operations the spwf core skills need (
 
 | Operation | bd CLI command | Purpose | Notes |
 |---|---|---|---|
-| `create_issue` | `bd q "<title>"` | Create a new story; return its `bd-NNN` id | Used by `/spwf:capture`. Title is user input — validated and quoted. |
+| `create_issue` | `bd q "<title>"` | Create a new story; return its `<prefix>-<hash>` id | Used by `/spwf:capture`. Title is user input — validated and quoted. |
 | `get_issue` | `bd show <id>` | Fetch a story's current state | Used by anything that needs status / dependencies / comments. Id is format-validated. |
 | `add_comment` | `bd comment <id> "<text>"` (or stdin) | Append a comment to an existing story | Used by `/spwf:tracker-comment`. Both id and body validated; prefer stdin for multi-line content. |
 | `transition` | `bd close <id>` (v1) | Move a story to closed state | Used by `/spwf:close`. Only `close` is supported in v1 — `reopen` and richer transitions are deferred. |
@@ -30,7 +30,7 @@ Every `bd` subprocess invocation in this skill MUST follow the rules below. Thes
 
 1. **Always quote substituted variables.** `bd q "$title"`, never `bd q $title`.
 2. **Never `eval` / `bash -c` / `sh -c` with substituted user input.** Re-parsing through the shell defeats quoting.
-3. **Validate ids against `^bd-[a-z0-9]+$` before invocation.** Exact match or reject — no cleaning, no normalisation.
+3. **Validate ids against `^[a-z0-9]+(-[a-z0-9]+)+$` before invocation.** Exact match or reject — no cleaning, no normalisation. The pattern is intentionally prefix-agnostic: bd uses the project directory name as the issue prefix by default, so ids look like `<prefix>-<hash>` where `<prefix>` is project-specific (e.g. `spwf-a3f2dd` in this repo, `auth-92ff01` in an "auth" project). The regex requires at least one hyphen and only lowercase alphanumeric+hyphen — shell-injection-safe regardless of prefix.
 4. **Prefer stdin for multi-line or special-character content.** `echo "$body" | bd comment "$id" --stdin` rather than inlining `$body` as an arg.
 5. **Capture exit codes; fail loudly.** Non-zero from `bd` halts the dispatch operation with bd's stderr surfaced verbatim.
 
@@ -69,7 +69,7 @@ If the check fails (non-zero exit), the operation halts immediately and the erro
 
 **Inputs:** `title` (string from user — e.g. ideation-file slug, `/spwf:capture`'s captured title)
 
-**Behaviour:** invoke `bd q "$title"` and return the resulting `bd-<hash>` id.
+**Behaviour:** invoke `bd q "$title"` and return the resulting `<prefix>-<hash>` id.
 
 ```bash
 title="$1"
@@ -92,7 +92,7 @@ fi
 # Validate the returned id matches Beads' documented format. If bd ever
 # changes id shape, we want to fail loudly here rather than propagate
 # a malformed id to the caller.
-if [[ ! "$id" =~ ^bd-[a-z0-9]+$ ]]; then
+if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
   echo "Error: bd q returned unexpected id format: $id" >&2
   exit 1
 fi
@@ -102,7 +102,7 @@ echo "$id"
 
 ### Operation: get_issue
 
-**Inputs:** `id` (string — `bd-<hash>` form)
+**Inputs:** `id` (string — `<prefix>-<hash>` form)
 
 **Behaviour:** invoke `bd show <id>` and return its stdout. Issue not found is a non-zero bd exit and surfaces verbatim.
 
@@ -111,7 +111,7 @@ id="$1"
 
 # Validate id format before any subprocess invocation. Decision 7 rule 3:
 # exact match or reject — no cleaning.
-if [[ ! "$id" =~ ^bd-[a-z0-9]+$ ]]; then
+if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
   echo "Error: invalid bd id format: $id" >&2
   exit 1
 fi
@@ -126,7 +126,7 @@ fi
 
 ### Operation: add_comment
 
-**Inputs:** `id` (string — `bd-<hash>` form), `body` (string — may contain newlines, shell metacharacters)
+**Inputs:** `id` (string — `<prefix>-<hash>` form), `body` (string — may contain newlines, shell metacharacters)
 
 **Behaviour:** invoke `bd comment <id> --stdin` and pipe `body` in. Stdin is used (Decision 7 rule 4) so the body's content cannot accidentally re-enter the shell.
 
@@ -134,7 +134,7 @@ fi
 id="$1"
 body="$2"
 
-if [[ ! "$id" =~ ^bd-[a-z0-9]+$ ]]; then
+if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
   echo "Error: invalid bd id format: $id" >&2
   exit 1
 fi
@@ -157,7 +157,7 @@ fi
 
 ### Operation: transition
 
-**Inputs:** `id` (string — `bd-<hash>` form), `transition` (string — `close` in v1; any other value is rejected)
+**Inputs:** `id` (string — `<prefix>-<hash>` form), `transition` (string — `close` in v1; any other value is rejected)
 
 **Behaviour:** invoke `bd close <id>`. v1 supports `close` only; `reopen` and richer transitions are deferred (no v1 success criterion requires them).
 
@@ -165,7 +165,7 @@ fi
 id="$1"
 transition="$2"
 
-if [[ ! "$id" =~ ^bd-[a-z0-9]+$ ]]; then
+if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
   echo "Error: invalid bd id format: $id" >&2
   exit 1
 fi

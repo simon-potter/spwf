@@ -69,13 +69,20 @@ If `bd setup claude` ever has features SPWF needs (e.g. an MCP for graph queries
 
 ---
 
-### 5. Per-project, gitignored `.beads/`
+### 5. `.beads/` is partially tracked: config shared, DB local
 
-**Decision:** Beads database lives at `./.beads/` next to `./openspec/`. The spwf-beadsify install instructions add `.beads/` to `.gitignore`. OpenSpec remains source-of-truth for the project's specs; Beads is the execution-time scratchpad.
+**Decision (revised against bd 1.0.4 reality):** Beads creates `./.beads/` next to `./openspec/`. Bd manages a partial gitignore via `.beads/.gitignore` so that:
 
-**Rationale:** Committing the Beads DB would produce per-`bd done` git diffs and merge churn. Per-machine (`~/.beads/`) conflates projects. The OpenSpec change directory + commits to `tasks.md` retain the durable record; Beads enriches but doesn't supplant it. Insights captured via `bd remember` are preserved by the build-loop change's `insights.md` export at close (out of scope here).
+- **Committed (shared via git):** `.beads/config.yaml` (issue prefix, backend choice), `.beads/metadata.json` (project_id, dolt_database name), `.beads/README.md`, `.beads/.gitignore` (the internal ignore rules themselves), `.beads/interactions.jsonl` (initially empty)
+- **Local-only (gitignored by `.beads/.gitignore`):** `.beads/embeddeddolt/` (the actual Dolt DB), `.beads/dolt/`, `.beads/*.lock`, `.beads/*.sock`, `.beads/bd.sock.startlock`, daemon runtime files, push/sync state
 
-**Trade-off:** Multi-machine workflows lose Beads state across machine switches. Acceptable for solo single-machine usage; revisit if/when relevant.
+bd init also adds patterns to the project-root `.gitignore`: `.dolt/`, `*.db`, `.beads-credential-key`.
+
+**Rationale:** The original spec said "`.beads/` gitignored entirely". Reality (discovered when `bd init` ran in this project during Phase 5) is that bd's designers chose partial tracking deliberately: the project_id and prefix config must be consistent across machines (so a clone+init produces the same id namespace), while the Dolt DB (mutating with every `bd q`/`bd close`) must stay local to avoid git churn. The spwf-beadsify spec follows bd's design rather than overriding it — fighting upstream conventions would create maintenance friction.
+
+**Trade-off:** Multi-machine workflows now share the *config* but not the *issue data*. Two machines initialised from the same repo see the same prefix and project_id, but each builds its own .dolt/ from scratch. This is bd's intended model; teams that need cross-machine issue data use Beads' Dolt remote / sync features (out of scope here).
+
+**Implication for spwf-beadsify install:** the plugin's README does NOT instruct users to add `.beads/` to `.gitignore`. bd init handles its own ignore policy; the project's `.gitignore` only gains the bd-init-added patterns (`.dolt/`, `*.db`, `.beads-credential-key`) — which bd init does automatically.
 
 ---
 
@@ -99,7 +106,7 @@ If `bd setup claude` ever has features SPWF needs (e.g. an MCP for graph queries
 
 2. **Never use `eval`, `bash -c "..."`, or `sh -c "..."` with substituted user input.** These re-parse the substituted content through the shell, defeating the protection that quoted parameter expansion provides.
 
-3. **Validate ids before invocation.** Every `bd-NNN` id arriving from user input or external systems MUST match `^bd-[a-z0-9]+$` (Beads' documented hash-based id format) before being passed to a subprocess. Reject non-matching ids with a clear error and halt the operation. No transformation, no normalisation — exact match or reject.
+3. **Validate ids before invocation.** Every `bd-NNN` id arriving from user input or external systems MUST match `^[a-z0-9]+(-[a-z0-9]+)+$` (Beads' documented hash-based id format) before being passed to a subprocess. Reject non-matching ids with a clear error and halt the operation. No transformation, no normalisation — exact match or reject.
 
 4. **Prefer stdin for multi-line or special-character content.** When a value (comment body, story title) may contain newlines, quotes, or other shell-significant content, use bd's stdin / `--file` mechanisms instead of inlining the string. Example: `echo "$comment_body" | bd comment "$id" --stdin` instead of `bd comment "$id" "$comment_body"`.
 
@@ -157,7 +164,7 @@ The mapping below is established by reading `bd --help` against the installed bd
 
 Out-of-scope for this change but worth recording for `add-beadsify-build-loop`: `bd remember` is the **insights store** (loaded at session prime); it fits the build-loop change's `openspec/changes/{id}/insights.md` export story naturally. `bd note` is a per-issue append-only note, distinct from `bd comment` — its role in the workflow is TBD.
 
-Issue id format observed: `bd-<hash>` (alphanumeric, not `bd-<digit>`). Input validation in Phase 2.2 should use a permissive regex such as `^bd-[a-z0-9]+$` rather than `^bd-\d+$`.
+Issue id format observed: `bd-<hash>` (alphanumeric, not `bd-<digit>`). Input validation in Phase 2.2 should use a permissive regex such as `^[a-z0-9]+(-[a-z0-9]+)+$` rather than `^bd-\d+$`.
 
 ---
 

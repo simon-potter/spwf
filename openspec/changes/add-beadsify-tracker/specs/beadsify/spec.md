@@ -78,7 +78,7 @@ The only safe way to initialise Beads inside an SPWF project is `bd init --skip-
 
 ### Requirement: Beads database is per-project and gitignored
 
-The Beads database SHALL live at `./.beads/` in the project root and SHALL be excluded from git via `.gitignore`. OpenSpec change directories remain the durable source-of-truth; Beads is the execution-time scratchpad.
+The Beads database SHALL live under `./.beads/` in the project root. `.beads/` itself is partially tracked per bd's design: the config / metadata / project_id are committed (shared across machines via git); the Dolt DB and runtime files are gitignored via `.beads/.gitignore` (managed by bd). The project-root `.gitignore` SHALL contain the patterns bd init adds (`.dolt/`, `*.db`, `.beads-credential-key`). OpenSpec change directories remain the durable source-of-truth for spec content; Beads is the execution-time scratchpad for issue tracking.
 
 #### Scenario: Missing .beads/ produces a clear error pointing at the safe init flags
 
@@ -87,11 +87,12 @@ The Beads database SHALL live at `./.beads/` in the project root and SHALL be ex
 - **THEN** the backend SHALL halt with a message that names the safe init command `bd init --skip-agents --skip-hooks --non-interactive` (not plain `bd init`) and explains that the skip flags prevent the Beads-installed Claude Code integration from conflicting with SPWorkflow
 - **AND** no files SHALL be modified
 
-#### Scenario: .beads/ is gitignored
+#### Scenario: Beads writes don't pollute git status
 
-- **WHEN** a user follows the install instructions
-- **THEN** `.gitignore` SHALL include `.beads/`
-- **AND** Beads writes SHALL produce zero tracked changes in `git status`
+- **WHEN** a user follows the install instructions and `bd init --skip-agents --skip-hooks --non-interactive` has run
+- **THEN** the project-root `.gitignore` SHALL contain `.dolt/`, `*.db`, and `.beads-credential-key`
+- **AND** `.beads/.gitignore` SHALL exist and ignore the Dolt DB (`embeddeddolt/`, `dolt/`) and runtime files (`*.lock`, `*.sock`, daemon files)
+- **AND** routine bd operations (`bd q`, `bd close`, `bd comment`) SHALL produce zero tracked changes in `git status` (config / metadata may change rarely on schema migrations, which is acceptable and expected)
 
 ---
 
@@ -102,22 +103,22 @@ Skills that already use tracker-dispatch (`/spwf:capture`, `/spwf:tracker-commen
 #### Scenario: capture creates a Beads story
 
 - **WHEN** `/spwf:capture` runs with `source: scratch` (or any input that triggers ticket creation) and `tracker: beads` is configured
-- **THEN** the backend SHALL invoke `bd write "<title>"` and return a `bd-NNN` id
-- **AND** the ideation file frontmatter SHALL record `ticket: bd-NNN`
+- **THEN** the backend SHALL invoke `bd q "<title>"` and return a `<prefix>-<hash>` id
+- **AND** the ideation file frontmatter SHALL record `ticket: <prefix>-<hash>`
 
 #### Scenario: tracker-comment lands in Beads
 
-- **WHEN** `/spwf:tracker-comment` runs against a change whose proposal frontmatter contains `ticket: bd-NNN`
+- **WHEN** `/spwf:tracker-comment` runs against a change whose proposal frontmatter contains `ticket: <prefix>-<hash>`
 - **AND** `tracker: beads` is configured
-- **THEN** the backend SHALL persist the comment to the Beads store (default mapping: `bd remember bd-NNN "<text>"`)
-- **AND** `bd show bd-NNN` SHALL surface the comment in its audit trail
+- **THEN** the backend SHALL persist the comment to the Beads store (`bd comment <id> --stdin`, body piped in — verified against bd 1.0.4)
+- **AND** `bd show <prefix>-<hash>` SHALL surface the comment in its audit trail
 
 #### Scenario: close transitions the Beads story
 
-- **WHEN** `/spwf:close` reaches the tracker-transition step against a change with `ticket: bd-NNN`
+- **WHEN** `/spwf:close` reaches the tracker-transition step against a change with `ticket: <prefix>-<hash>`
 - **AND** `tracker: beads` is configured
-- **THEN** the backend SHALL invoke `bd close bd-NNN` before the OpenSpec archive step runs
-- **AND** `bd show bd-NNN` SHALL report the story as closed
+- **THEN** the backend SHALL invoke `bd close <id>` before the OpenSpec archive step runs
+- **AND** `bd show <prefix>-<hash>` SHALL report the story as closed
 
 ---
 
