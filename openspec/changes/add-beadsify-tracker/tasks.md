@@ -28,10 +28,10 @@
 **Per-operation implementation (each uses the Phase 2.2 invocation pattern):**
 
 - [x] 2.5 Backend's first operation invocation checks `.beads/` exists; if missing, emits a clear error pointing the user at the **safe** init command — NOT plain `bd init`. Required message form: `Beads not initialised in this project. Run in the project root: bd init --skip-agents --skip-hooks --non-interactive   (Plain 'bd init' would create CLAUDE.md, AGENTS.md, and register Claude Code hooks that conflict with SPWorkflow — the skip flags prevent this.)` Halts cleanly without writing any files. (Auto-init was rejected at Phase 2.1 — see design.md § "`bd init` safety".)
-- [ ] 2.6 Backend's `create_issue` operation invokes `bd q "<title>"` and returns the resulting `bd-<hash>` id parsed from stdout (per design.md § "bd CLI mapping"). Title passes through input validation before subprocess invocation.
-- [ ] 2.7 Backend's `get_issue` operation invokes `bd show <id>` and returns the structured result (title, status, dependencies, comments). The id is format-validated (`^bd-[a-z0-9]+$`) before subprocess invocation.
-- [ ] 2.8 Backend's `add_comment` operation invokes `bd comment <id> "<text>"` (per design.md § "bd CLI mapping" — NOT `bd remember`, which is project-level persistent memory used elsewhere). Both the id and the comment body pass through input validation.
-- [ ] 2.9 Backend's `transition` operation supports `close` only (`bd close <id>`). Unknown transition names are rejected with a clear error. The id is format-validated (`^bd-[a-z0-9]+$`) before subprocess invocation. (`reopen` and richer transitions are deliberately deferred — no v1 success criterion requires them.)
+- [x] 2.6 Backend's `create_issue` operation invokes `bd q "<title>"` and returns the resulting `bd-<hash>` id parsed from stdout (per design.md § "bd CLI mapping"). Title passes through input validation before subprocess invocation.
+- [x] 2.7 Backend's `get_issue` operation invokes `bd show <id>` and returns the structured result (title, status, dependencies, comments). The id is format-validated (`^bd-[a-z0-9]+$`) before subprocess invocation.
+- [x] 2.8 Backend's `add_comment` operation invokes `bd comment <id> --stdin` with body piped in via `printf '%s' "$body" | …` (per Decision 7 rule 4: stdin avoids shell-injection surface for special characters in `$body`). NOT `bd remember`, which is project-level persistent memory used elsewhere. Both the id and the comment body pass through input validation.
+- [x] 2.9 Backend's `transition` operation supports `close` only (`bd close <id>`). Unknown transition names are rejected with a clear error. The id is format-validated (`^bd-[a-z0-9]+$`) before subprocess invocation. (`reopen` and richer transitions are deliberately deferred — no v1 success criterion requires them.)
 
 ## Phase 3 — Extend tracker-dispatch.md
 

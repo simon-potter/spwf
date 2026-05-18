@@ -67,16 +67,125 @@ If the check fails (non-zero exit), the operation halts immediately and the erro
 
 ### Operation: create_issue
 
-_Task 2.6 — pending._
+**Inputs:** `title` (string from user — e.g. ideation-file slug, `/spwf:capture`'s captured title)
+
+**Behaviour:** invoke `bd q "$title"` and return the resulting `bd-<hash>` id.
+
+```bash
+title="$1"
+
+# Validate: title must be non-empty.
+if [ -z "$title" ]; then
+  echo "Error: create_issue requires a non-empty title" >&2
+  exit 1
+fi
+
+# Invoke. Title is passed as a single quoted argument — bd receives it
+# verbatim. No shell re-parsing.
+id=$(bd q "$title")
+status=$?
+if [ "$status" -ne 0 ]; then
+  echo "Error: bd q failed with exit $status" >&2
+  exit "$status"
+fi
+
+# Validate the returned id matches Beads' documented format. If bd ever
+# changes id shape, we want to fail loudly here rather than propagate
+# a malformed id to the caller.
+if [[ ! "$id" =~ ^bd-[a-z0-9]+$ ]]; then
+  echo "Error: bd q returned unexpected id format: $id" >&2
+  exit 1
+fi
+
+echo "$id"
+```
 
 ### Operation: get_issue
 
-_Task 2.7 — pending._
+**Inputs:** `id` (string — `bd-<hash>` form)
+
+**Behaviour:** invoke `bd show <id>` and return its stdout. Issue not found is a non-zero bd exit and surfaces verbatim.
+
+```bash
+id="$1"
+
+# Validate id format before any subprocess invocation. Decision 7 rule 3:
+# exact match or reject — no cleaning.
+if [[ ! "$id" =~ ^bd-[a-z0-9]+$ ]]; then
+  echo "Error: invalid bd id format: $id" >&2
+  exit 1
+fi
+
+bd show "$id"
+status=$?
+if [ "$status" -ne 0 ]; then
+  echo "Error: bd show $id failed with exit $status" >&2
+  exit "$status"
+fi
+```
 
 ### Operation: add_comment
 
-_Task 2.8 — pending._
+**Inputs:** `id` (string — `bd-<hash>` form), `body` (string — may contain newlines, shell metacharacters)
+
+**Behaviour:** invoke `bd comment <id> --stdin` and pipe `body` in. Stdin is used (Decision 7 rule 4) so the body's content cannot accidentally re-enter the shell.
+
+```bash
+id="$1"
+body="$2"
+
+if [[ ! "$id" =~ ^bd-[a-z0-9]+$ ]]; then
+  echo "Error: invalid bd id format: $id" >&2
+  exit 1
+fi
+
+if [ -z "$body" ]; then
+  echo "Error: add_comment requires a non-empty body" >&2
+  exit 1
+fi
+
+# Use stdin to avoid any shell-injection surface for $body. printf %s
+# prevents trailing newline issues and doesn't interpret escapes inside
+# $body. (Compare echo, which on some shells interprets backslash escapes.)
+printf '%s' "$body" | bd comment "$id" --stdin
+status=$?
+if [ "$status" -ne 0 ]; then
+  echo "Error: bd comment $id --stdin failed with exit $status" >&2
+  exit "$status"
+fi
+```
 
 ### Operation: transition
 
-_Task 2.9 — pending._
+**Inputs:** `id` (string — `bd-<hash>` form), `transition` (string — `close` in v1; any other value is rejected)
+
+**Behaviour:** invoke `bd close <id>`. v1 supports `close` only; `reopen` and richer transitions are deferred (no v1 success criterion requires them).
+
+```bash
+id="$1"
+transition="$2"
+
+if [[ ! "$id" =~ ^bd-[a-z0-9]+$ ]]; then
+  echo "Error: invalid bd id format: $id" >&2
+  exit 1
+fi
+
+case "$transition" in
+  close)
+    bd close "$id"
+    status=$?
+    if [ "$status" -ne 0 ]; then
+      echo "Error: bd close $id failed with exit $status" >&2
+      exit "$status"
+    fi
+    ;;
+  '')
+    echo "Error: transition operation requires a transition name (e.g. 'close')" >&2
+    exit 1
+    ;;
+  *)
+    echo "Error: unsupported transition '$transition' (v1 supports 'close' only)" >&2
+    exit 1
+    ;;
+esac
+```
