@@ -40,7 +40,30 @@ Every `bd` subprocess invocation in this skill MUST follow the rules below. Thes
 
 ### Preflight (.beads/ existence check)
 
-_Task 2.5 — pending._
+Before invoking any dispatch operation, verify that Beads is initialised in this project. Run:
+
+```bash
+if [ ! -d "./.beads" ]; then
+  cat >&2 <<'EOF'
+Error: Beads not initialised in this project.
+
+To fix, run in the project root:
+
+  bd init --skip-agents --skip-hooks --non-interactive
+
+IMPORTANT: do not run plain `bd init`. It writes CLAUDE.md and AGENTS.md
+to the project root, creates .claude/settings.json, and registers
+SessionStart + PreCompact hooks of Beads' own design — all of which
+conflict with SPWorkflow's existing Claude Code integration. The
+--skip-agents and --skip-hooks flags prevent this.
+
+After running the safe init, re-run the operation.
+EOF
+  exit 1
+fi
+```
+
+If the check fails (non-zero exit), the operation halts immediately and the error reaches the user via tracker-dispatch.md. **Do not auto-initialise** — this is a conscious user decision per `openspec/changes/add-beadsify-tracker/design.md` § "`bd init` safety". No files are modified by this preflight; it is read-only.
 
 ### Operation: create_issue
 
