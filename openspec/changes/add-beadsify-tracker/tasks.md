@@ -22,8 +22,8 @@
 
 **Backend skill scaffold:**
 
-- [ ] 2.3 `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` exists with valid frontmatter (name, description, `disable-model-invocation: true`, `allowed-tools` covering Read/Bash)
-- [ ] 2.4 The backend module declares the dispatch operations it implements: `create_issue`, `get_issue`, `add_comment`, `transition` (close only in v1)
+- [x] 2.3 `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` exists with valid frontmatter (name, description, `disable-model-invocation: true`, `allowed-tools` covering Read/Bash)
+- [x] 2.4 The backend module declares the dispatch operations it implements: `create_issue`, `get_issue`, `add_comment`, `transition` (close only in v1)
 
 **Per-operation implementation (each uses the Phase 2.2 invocation pattern):**
 
