@@ -37,7 +37,7 @@
 
 **Preflight refactor:**
 
-- [ ] 3.1 Read the current `plugins/spwf/skills/_shared/tracker-dispatch.md`. If it does not already structure backends as a list extensible without refactor, refactor it first so the existing `youtrack` / `jira` / `none` cases are clearly listed and a fourth case can be added by adding a list entry. The refactor must produce byte-identical behaviour for existing backends — verify by mental diff or by running the existing capture/tracker-comment/close paths with `tracker: youtrack` before and after the refactor.
+- [x] 3.1 Refactored `plugins/spwf/skills/_shared/tracker-dispatch.md` to support both MCP-based and skill-based backends. Added "Backend types" classification section (MCP backends speak via `mcp__X__*` tool names; skill backends delegate to a SKILL.md in another plugin). Renamed "Dispatch table" to "MCP dispatch table" — actual rows unchanged. Split "Adding a new tracker" into MCP-based and skill-based subsections. Mental regression check: existing youtrack / jira / none paths through dispatch find the same MCP rows / same probe order / same fail-fast behaviour. Byte-identical for the three existing backends; verified at integration level in Phase 5.3.
 
 **Extension:**
 
