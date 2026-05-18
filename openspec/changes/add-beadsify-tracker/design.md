@@ -89,6 +89,34 @@ If `bd setup claude` ever has features SPWF needs (e.g. an MCP for graph queries
 
 ---
 
+### 7. Safe subprocess-invocation pattern
+
+**Decision:** The Beads backend (a SKILL.md interpreted by Claude as instructions) MUST follow these rules for every `bd` invocation. They are reproduced verbatim in the backend skill body so Claude can apply them mechanically.
+
+**The pattern (bash execution context):**
+
+1. **Always quote substituted variables.** `bd q "$title"`, never `bd q $title`. Quoted parameter expansion in bash prevents word splitting and glob expansion — it is *not* equivalent to shell-string concatenation.
+
+2. **Never use `eval`, `bash -c "..."`, or `sh -c "..."` with substituted user input.** These re-parse the substituted content through the shell, defeating the protection that quoted parameter expansion provides.
+
+3. **Validate ids before invocation.** Every `bd-NNN` id arriving from user input or external systems MUST match `^bd-[a-z0-9]+$` (Beads' documented hash-based id format) before being passed to a subprocess. Reject non-matching ids with a clear error and halt the operation. No transformation, no normalisation — exact match or reject.
+
+4. **Prefer stdin for multi-line or special-character content.** When a value (comment body, story title) may contain newlines, quotes, or other shell-significant content, use bd's stdin / `--file` mechanisms instead of inlining the string. Example: `echo "$comment_body" | bd comment "$id" --stdin` instead of `bd comment "$id" "$comment_body"`.
+
+5. **Capture exit codes; fail loudly.** Every `bd` invocation must check `$?` and abort the dispatch operation on non-zero — never silently continue or assume success. A failed `bd` call is a hard halt with the bd stderr surfaced verbatim.
+
+**What this pattern excludes:**
+
+- No id "cleaning" that might smuggle a payload past validation (e.g. `id=$(echo "$id" | tr -d ' ')` is forbidden — validate the original).
+- No pipe-to-`bash` of any bd output (`bd show … | bash` is forbidden).
+- No string interpolation of titles or comments into command-substitution paths (`$(bd q "$title")` is fine; `eval "bd q \"$title\""` is forbidden).
+
+**Rationale:** All four dispatch operations pass user-controlled content to a subprocess (titles, comment bodies, ids). The class of risk is command injection — Phase 5.5 specifically tests with adversarial inputs containing shell metacharacters. The pattern is designed to be mechanically applicable (a few rules a Claude reading the skill body can follow without judgement calls) and *narrow* (it forbids classes of construct, not specific commands — easier to audit).
+
+**Alternative considered:** Pre-write a shared `_shared/bd-helpers.sh` with vetted helper functions (`bd_q_safe`, `bd_close_safe`, etc.) and require the backend to call those. Rejected because (a) SKILL.md execution doesn't include a "source helper library" step naturally; (b) the helpers would themselves need this pattern; (c) auditing one rule list is easier than auditing a helper library *plus* a rule list saying "use the helpers."
+
+---
+
 ## Risks and Trade-offs
 
 | Risk | Mitigation |
