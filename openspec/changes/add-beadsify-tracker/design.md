@@ -69,11 +69,11 @@ If `bd setup claude` ever has features SPWF needs (e.g. an MCP for graph queries
 
 ---
 
-### 5. Per-project, gitignored `.bd/`
+### 5. Per-project, gitignored `.beads/`
 
-**Decision:** Beads database lives at `./.bd/` next to `./openspec/`. The spwf-beadsify install instructions add `.bd/` to `.gitignore`. OpenSpec remains source-of-truth for the project's specs; Beads is the execution-time scratchpad.
+**Decision:** Beads database lives at `./.beads/` next to `./openspec/`. The spwf-beadsify install instructions add `.beads/` to `.gitignore`. OpenSpec remains source-of-truth for the project's specs; Beads is the execution-time scratchpad.
 
-**Rationale:** Committing the Beads DB would produce per-`bd done` git diffs and merge churn. Per-machine (`~/.bd/`) conflates projects. The OpenSpec change directory + commits to `tasks.md` retain the durable record; Beads enriches but doesn't supplant it. Insights captured via `bd remember` are preserved by the build-loop change's `insights.md` export at close (out of scope here).
+**Rationale:** Committing the Beads DB would produce per-`bd done` git diffs and merge churn. Per-machine (`~/.beads/`) conflates projects. The OpenSpec change directory + commits to `tasks.md` retain the durable record; Beads enriches but doesn't supplant it. Insights captured via `bd remember` are preserved by the build-loop change's `insights.md` export at close (out of scope here).
 
 **Trade-off:** Multi-machine workflows lose Beads state across machine switches. Acceptable for solo single-machine usage; revisit if/when relevant.
 
@@ -95,7 +95,7 @@ If `bd setup claude` ever has features SPWF needs (e.g. an MCP for graph queries
 |---|---|
 | `bd` CLI surface changes in a breaking way (young tool) | Pin the backend module to a documented `bd` version range in its README; bump explicitly when upgrading |
 | `bd setup claude` already installed on a contributor machine | Plugin README detects via documented marker file and warns; manual cleanup instructions provided |
-| Operator forgets `bd init` and gets cryptic errors | Backend's first dispatch attempt checks `.bd/` exists and emits a clear "run `bd init` then retry" message |
+| Operator forgets `bd init` and gets cryptic errors | Backend's first dispatch attempt checks `.beads/` exists and emits a clear "run `bd init` then retry" message |
 | Beads' Dolt-based store grows large | Out of scope for v1; documented as a known limitation in the plugin README |
 | Cross-plugin path coupling in tracker-dispatch.md breaks if spwf-beadsify reorganises | Pin the backend module path; treat any future move as a coordinated change touching both plugins |
 
@@ -106,11 +106,11 @@ If `bd setup claude` ever has features SPWF needs (e.g. an MCP for graph queries
 Configuration:
 
 - `.spwf/tracker.yaml` — `tracker: beads` (alongside existing `youtrack` / `jira` / `none`)
-- `.gitignore` — projects using Beads add `.bd/`
+- `.gitignore` — projects using Beads add `.beads/`
 
 Beads database:
 
-- `./.bd/` — Beads' on-disk store (Dolt format, opaque). Created by `bd init`, populated by `bd create` (or `bd q`) / `bd close` / `bd comment` / `bd remember`.
+- `./.beads/` — Beads' on-disk store (Dolt format, opaque). Created by `bd init`, populated by `bd create` (or `bd q`) / `bd close` / `bd comment` / `bd remember`.
 
 Spec artefacts: standard SPWF / OpenSpec conventions, no new formats.
 
@@ -133,9 +133,35 @@ Issue id format observed: `bd-<hash>` (alphanumeric, not `bd-<digit>`). Input va
 
 ---
 
+## `bd init` safety (resolved 2026-05-18 against bd 1.0.4)
+
+Critical finding from Phase 2.1 preflight: **plain `bd init` is opinionated and invasive.** Running it without flags in a project root:
+
+- Creates `.beads/` (correct — the Beads database)
+- Creates project-root `AGENTS.md` and `CLAUDE.md` (overwrites if absent; behaviour on existing files unverified — assume destructive)
+- Creates `.claude/settings.json` and **registers SessionStart + PreCompact hooks** of Beads' own design
+- Modifies `.gitignore` (adds `.dolt/`, `*.db`, `.beads-credential-key`)
+- **Auto-commits** all of the above
+
+This is functionally equivalent to running `bd setup claude` — which the spec explicitly forbids (see Decision 3 above). The earlier "Do NOT run `bd setup claude`" guidance was necessary but **incomplete**: plain `bd init` does the same thing.
+
+**Decision:** spwf-beadsify mandates the safe init flags:
+
+```bash
+bd init --skip-agents --skip-hooks --non-interactive
+```
+
+Verified behaviour with these flags (against bd 1.0.4):
+
+- ✓ Creates `.beads/`
+- ✓ No `CLAUDE.md` / `AGENTS.md` / `.claude/settings.json` polluted
+- ⚠ Still modifies `.gitignore` (adds 3 patterns) — acceptable; correct patterns
+- ⚠ Still makes one auto-commit at init time — acceptable; clearly labelled `bd init: initialize beads issue tracking`
+
+**Bootstrap UX (open question 1 resolved):** the backend's first failed dispatch SHALL halt with a message containing the exact safe init command, not just `bd init`. Manual init by the user is required — same reasoning as Decision 3 (we don't let Beads make opinionated decisions on the user's behalf inside an SPWF project). Auto-init from the backend is explicitly rejected: even with safe flags, init has irreversible side effects (`.gitignore` mutation + auto-commit) that the user should approve consciously the first time.
+
 ## Open questions (carried from Challenge, to settle during build)
 
-These do not block spec validation. Two of the four original open questions (comment mapping, status vocab) are resolved above; the remaining two stay open:
+These do not block spec validation. Three of the four original open questions (comment mapping, status vocab, bd init UX) are now resolved; one remains:
 
-1. **`bd init` bootstrap UX.** Auto-init from the backend on first failed dispatch, or require manual `bd init`? Default plan: manual with a clear error. Revisit if friction is high.
-2. **Dispatch backend file layout.** Default plan: single `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` with branching logic per operation. Revisit if it grows past 300 lines.
+1. **Dispatch backend file layout.** Default plan: single `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` with branching logic per operation. Revisit if it grows past 300 lines.

@@ -51,38 +51,46 @@ When `.spwf/tracker.yaml` sets `tracker: beads` but `spwf-beadsify` is not insta
 
 ---
 
-### Requirement: Raw bd CLI is the only Beads interface
+### Requirement: Raw bd CLI is the only Beads interface; Beads-installed Claude integration is forbidden
 
-The Beads backend module SHALL invoke the `bd` CLI directly for every operation (`bd write`, `bd show`, `bd remember`, `bd close`, `bd reopen`). It SHALL NOT invoke `bd setup claude` or rely on any artefact `bd setup claude` would install.
+The Beads backend module SHALL invoke the `bd` CLI directly for the operations the dispatch needs (`bd q`, `bd show`, `bd comment`, `bd close`). It SHALL NOT invoke, depend on, or assume the presence of any Beads-installed Claude Code integration. Two Beads commands install such integration and are explicitly forbidden as install steps for an SPWF project:
 
-#### Scenario: No bd setup claude
+- `bd setup claude` — installs Beads' opinionated Claude Code integration.
+- **Plain `bd init`** — has the same side effects as `bd setup claude`: it writes `CLAUDE.md` and `AGENTS.md` to the project root, creates `.claude/settings.json`, and registers `SessionStart` + `PreCompact` hooks of Beads' own design.
 
-- **WHEN** a contributor follows the install instructions in `plugins/spwf-beadsify/README.md`
-- **THEN** the README SHALL explicitly warn against running `bd setup claude`
-- **AND** the warning SHALL include the reasoning that SPWF provides its own Claude Code integration
+The only safe way to initialise Beads inside an SPWF project is `bd init --skip-agents --skip-hooks --non-interactive`.
 
-#### Scenario: Backend uses raw CLI
+#### Scenario: README warns against both bd setup claude and plain bd init
+
+- **WHEN** a contributor reads `plugins/spwf-beadsify/README.md`
+- **THEN** the README SHALL include an explicit warning against running both `bd setup claude` and plain `bd init`
+- **AND** the warning SHALL state the reasoning (SPWF provides its own Claude Code integration; both commands would install a conflicting one)
+- **AND** the README SHALL present the safe init command `bd init --skip-agents --skip-hooks --non-interactive` as the only sanctioned way to initialise Beads in an SPWF project
+
+#### Scenario: Backend uses raw CLI only
 
 - **WHEN** any tracker-dispatch operation is routed to the Beads backend
 - **THEN** the backend SHALL invoke `bd` as a subprocess
-- **AND** SHALL NOT invoke any artefact installed by `bd setup claude`
+- **AND** SHALL NOT invoke any Beads command that installs Claude Code integration
+- **AND** SHALL NOT depend on any file Beads' Claude integration would have created
 
 ---
 
 ### Requirement: Beads database is per-project and gitignored
 
-The Beads database SHALL live at `./.bd/` in the project root and SHALL be excluded from git via `.gitignore`. OpenSpec change directories remain the durable source-of-truth; Beads is the execution-time scratchpad.
+The Beads database SHALL live at `./.beads/` in the project root and SHALL be excluded from git via `.gitignore`. OpenSpec change directories remain the durable source-of-truth; Beads is the execution-time scratchpad.
 
-#### Scenario: Missing .bd/ produces a clear error
+#### Scenario: Missing .beads/ produces a clear error pointing at the safe init flags
 
 - **WHEN** a tracker-dispatch operation is routed to the Beads backend
-- **AND** `./.bd/` does not exist in the project root
-- **THEN** the backend SHALL halt with: `.bd/ not initialised. Run: bd init (in the project root) then retry.`
+- **AND** `./.beads/` does not exist in the project root
+- **THEN** the backend SHALL halt with a message that names the safe init command `bd init --skip-agents --skip-hooks --non-interactive` (not plain `bd init`) and explains that the skip flags prevent the Beads-installed Claude Code integration from conflicting with SPWorkflow
+- **AND** no files SHALL be modified
 
-#### Scenario: .bd/ is gitignored
+#### Scenario: .beads/ is gitignored
 
 - **WHEN** a user follows the install instructions
-- **THEN** `.gitignore` SHALL include `.bd/`
+- **THEN** `.gitignore` SHALL include `.beads/`
 - **AND** Beads writes SHALL produce zero tracked changes in `git status`
 
 ---
@@ -123,10 +131,10 @@ A second Claude Code session in the same project SHALL be able to create, commen
 - **AND** Session B concurrently invokes `/spwf:capture` (or any tracker-touching skill) producing a new story `bd-B` not in `bd-A`'s subtree
 - **THEN** Session A's `bd next` calls SHALL continue returning items from `bd-A`'s subtree only and SHALL NOT surface `bd-B`
 - **AND** the Beads store SHALL contain both `bd-A` (and its children, in their pre-existing states) and `bd-B`
-- **AND** no `.bd/` corruption SHALL be observable via `bd list` / `bd show`
+- **AND** no `.beads/` corruption SHALL be observable via `bd list` / `bd show`
 
 #### Scenario: Concurrent writers don't corrupt the store
 
-- **WHEN** two `bd q "<title>"` invocations execute simultaneously against the same `.bd/`
+- **WHEN** two `bd q "<title>"` invocations execute simultaneously against the same `.beads/`
 - **THEN** both stories SHALL be created with distinct hash-based ids
 - **AND** `bd list` SHALL show both

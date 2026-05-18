@@ -16,7 +16,7 @@ Depends on [`beadsify-tracker.md`](beadsify-tracker.md) having shipped — the `
 
 ## What we know
 
-- **Per-change opt-in.** The build-loop hook only activates when **both** `.bd/` exists in the project **and** the current change's `proposal.md` frontmatter contains `beads_story_id: bd-NNN`. Changes without that frontmatter run the existing tasks.md-driven flow unchanged.
+- **Per-change opt-in.** The build-loop hook only activates when **both** `.beads/` exists in the project **and** the current change's `proposal.md` frontmatter contains `beads_story_id: bd-NNN`. Changes without that frontmatter run the existing tasks.md-driven flow unchanged.
 - **Mechanism: hook in `/spwf:build`, not a custom OpenSpec schema.** Lower blast radius, no dependency on OpenSpec's young custom-schema API. A formal `beads-driven` schema is a possible future change once the model is proven.
 - **Source-of-truth during build.** Beads is canonical. `tasks.md` is a best-effort human-readable mirror updated after each `bd done`. Sync failures log a warning and continue — build is never halted by sync drift.
 - **Reconciliation points.** `/spwf:close` and `/spwf:pause` both run a mandatory reconciliation pass comparing Beads sub-task state vs `tasks.md` and surface unresolvable conflicts to the user.

@@ -108,7 +108,7 @@ keeps working unchanged — only the backend differs.
 | Profile | Install | Tracker | When to choose |
 |---|---|---|---|
 | **SPWF only** (default) | `spwf` + `spwf-agents` | YouTrack / Jira / none, configured via MCP and `.spwf/tracker.yaml` | Client work, team workflows, anywhere an external tracker is required or already in use |
-| **SPWF + Beadsify** | `spwf` + `spwf-agents` + `spwf-beadsify`, plus the [Beads CLI](https://github.com/gastownhall/beads) | Beads — in-repo dependency graph at `./.bd/`, selected with `tracker: beads` in `.spwf/tracker.yaml` | Solo projects, agent-heavy workflows, anywhere you want persistent agent memory and dependency-aware tasks without an external service |
+| **SPWF + Beadsify** | `spwf` + `spwf-agents` + `spwf-beadsify`, plus the [Beads CLI](https://github.com/gastownhall/beads) | Beads — in-repo dependency graph at `./.beads/`, selected with `tracker: beads` in `.spwf/tracker.yaml` | Solo projects, agent-heavy workflows, anywhere you want persistent agent memory and dependency-aware tasks without an external service |
 
 Switching profiles per project is fine. The same skills, agents, and hooks run
 either way; only the tracker backend is swapped.

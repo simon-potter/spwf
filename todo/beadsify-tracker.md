@@ -20,13 +20,13 @@ This change ships **first** because it is lower-risk and builds the `bd` habit a
 - **Dispatch fallback behaviour.** If `tracker: beads` is set in `.spwf/tracker.yaml` but `spwf-beadsify` is not installed, dispatch errors with: *"tracker: beads requested but spwf-beadsify plugin not installed. Install: `/plugin install spwf-beadsify@spwf`. Or change tracker in .spwf/tracker.yaml."*
 - **Beads operations needed for v1 dispatch.** Roughly: create_issue (`bd write`), get_issue (`bd show`), add_comment (`bd remember bd-N "<text>"` — note: Beads has no native "comment" concept; insights serve as the analogue), transition (`bd close`, `bd reopen`). Full mapping is a spec-phase deliverable.
 - **No `bd setup claude`.** SPWF talks to bd via raw CLI only. The plugin README explicitly warns against running `bd setup claude` to avoid opinionated-default conflicts.
-- **Beads database location.** Per-project, gitignored `./.bd/`. Plugin's first-run check ensures `.bd/` exists or prompts the user to run `bd init`.
+- **Beads database location.** Per-project, gitignored `./.beads/`. Plugin's first-run check ensures `.beads/` exists or prompts the user to run `bd init`.
 
 ## Open questions
 
 - **Beads "comment" mapping.** Beads has `bd remember` (insights tied to a story) but no first-class comment concept. Does `/spwf:tracker-comment` produce a `bd remember bd-N "<text>"` (treating the comment as an insight), or a distinct concept (e.g. `bd note`)? Investigate `bd` CLI for a closer match before settling.
 - **Status vocabulary mapping.** YouTrack and Jira have rich status vocabularies (Open / In Progress / In Review / Done / etc.). Beads ships with a narrower vocab (open / in-progress / blocked / closed per the research notes). What does `/spwf:close` set as the final state? `bd close <id>` only? Or a richer "done with archive reference" state?
-- **`bd init` bootstrap.** Should `spwf-beadsify` auto-run `bd init` on first use if `.bd/` is missing, or require the user to do it manually? Auto-init is friendlier; manual is more transparent about what's happening.
+- **`bd init` bootstrap.** Should `spwf-beadsify` auto-run `bd init` on first use if `.beads/` is missing, or require the user to do it manually? Auto-init is friendlier; manual is more transparent about what's happening.
 - **Dispatch contract for spwf-beadsify backend.** What's the exact file/skill layout in spwf-beadsify that tracker-dispatch.md points at? A single `tracker-backend/SKILL.md`? Multiple per-operation skills? Settle in spec.
 
 ## Rough scope

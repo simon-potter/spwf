@@ -20,16 +20,43 @@ tracker: beads
 ## Prerequisites
 
 1. **Beads CLI (`bd`) installed and on PATH.** The parent repo ships a wrapper at `scripts/install-beads.sh` — `bash scripts/install-beads.sh` from the project root installs it via the upstream installer.
-2. **`bd init` run once in the project root.** Creates `./.bd/`. Without this, the plugin halts with a clear error on the first dispatch.
-3. **`.bd/` in `.gitignore`.** The Beads database is per-checkout execution state, not source-of-truth — OpenSpec is.
 
-Full details for items 2 and 3 are filled in by tasks 4.1 / 4.3 of `add-beadsify-tracker`.
+2. **Initialise Beads in the project, but use the safe flags.** The plugin halts on first dispatch if `.beads/` is missing. To create it, run **in the project root**:
 
-## Do NOT run `bd setup claude`
+   ```bash
+   bd init --skip-agents --skip-hooks --non-interactive
+   ```
 
-Beads ships with a `bd setup claude` command that installs its own Claude Code integration scaffolding. **Do not run it.** SPWF provides the canonical Claude Code integration via the `spwf` and `spwf-agents` plugins; layering Beads' opinionated defaults on top would create unpredictable interactions. This plugin invokes the raw `bd` CLI directly (`bd q`, `bd show`, `bd comment`, `bd close`) — that's the only Beads integration surface we use.
+   **Do not run plain `bd init`.** See the "Forbidden commands" section below for why.
 
-If `bd setup claude` was already run on this machine, see the `bd` documentation for cleanup instructions.
+3. **`.gitignore` entries.** `bd init` adds `.dolt/`, `*.db`, and `.beads-credential-key` to `.gitignore` automatically (and auto-commits the change). Add `.beads/` yourself:
+
+   ```bash
+   echo ".beads/" >> .gitignore
+   ```
+
+   The Beads database is per-checkout execution state, not source-of-truth — OpenSpec is.
+
+## Forbidden commands
+
+**Two `bd` commands are forbidden inside an SPWF project.** Both install Beads' own Claude Code integration, which conflicts with SPWorkflow's (32 skills, 13 agents, 5 hooks) — at best unpredictable interactions, at worst overwriting your `CLAUDE.md` and `AGENTS.md`.
+
+| Command | What it does (verified against bd 1.0.4) | Use this instead |
+|---|---|---|
+| `bd init` (plain, no flags) | Creates `.beads/`, **writes `CLAUDE.md` and `AGENTS.md` to the project root**, creates `.claude/settings.json` with SessionStart + PreCompact hooks, modifies `.gitignore`, auto-commits | `bd init --skip-agents --skip-hooks --non-interactive` |
+| `bd setup claude` | Installs Beads' Claude Code integration on its own (separate from init) | Don't run it. Period. |
+
+This plugin only ever invokes the raw `bd` CLI directly (`bd q`, `bd show`, `bd comment`, `bd close`). It never invokes any Beads command that installs Claude Code integration.
+
+### Recovery if you already ran the wrong command
+
+If `bd init` (plain) or `bd setup claude` was already run on this machine in your project:
+
+- Check `git log` for an auto-commit titled `bd init: initialize beads issue tracking` — revert it
+- Restore your project's `CLAUDE.md` from git history (if it was overwritten)
+- Delete the project-root `AGENTS.md` (if you didn't have one before)
+- Remove `.claude/settings.json` hook entries Beads added (`SessionStart`, `PreCompact` with bd-related commands)
+- Re-run `bd init --skip-agents --skip-hooks --non-interactive` to keep the `.beads/` database
 
 ## Status
 

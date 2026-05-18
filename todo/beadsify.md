@@ -27,7 +27,7 @@ Long-horizon agentic coding suffers from "context drift": agents lose their plac
 
 **Coexistence with external trackers.** Beads *replaces* YouTrack/Jira as SPWF's default tracker for this project, rather than coexisting separately. Added as a new tracker-dispatch backend; YouTrack/Jira backends remain available for projects that need them (e.g. client work where Jira is mandated). `.spwf/tracker.yaml` selects the active backend.
 
-**Where the Beads database lives.** Per-project, gitignored — `./.bd/` next to `./openspec/`. OpenSpec stays source-of-truth for the spec; Beads is the execution-time scratchpad. Insights captured via `bd remember` survive the gitignored DB by being exported to a committed file at `/spwf:close` (see next answer).
+**Where the Beads database lives.** Per-project, gitignored — `./.beads/` next to `./openspec/`. OpenSpec stays source-of-truth for the spec; Beads is the execution-time scratchpad. Insights captured via `bd remember` survive the gitignored DB by being exported to a committed file at `/spwf:close` (see next answer).
 
 **`bd remember` vs `/spwf:learn-from-mistakes`.** Layered with explicit hand-off. `bd remember` is the build-time capture surface (fast, frictionless, gitignored). At `/spwf:close`, before archive, Beads insights for the current change are exported to `openspec/changes/{change-id}/insights.md` (committed, persistent). `/spwf:learn-from-mistakes` reads commits + `insights.md`, so durable insights bubble up from bd → openspec → project docs.
 
@@ -44,7 +44,7 @@ Long-horizon agentic coding suffers from "context drift": agents lose their plac
 - **New plugin `spwf-beadsify`** — third entry in the marketplace, opt-in install. Both child changes ship into this plugin. Users who don't want Beads integration don't install it; `spwf` core is unaffected.
 - **Tracker-dispatch wiring.** `_shared/tracker-dispatch.md` in spwf core lists `beads` as a known backend pointing to a module inside `plugins/spwf-beadsify/`. If `tracker: beads` is set in `.spwf/tracker.yaml` but `spwf-beadsify` is not installed, dispatch errors with a clear message ("install spwf-beadsify or change tracker").
 - **Plugin name `spwf-beadsify` confirmed** (matches existing `spwf-agents` naming). Slash commands under the namespace become `/spwf-beadsify:<name>`.
-- **Per-change opt-in via frontmatter.** The build-loop hook only activates when both `.bd/` exists AND `proposal.md` frontmatter contains `beads_story_id: bd-NNN`. Changes without that frontmatter run the normal tasks.md-driven flow.
+- **Per-change opt-in via frontmatter.** The build-loop hook only activates when both `.beads/` exists AND `proposal.md` frontmatter contains `beads_story_id: bd-NNN`. Changes without that frontmatter run the normal tasks.md-driven flow.
 - **Insights file location.** `openspec/changes/{change-id}/insights.md` — travels with the OpenSpec change into the archive automatically.
 - **Order of delivery.** `beadsify-tracker` first (lower risk, mechanical mapping, builds the bd habit at the tracker level), then `beadsify-build-loop` (higher risk, changes how every build runs).
 

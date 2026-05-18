@@ -38,14 +38,14 @@ Settled during Challenge:
 - **New plugin** `spwf-beadsify` (third in marketplace), not bundled into spwf core. Users who don't want Beads aren't affected.
 - **Tracker layer replacement**, not coexistence. With `tracker: beads`, Beads is the canonical tracker for the project. YouTrack/Jira backends remain selectable for projects with external requirements (e.g. client work where Jira is mandated).
 - **Raw CLI only.** SPWF calls `bd q`, `bd show`, `bd comment`, `bd close` directly (mapping verified against bd 1.0.4 — see `design.md` § "bd CLI mapping"). `bd setup claude` is explicitly disallowed in the prerequisite docs.
-- **Per-project gitignored `.bd/`.** Beads database lives at `./.bd/` and is in `.gitignore`. OpenSpec remains source-of-truth; Beads is the execution-time scratchpad.
+- **Per-project gitignored `.beads/`.** Beads database lives at `./.beads/` and is in `.gitignore`. OpenSpec remains source-of-truth; Beads is the execution-time scratchpad.
 - **Tracker layer ships first** (this change), build-loop integration ships next (`add-beadsify-build-loop`, separate change, depends on this one).
 
 Open (TBD — settle during design.md / build):
 
 - **Beads "comment" mapping.** Beads has no first-class `comment` concept. Options: (a) use `bd remember bd-N "<text>"` (treats comment as an insight); (b) check `bd` CLI for a closer match like `bd note` or `bd attach`. Resolve by reading `bd --help` during design.
 - **Status vocabulary mapping.** Beads' status vocab (open / in-progress / blocked / closed per the research notes) is narrower than YouTrack's. Pin the exact mapping table during design — particularly what `/spwf:close` sets as the final state.
-- **`bd init` bootstrap UX.** Should the plugin auto-run `bd init` when `.bd/` is missing, or require manual setup? Auto is friendlier; manual is more transparent. Decide during design — defer if not blocking the first acceptance test.
+- **~~`bd init` bootstrap UX~~** — resolved during Phase 2.1: manual init by the user, with mandatory safe flags `bd init --skip-agents --skip-hooks --non-interactive`. See `design.md` § "`bd init` safety" for why plain `bd init` is forbidden in an SPWF project.
 - **Dispatch backend file layout.** Exact files inside `plugins/spwf-beadsify/skills/tracker-backend/`: single SKILL.md with branching logic, or one skill per operation? Pin during design once we know the operation surface.
 
 ## Success Criteria
@@ -53,7 +53,7 @@ Open (TBD — settle during design.md / build):
 With this change shipped:
 
 1. `/plugin install spwf-beadsify@spwf` succeeds against the local marketplace.
-2. With `.spwf/tracker.yaml` containing `tracker: beads` and `bd init` already run:
+2. With `.spwf/tracker.yaml` containing `tracker: beads` and Beads initialised via `bd init --skip-agents --skip-hooks --non-interactive`:
    - `/spwf:capture` (source: scratch) produces a `bd-NNN` story id and records it in the ideation file frontmatter.
    - `/spwf:tracker-comment` lands the comment in Beads (via the resolved mapping).
    - `/spwf:close` transitions the Beads story to closed before archive.
