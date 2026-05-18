@@ -1,0 +1,6 @@
+{
+  "name": "spwf-beadsify",
+  "description": "Optional SPWorkflow add-on — adds Beads (bd) as a tracker-dispatch backend. Replaces YouTrack/Jira as the project's default tracker when .spwf/tracker.yaml is set to 'tracker: beads'. Requires the Beads CLI (https://github.com/gastownhall/beads).",
+  "version": "0.1.0",
+  "author": { "name": "Simon Potter" }
+}

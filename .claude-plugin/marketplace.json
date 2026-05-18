@@ -20,6 +20,12 @@
       "source": "./plugins/spwf-agents",
       "description": "13 specialist subagents covering every phase of the SPWorkflow engineering cycle",
       "version": "1.0.0"
+    },
+    {
+      "name": "spwf-beadsify",
+      "source": "./plugins/spwf-beadsify",
+      "description": "Optional add-on — Beads (bd) as a tracker-dispatch backend. Requires the Beads CLI. SPWF works without this plugin.",
+      "version": "0.1.0"
     }
   ]
 }
