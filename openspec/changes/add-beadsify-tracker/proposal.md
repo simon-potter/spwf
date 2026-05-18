@@ -37,7 +37,7 @@ Settled during Challenge:
 
 - **New plugin** `spwf-beadsify` (third in marketplace), not bundled into spwf core. Users who don't want Beads aren't affected.
 - **Tracker layer replacement**, not coexistence. With `tracker: beads`, Beads is the canonical tracker for the project. YouTrack/Jira backends remain selectable for projects with external requirements (e.g. client work where Jira is mandated).
-- **Raw CLI only.** SPWF calls `bd write`, `bd show`, `bd remember`, `bd close` directly. `bd setup claude` is explicitly disallowed in the prerequisite docs.
+- **Raw CLI only.** SPWF calls `bd q`, `bd show`, `bd comment`, `bd close` directly (mapping verified against bd 1.0.4 — see `design.md` § "bd CLI mapping"). `bd setup claude` is explicitly disallowed in the prerequisite docs.
 - **Per-project gitignored `.bd/`.** Beads database lives at `./.bd/` and is in `.gitignore`. OpenSpec remains source-of-truth; Beads is the execution-time scratchpad.
 - **Tracker layer ships first** (this change), build-loop integration ships next (`add-beadsify-build-loop`, separate change, depends on this one).
 
@@ -60,3 +60,4 @@ With this change shipped:
 3. With `.spwf/tracker.yaml` containing `tracker: beads` but `spwf-beadsify` not installed, dispatch errors with: *"tracker: beads requested but spwf-beadsify plugin not installed. Install: `/plugin install spwf-beadsify@spwf`. Or change tracker in .spwf/tracker.yaml."*
 4. Existing `tracker: youtrack`, `tracker: jira`, and `tracker: none` configurations continue to work unchanged (regression check).
 5. The root README and CLAUDE.md describe Beadsify install as opt-in and warn against `bd setup claude`.
+6. **Multi-session braindump works.** A second Claude Code session in the same project can run `bd q "<title>"` (or any other tracker-touching `/spwf:*` skill) to land new stories into the graph while a first session is actively running `/spwf:build` against an unrelated change. The build session's `bd next` remains scoped to its `beads_story_id` subtree; the braindump session's writes land at the top level (or under their own parent) and don't perturb the build. The concurrency smoke test in Phase 5.6 validates this against the installed bd version.

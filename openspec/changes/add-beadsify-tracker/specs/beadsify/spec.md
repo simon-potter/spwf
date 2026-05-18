@@ -110,3 +110,23 @@ Skills that already use tracker-dispatch (`/spwf:capture`, `/spwf:tracker-commen
 - **AND** `tracker: beads` is configured
 - **THEN** the backend SHALL invoke `bd close bd-NNN` before the OpenSpec archive step runs
 - **AND** `bd show bd-NNN` SHALL report the story as closed
+
+---
+
+### Requirement: Concurrent sessions are supported
+
+A second Claude Code session in the same project SHALL be able to create, comment on, or query Beads stories via the spwf-beadsify backend while another session is running a build, without corrupting the Beads store or perturbing the active build's task selection.
+
+#### Scenario: Braindump while building
+
+- **WHEN** Session A is running a build loop against a change whose `proposal.md` contains `beads_story_id: bd-A`
+- **AND** Session B concurrently invokes `/spwf:capture` (or any tracker-touching skill) producing a new story `bd-B` not in `bd-A`'s subtree
+- **THEN** Session A's `bd next` calls SHALL continue returning items from `bd-A`'s subtree only and SHALL NOT surface `bd-B`
+- **AND** the Beads store SHALL contain both `bd-A` (and its children, in their pre-existing states) and `bd-B`
+- **AND** no `.bd/` corruption SHALL be observable via `bd list` / `bd show`
+
+#### Scenario: Concurrent writers don't corrupt the store
+
+- **WHEN** two `bd q "<title>"` invocations execute simultaneously against the same `.bd/`
+- **THEN** both stories SHALL be created with distinct hash-based ids
+- **AND** `bd list` SHALL show both
