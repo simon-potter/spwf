@@ -106,7 +106,7 @@ bd init also adds patterns to the project-root `.gitignore`: `.dolt/`, `*.db`, `
 
 2. **Never use `eval`, `bash -c "..."`, or `sh -c "..."` with substituted user input.** These re-parse the substituted content through the shell, defeating the protection that quoted parameter expansion provides.
 
-3. **Validate ids before invocation.** Every `bd-NNN` id arriving from user input or external systems MUST match `^[a-z0-9]+(-[a-z0-9]+)+$` (Beads' documented hash-based id format) before being passed to a subprocess. Reject non-matching ids with a clear error and halt the operation. No transformation, no normalisation — exact match or reject.
+3. **Validate ids before invocation.** Every `<prefix>-<hash>` id arriving from user input or external systems MUST match `^[a-z0-9]+(-[a-z0-9]+)+$` (Beads' documented hash-based id format; prefix is project-derived) before being passed to a subprocess. Reject non-matching ids with a clear error and halt the operation. No transformation, no normalisation — exact match or reject.
 
 4. **Prefer stdin for multi-line or special-character content.** When a value (comment body, story title) may contain newlines, quotes, or other shell-significant content, use bd's stdin / `--file` mechanisms instead of inlining the string. Example: `echo "$comment_body" | bd comment "$id" --stdin` instead of `bd comment "$id" "$comment_body"`.
 

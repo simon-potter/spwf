@@ -54,7 +54,7 @@ With this change shipped:
 
 1. `/plugin install spwf-beadsify@spwf` succeeds against the local marketplace.
 2. With `.spwf/tracker.yaml` containing `tracker: beads` and Beads initialised via `bd init --skip-agents --skip-hooks --non-interactive`:
-   - `/spwf:capture` (source: scratch) produces a `bd-NNN` story id and records it in the ideation file frontmatter.
+   - `/spwf:capture` (source: scratch) produces a `<prefix>-<hash>` story id (project-derived prefix, e.g. `spwf-a3f2dd` in this repo) and records it in the ideation file frontmatter.
    - `/spwf:tracker-comment` lands the comment in Beads (via the resolved mapping).
    - `/spwf:close` transitions the Beads story to closed before archive.
 3. With `.spwf/tracker.yaml` containing `tracker: beads` but `spwf-beadsify` not installed, dispatch errors with: *"tracker: beads requested but spwf-beadsify plugin not installed. Install: `/plugin install spwf-beadsify@spwf`. Or change tracker in .spwf/tracker.yaml."*

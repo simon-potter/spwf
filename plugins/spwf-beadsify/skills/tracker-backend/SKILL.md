@@ -175,9 +175,9 @@ fi
 case "$transition" in
   close)
     bd close "$id"
-    status=$?
-    if [ "$status" -ne 0 ]; then
-      echo "Error: bd close $id failed with exit "$rc"" >&2
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+      echo "Error: bd close $id failed with exit $rc" >&2
       exit "$rc"
     fi
     ;;
