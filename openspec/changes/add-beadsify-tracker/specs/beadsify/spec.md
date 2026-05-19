@@ -87,12 +87,19 @@ The Beads database SHALL live under `./.beads/` in the project root. `.beads/` i
 - **THEN** the backend SHALL halt with a message that names the safe init command `bd init --skip-agents --skip-hooks --non-interactive` (not plain `bd init`) and explains that the skip flags prevent the Beads-installed Claude Code integration from conflicting with SPWorkflow
 - **AND** no files SHALL be modified
 
-#### Scenario: Beads writes don't pollute git status
+#### Scenario: Dolt DB is local; JSONL audit log is tracked
 
 - **WHEN** a user follows the install instructions and `bd init --skip-agents --skip-hooks --non-interactive` has run
 - **THEN** the project-root `.gitignore` SHALL contain `.dolt/`, `*.db`, and `.beads-credential-key`
-- **AND** `.beads/.gitignore` SHALL exist and ignore the Dolt DB (`embeddeddolt/`, `dolt/`) and runtime files (`*.lock`, `*.sock`, daemon files)
-- **AND** routine bd operations (`bd q`, `bd close`, `bd comment`) SHALL produce zero tracked changes in `git status` (config / metadata may change rarely on schema migrations, which is acceptable and expected)
+- **AND** `.beads/.gitignore` SHALL exist and ignore the Dolt DB (`embeddeddolt/`, `dolt/`), runtime files (`*.lock`, `*.sock`, daemon files), `export-state.json`, and `last-touched`
+
+#### Scenario: JSONL auto-export evolves with bd usage
+
+- **WHEN** routine bd operations (`bd q`, `bd close`, `bd comment`) run
+- **THEN** `.beads/issues.jsonl` and `.beads/interactions.jsonl` SHALL be auto-exported by bd and SHALL show as tracked changes in `git status`
+- **AND** these files are intentionally tracked (not in `.beads/.gitignore`) so the issue audit trail travels via git
+- **AND** users commit these alongside other work in their normal workflow (no special handling required by spwf-beadsify)
+- **AND** users who want strict "git status clean" semantics MAY disable auto-export via `bd config set export.auto false` (documented in the plugin README) at the cost of losing the JSONL audit view
 
 ---
 

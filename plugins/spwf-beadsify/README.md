@@ -31,6 +31,8 @@ tracker: beads
 
 3. **`.gitignore` entries.** `bd init` adds `.dolt/`, `*.db`, and `.beads-credential-key` to the project-root `.gitignore` automatically (and auto-commits the change). **Do NOT add `.beads/` yourself** — bd manages `.beads/` partially: the config, metadata, and project_id are committed (so a clone+init produces the same id namespace), while the Dolt DB and runtime files are gitignored via `.beads/.gitignore` (which bd creates). OpenSpec change directories remain source-of-truth for spec content; Beads is the execution-time scratchpad for issue tracking.
 
+4. **Expect JSONL exports to evolve with usage.** After every bd write, bd auto-exports issues to `.beads/issues.jsonl` and interactions to `.beads/interactions.jsonl`. These files are **intentionally tracked** (not in `.beads/.gitignore`) — they're the git-friendly audit view of your issue history. Routine bd operations produce git diffs in these two files; commit them alongside other work in your normal workflow. If you want strict "git status clean" semantics, disable auto-export with `bd config set export.auto false` — at the cost of losing the JSONL audit view.
+
 ## Forbidden commands
 
 **Two `bd` commands are forbidden inside an SPWF project.** Both install Beads' own Claude Code integration, which conflicts with SPWorkflow's (32 skills, 13 agents, 5 hooks) — at best unpredictable interactions, at worst overwriting your `CLAUDE.md` and `AGENTS.md`.
