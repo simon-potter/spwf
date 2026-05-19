@@ -34,6 +34,8 @@ Every `bd` subprocess invocation in this skill MUST follow the rules below. Thes
 4. **Prefer stdin for multi-line or special-character content.** `echo "$body" | bd comment "$id" --stdin` rather than inlining `$body` as an arg.
 5. **Capture exit codes; fail loudly.** Non-zero from `bd` halts the dispatch operation with bd's stderr surfaced verbatim.
 
+**Shell-portability note:** the bash below runs in whatever interactive shell Claude Code is configured with (commonly bash or zsh). Avoid zsh-readonly variable names when capturing values — most notably **`$status`** (zsh refuses assignment). Use `$rc` for return codes throughout.
+
 ## Implementation
 
 > Filled in by tasks 2.5 (preflight `.beads/` check) and 2.6–2.9 (per-operation implementation) of the `add-beadsify-tracker` OpenSpec change.
@@ -83,10 +85,10 @@ fi
 # Invoke. Title is passed as a single quoted argument — bd receives it
 # verbatim. No shell re-parsing.
 id=$(bd q "$title")
-status=$?
-if [ "$status" -ne 0 ]; then
-  echo "Error: bd q failed with exit $status" >&2
-  exit "$status"
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "Error: bd q failed with exit "$rc"" >&2
+  exit "$rc"
 fi
 
 # Validate the returned id matches Beads' documented format. If bd ever
@@ -117,10 +119,10 @@ if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
 fi
 
 bd show "$id"
-status=$?
-if [ "$status" -ne 0 ]; then
-  echo "Error: bd show $id failed with exit $status" >&2
-  exit "$status"
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "Error: bd show $id failed with exit "$rc"" >&2
+  exit "$rc"
 fi
 ```
 
@@ -148,10 +150,10 @@ fi
 # prevents trailing newline issues and doesn't interpret escapes inside
 # $body. (Compare echo, which on some shells interprets backslash escapes.)
 printf '%s' "$body" | bd comment "$id" --stdin
-status=$?
-if [ "$status" -ne 0 ]; then
-  echo "Error: bd comment $id --stdin failed with exit $status" >&2
-  exit "$status"
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "Error: bd comment $id --stdin failed with exit "$rc"" >&2
+  exit "$rc"
 fi
 ```
 
@@ -175,8 +177,8 @@ case "$transition" in
     bd close "$id"
     status=$?
     if [ "$status" -ne 0 ]; then
-      echo "Error: bd close $id failed with exit $status" >&2
-      exit "$status"
+      echo "Error: bd close $id failed with exit "$rc"" >&2
+      exit "$rc"
     fi
     ;;
   '')
