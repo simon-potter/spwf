@@ -19,7 +19,7 @@ This backend implements the four dispatch operations the spwf core skills need (
 |---|---|---|---|
 | `create_issue` | `bd q "<title>"` | Create a new story; return its `<prefix>-<hash>` id | Used by `/spwf:capture`. Title is user input — validated and quoted. |
 | `get_issue` | `bd show <id>` | Fetch a story's current state | Used by anything that needs status / dependencies / comments. Id is format-validated. |
-| `add_comment` | `bd comment <id> "<text>"` (or stdin) | Append a comment to an existing story | Used by `/spwf:tracker-comment`. Both id and body validated; prefer stdin for multi-line content. |
+| `add_comment` | `bd comment <id> --stdin` (body piped) | Append a comment to an existing story | Used by `/spwf:tracker-comment`. Both id and body validated. Stdin is always used (not the positional `<text>` form) to avoid any shell-injection surface for body content — see Decision 7 rule 4. |
 | `set_state` | `bd close <id>` (v1) | Move a story to a terminal state | Used by `/spwf:close`. v1 accepts the close-equivalent state set (`close`/`closed`/`Closed`/`done`/`Done`) — all map to `bd close`. Other states rejected until bd grows them. `reopen` and richer transitions deferred. |
 
 **Out of scope for this skill:** `bd remember`, `bd init`, `bd setup *`, any command that installs Claude Code integration. See `plugins/spwf-beadsify/README.md` § "Forbidden commands" for why.
@@ -37,8 +37,6 @@ Every `bd` subprocess invocation in this skill MUST follow the rules below. Thes
 **Shell-portability note:** the bash below is designed to run in whatever shell Claude Code is configured with (commonly bash or zsh; the code stays POSIX-compatible for the parts that matter — id validation uses `grep -qE` rather than `[[ =~ ]]` so no extended-test support is required). Avoid zsh-readonly variable names when capturing values — most notably **`$status`** (zsh refuses assignment). Use `$rc` for return codes throughout.
 
 ## Implementation
-
-> Filled in by tasks 2.5 (preflight `.beads/` check) and 2.6–2.9 (per-operation implementation) of the `add-beadsify-tracker` OpenSpec change.
 
 ### Preflight (.beads/ existence check)
 
