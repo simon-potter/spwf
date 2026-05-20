@@ -40,14 +40,18 @@ Recognised flags (strip from `$ARGUMENTS` before parsing the rest):
 - `--no-fetch` — skip the `get_issue` call that grounds context
   (faster but less informed; rarely needed)
 
-## Step 2 — Verify tracker MCP and fetch issue context
+## Step 2 — Verify tracker available and fetch issue context
 
-Resolve the active tracker per `_shared/tracker-dispatch.md`. If no
-tracker MCP is configured (and `tracker:` isn't `none`), **fail fast**
-with the standard message:
+Resolve the active tracker per `_shared/tracker-dispatch.md`. If the tracker
+is not available in this session (and `tracker:` isn't `none`), **fail fast**:
 
-> *"No issue tracker MCP configured. Configure YouTrack or Atlassian
-> MCP, or set `tracker: none` in `.spwf/tracker.yaml` to opt out."*
+- **MCP backend not responding** (YouTrack/Jira) → *"No issue tracker MCP
+  configured. Configure YouTrack or Atlassian MCP, or set `tracker: none` in
+  `.spwf/tracker.yaml` to opt out. (For an in-repo tracker, set
+  `tracker: beads` and install spwf-beadsify.)"*
+- **Skill backend not installed** (`tracker: beads` set but `spwf-beadsify`
+  missing) → use the verbatim error from `_shared/tracker-dispatch.md`
+  § "Configured-but-not-installed error".
 
 If `tracker: none` is set, halt with: *"Tracker integration is opted out
 for this repo (`tracker: none`). Cannot post a comment."*

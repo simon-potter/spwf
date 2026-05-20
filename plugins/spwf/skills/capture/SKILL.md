@@ -101,14 +101,25 @@ Read `$ARGUMENTS`:
 For tracker fetches, extract: summary, description, acceptance criteria, issue type,
 labels/tags, priority/state.
 
-**Fail fast on missing MCP.** If the user supplied a ticket-shaped argument and no
-tracker MCP is configured (no `mcp__youtrack__*` and no `mcp__atlassian__jira_*` tools
-respond), stop with: *"No issue tracker MCP configured. Add YouTrack or Atlassian MCP
-in user settings, or set `tracker: none` in `.spwf/tracker.yaml` to skip tracker steps."*
-Do not silently fall back to freeform.
+**Fail fast on missing tracker.** If the user supplied a ticket-shaped argument and
+no tracker is available in this session, stop with the dispatch-resolved error and
+do not silently fall back to freeform. "Available" depends on which kind of backend
+is configured (see `_shared/tracker-dispatch.md`):
 
-Tracker selection: see `_shared/tracker-dispatch.md`. Default is to probe YouTrack then
-Jira; override via `tracker:` in `.spwf/tracker.yaml`.
+- **MCP backend** (`tracker: youtrack` / `jira`, or unset and one of the MCPs is
+  configured): available iff the MCP's tools (`mcp__youtrack__*`,
+  `mcp__atlassian__jira_*`, etc.) respond. If neither responds and `tracker:` is
+  unset, halt with: *"No issue tracker MCP configured. Add YouTrack or Atlassian MCP
+  in user settings, or set `tracker: none` in `.spwf/tracker.yaml` to skip tracker
+  steps. (For an in-repo tracker, set `tracker: beads` and install spwf-beadsify.)"*
+- **Skill backend** (`tracker: beads` and similar): available iff the backend
+  module SKILL.md is loadable in this session. If `tracker: beads` is set but
+  `spwf-beadsify` is not installed, halt with the verbatim error from
+  `_shared/tracker-dispatch.md` § "Configured-but-not-installed error".
+
+Tracker selection: see `_shared/tracker-dispatch.md`. The default probe is YouTrack
+→ Jira (MCP backends only — skill backends are never auto-probed; they require an
+explicit `tracker:` setting in `.spwf/tracker.yaml`).
 
 ---
 
