@@ -17,8 +17,8 @@ This backend implements the four dispatch operations the spwf core skills need (
 
 | Operation | bd CLI command | Purpose | Notes |
 |---|---|---|---|
-| `create_issue` | `bd q "<title>"` | Create a new story; return its `<prefix>-<hash>` id | Used by `/spwf:capture`. Title is user input — validated and quoted. |
-| `get_issue` | `bd show <id>` | Fetch a story's current state | Used by anything that needs status / dependencies / comments. Id is format-validated. |
+| `create_issue` | `bd create --silent` (with `--body-file -` if body supplied) | Create a new story; return its `<prefix>-<hash>` id | Used by `/spwf:capture`. Title is user input — validated and quoted. Body (when supplied) is piped via stdin so adversarial content can't escape into the shell. `--silent` makes bd output only the id, same as `bd q`. |
+| `get_issue` | `bd show <id> --json` | Fetch a story's current state as structured JSON | Used by anything that needs status / dependencies / comments. Id is format-validated. **Returns JSON**, not human-formatted text — matches the dispatch contract in `tracker-dispatch.md` which promises structured data. |
 | `add_comment` | `bd comment <id> --stdin` (body piped) | Append a comment to an existing story | Used by `/spwf:tracker-comment`. Both id and body validated. Stdin is always used (not the positional `<text>` form) to avoid any shell-injection surface for body content — see Decision 7 rule 4. |
 | `set_state` | `bd close <id>` (v1) | Move a story to a terminal state | Used by `/spwf:close`. v1 accepts the close-equivalent state set (`close`/`closed`/`Closed`/`done`/`Done`) — all map to `bd close`. Other states rejected until bd grows them. `reopen` and richer transitions deferred. |
 
@@ -68,12 +68,13 @@ If the check fails (non-zero exit), the operation halts immediately and the erro
 
 ### Operation: create_issue
 
-**Inputs:** `title` (string from user — e.g. ideation-file slug, `/spwf:capture`'s captured title)
+**Inputs:** `title` (string from user), `body` (string, optional — may be empty for title-only stories or multi-line markdown for full ideation bodies). Matches the dispatch contract signature `create_issue(project, title, body)` in `_shared/tracker-dispatch.md`. (`project` is unused for Beads — bd derives the issue prefix from the project directory at `bd init` time, not per call.)
 
-**Behaviour:** invoke `bd q "$title"` and return the resulting `<prefix>-<hash>` id.
+**Behaviour:** invoke `bd create --silent` (with `--body-file -` piping `$body` via stdin if non-empty) and return the resulting `<prefix>-<hash>` id. `--silent` makes bd's stdout just the id.
 
 ```bash
 title="$1"
+body="${2:-}"
 
 # Validate: title must be non-empty.
 if [ -z "$title" ]; then
@@ -81,12 +82,16 @@ if [ -z "$title" ]; then
   exit 1
 fi
 
-# Invoke. Title is passed as a single quoted argument — bd receives it
-# verbatim. No shell re-parsing.
-id=$(bd q "$title")
+# Invoke. Title is positional quoted arg; body (if any) via stdin so
+# adversarial content can't escape into the shell (Decision 7 rule 4).
+if [ -n "$body" ]; then
+  id=$(printf '%s' "$body" | bd create --silent --body-file - "$title")
+else
+  id=$(bd create --silent "$title")
+fi
 rc=$?
 if [ "$rc" -ne 0 ]; then
-  echo "Error: bd q failed with exit $rc" >&2
+  echo "Error: bd create failed with exit $rc" >&2
   exit "$rc"
 fi
 
@@ -94,7 +99,7 @@ fi
 # changes id shape, we want to fail loudly here rather than propagate
 # a malformed id to the caller.
 if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
-  echo "Error: bd q returned unexpected id format: $id" >&2
+  echo "Error: bd create returned unexpected id format: $id" >&2
   exit 1
 fi
 
@@ -105,7 +110,7 @@ echo "$id"
 
 **Inputs:** `id` (string — `<prefix>-<hash>` form)
 
-**Behaviour:** invoke `bd show <id>` and return its stdout. Issue not found is a non-zero bd exit and surfaces verbatim.
+**Behaviour:** invoke `bd show <id> --json` and return structured JSON on stdout. Matches the dispatch contract which promises a payload containing `{id, title, description, type, state, labels, ...}`. Callers parse the JSON to extract fields — they do not pattern-match human-readable text. Issue not found is a non-zero bd exit and surfaces verbatim.
 
 ```bash
 id="$1"
@@ -117,10 +122,10 @@ if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
   exit 1
 fi
 
-bd show "$id"
+bd show "$id" --json
 rc=$?
 if [ "$rc" -ne 0 ]; then
-  echo "Error: bd show $id failed with exit $rc" >&2
+  echo "Error: bd show $id --json failed with exit $rc" >&2
   exit "$rc"
 fi
 ```

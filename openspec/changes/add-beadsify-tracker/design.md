@@ -157,8 +157,8 @@ The mapping below is established by reading `bd --help` against the installed bd
 
 | Dispatch operation | bd CLI command | Notes |
 |---|---|---|
-| `create_issue` | `bd q "<title>"` | Quick capture; outputs only the issue id (e.g. `bd-a1b2`). Safer than `bd create` for programmatic dispatch — minimal output to parse. |
-| `get_issue` | `bd show <id>` | Returns issue details: title, status, dependencies, comments, labels. |
+| `create_issue` | `bd create --silent` (with `--body-file -` if body supplied via stdin) | Outputs only the issue id (like `bd q`) but supports a description body — required to honour the dispatch contract `create_issue(project, title, body)`. Body via stdin keeps adversarial content out of the shell. |
+| `get_issue` | `bd show <id> --json` | Returns structured JSON `{id, title, description, status, priority, issue_type, labels, dependencies, comments, ...}`. Required so callers can extract specific fields per the dispatch contract; raw `bd show` text would force pattern-matching. |
 | `add_comment` | `bd comment <id> "<text>"` | First-class command — earlier plan to use `bd remember` was based on incorrect research. `bd remember` is project-level persistent agent memory (loaded at `bd prime`), not per-issue commentary. |
 | `set_state` (close) | `bd close <id>` | Confirmed. State values: accept the close-equivalent set `close`/`closed`/`Closed`/`done`/`Done` (matches what skills like `/spwf:close` typically pass per `done_state` in `.spwf/tracker.yaml`); reject other values until bd grows additional terminal states. Reopen (`bd reopen <id>`) deferred — no v1 success criterion needs it. |
 

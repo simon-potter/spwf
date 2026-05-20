@@ -53,7 +53,7 @@ When `.spwf/tracker.yaml` sets `tracker: beads` but `spwf-beadsify` is not insta
 
 ### Requirement: Raw bd CLI is the only Beads interface; Beads-installed Claude integration is forbidden
 
-The Beads backend module SHALL invoke the `bd` CLI directly for the operations the dispatch needs (`bd q`, `bd show`, `bd comment`, `bd close`). It SHALL NOT invoke, depend on, or assume the presence of any Beads-installed Claude Code integration. Two Beads commands install such integration and are explicitly forbidden as install steps for an SPWF project:
+The Beads backend module SHALL invoke the `bd` CLI directly for the operations the dispatch needs (`bd create`, `bd show --json`, `bd comment`, `bd close`). It SHALL NOT invoke, depend on, or assume the presence of any Beads-installed Claude Code integration. Two Beads commands install such integration and are explicitly forbidden as install steps for an SPWF project:
 
 - `bd setup claude` — installs Beads' opinionated Claude Code integration.
 - **Plain `bd init`** — has the same side effects as `bd setup claude`: it writes `CLAUDE.md` and `AGENTS.md` to the project root, creates `.claude/settings.json`, and registers `SessionStart` + `PreCompact` hooks of Beads' own design.
@@ -95,7 +95,7 @@ The Beads database SHALL live under `./.beads/` in the project root. `.beads/` i
 
 #### Scenario: JSONL auto-export evolves with bd usage
 
-- **WHEN** routine bd operations (`bd q`, `bd close`, `bd comment`) run
+- **WHEN** routine bd operations (`bd create`, `bd close`, `bd comment`) run
 - **THEN** `.beads/issues.jsonl` and `.beads/interactions.jsonl` SHALL be auto-exported by bd and SHALL show as tracked changes in `git status`
 - **AND** these files are intentionally tracked (not in `.beads/.gitignore`) so the issue audit trail travels via git
 - **AND** users commit these alongside other work in their normal workflow (no special handling required by spwf-beadsify)
@@ -110,7 +110,7 @@ Skills that already use tracker-dispatch (`/spwf:capture`, `/spwf:tracker-commen
 #### Scenario: capture creates a Beads story
 
 - **WHEN** `/spwf:capture` runs with `source: scratch` (or any input that triggers ticket creation) and `tracker: beads` is configured
-- **THEN** the backend SHALL invoke `bd q "<title>"` and return a `<prefix>-<hash>` id
+- **THEN** the backend SHALL invoke `bd create --silent` (piping `body` via `--body-file -` if non-empty) and return a `<prefix>-<hash>` id
 - **AND** the ideation file frontmatter SHALL record `ticket: <prefix>-<hash>`
 
 #### Scenario: tracker-comment lands in Beads
@@ -143,6 +143,6 @@ A second Claude Code session in the same project SHALL be able to create, commen
 
 #### Scenario: Concurrent writers don't corrupt the store
 
-- **WHEN** two `bd q "<title>"` invocations execute simultaneously against the same `.beads/`
+- **WHEN** two `bd create --silent` invocations execute simultaneously against the same `.beads/`
 - **THEN** both stories SHALL be created with distinct hash-based ids
 - **AND** `bd list` SHALL show both
