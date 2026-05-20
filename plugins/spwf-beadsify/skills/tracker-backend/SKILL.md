@@ -34,7 +34,7 @@ Every `bd` subprocess invocation in this skill MUST follow the rules below. Thes
 4. **Prefer stdin for multi-line or special-character content.** `echo "$body" | bd comment "$id" --stdin` rather than inlining `$body` as an arg.
 5. **Capture exit codes; fail loudly.** Non-zero from `bd` halts the dispatch operation with bd's stderr surfaced verbatim.
 
-**Shell-portability note:** the bash below runs in whatever interactive shell Claude Code is configured with (commonly bash or zsh). Avoid zsh-readonly variable names when capturing values — most notably **`$status`** (zsh refuses assignment). Use `$rc` for return codes throughout.
+**Shell-portability note:** the bash below is designed to run in whatever shell Claude Code is configured with (commonly bash or zsh; the code stays POSIX-compatible for the parts that matter — id validation uses `grep -qE` rather than `[[ =~ ]]` so no extended-test support is required). Avoid zsh-readonly variable names when capturing values — most notably **`$status`** (zsh refuses assignment). Use `$rc` for return codes throughout.
 
 ## Implementation
 
@@ -94,7 +94,7 @@ fi
 # Validate the returned id matches Beads' documented format. If bd ever
 # changes id shape, we want to fail loudly here rather than propagate
 # a malformed id to the caller.
-if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
+if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
   echo "Error: bd q returned unexpected id format: $id" >&2
   exit 1
 fi
@@ -113,7 +113,7 @@ id="$1"
 
 # Validate id format before any subprocess invocation. Decision 7 rule 3:
 # exact match or reject — no cleaning.
-if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
+if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
   echo "Error: invalid bd id format: $id" >&2
   exit 1
 fi
@@ -136,7 +136,7 @@ fi
 id="$1"
 body="$2"
 
-if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
+if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
   echo "Error: invalid bd id format: $id" >&2
   exit 1
 fi
@@ -167,7 +167,7 @@ fi
 id="$1"
 transition="$2"
 
-if [[ ! "$id" =~ ^[a-z0-9]+(-[a-z0-9]+)+$ ]]; then
+if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
   echo "Error: invalid bd id format: $id" >&2
   exit 1
 fi
