@@ -42,10 +42,11 @@ Every `bd` subprocess invocation in this skill MUST follow the rules below. Thes
 
 ### Preflight (.beads/ existence check)
 
-Before invoking any dispatch operation, verify that Beads is initialised in this project. Run:
+Before invoking any dispatch operation, verify that Beads is initialised in this project. Anchor the check at the git project root so the result is independent of the caller's working directory:
 
 ```bash
-if [ ! -d "./.beads" ]; then
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || PROJECT_ROOT="$PWD"
+if [ ! -d "$PROJECT_ROOT/.beads" ]; then
   cat >&2 <<'EOF'
 Error: Beads not initialised in this project.
 
@@ -87,7 +88,7 @@ fi
 id=$(bd q "$title")
 rc=$?
 if [ "$rc" -ne 0 ]; then
-  echo "Error: bd q failed with exit "$rc"" >&2
+  echo "Error: bd q failed with exit $rc" >&2
   exit "$rc"
 fi
 
@@ -121,7 +122,7 @@ fi
 bd show "$id"
 rc=$?
 if [ "$rc" -ne 0 ]; then
-  echo "Error: bd show $id failed with exit "$rc"" >&2
+  echo "Error: bd show $id failed with exit $rc" >&2
   exit "$rc"
 fi
 ```
@@ -152,7 +153,7 @@ fi
 printf '%s' "$body" | bd comment "$id" --stdin
 rc=$?
 if [ "$rc" -ne 0 ]; then
-  echo "Error: bd comment $id --stdin failed with exit "$rc"" >&2
+  echo "Error: bd comment $id --stdin failed with exit $rc" >&2
   exit "$rc"
 fi
 ```
