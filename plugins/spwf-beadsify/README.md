@@ -31,7 +31,7 @@ tracker: beads
 
 3. **`.gitignore` entries.** `bd init` adds `.dolt/`, `*.db`, and `.beads-credential-key` to the project-root `.gitignore` automatically (and auto-commits the change). **Do NOT add `.beads/` yourself** — bd manages `.beads/` partially: the config, metadata, and project_id are committed (so a clone+init produces the same id namespace), while the Dolt DB and runtime files are gitignored via `.beads/.gitignore` (which bd creates). OpenSpec change directories remain source-of-truth for spec content; Beads is the execution-time scratchpad for issue tracking.
 
-4. **Expect JSONL exports to evolve with usage.** After every bd write, bd auto-exports issues to `.beads/issues.jsonl` and interactions to `.beads/interactions.jsonl`. These files are **intentionally tracked** (not in `.beads/.gitignore`) — they're the git-friendly audit view of your issue history. Routine bd operations produce git diffs in these two files; commit them alongside other work in your normal workflow. If you want strict "git status clean" semantics, disable auto-export with `bd config set export.auto false` — at the cost of losing the JSONL audit view.
+4. **Expect JSONL exports to evolve with usage.** After every bd write, bd auto-exports issues to `.beads/issues.jsonl` and interactions to `.beads/interactions.jsonl`. These files are **intentionally tracked** (not in `.beads/.gitignore`) — they're the git-friendly audit view of your issue history (useful for PR-history inspection, retrospectives, and migrations off Beads later). Routine bd operations produce git diffs in these two files; commit them alongside other work in your normal workflow. If you want strict "git status clean" semantics, disable auto-export with `bd config set export.auto false` — at the cost of losing the issue/interaction audit trail in git. (The build-loop change's `insights.md` export, planned for `add-beadsify-build-loop`, draws from `bd remember` data and is **not** affected by this flag.)
 
 ## Forbidden commands
 
@@ -89,6 +89,17 @@ The braindump pattern also works from a plain terminal. `bd q "thought"` from th
 project root creates a story. `bd remember "<insight>"` writes to the persistent
 memory store. Useful when an idea surfaces while you're paged into something else
 entirely.
+
+## Switching back to YouTrack / Jira (regression-verify)
+
+If you flip `.spwf/tracker.yaml` from `tracker: beads` to `tracker: youtrack` (or `tracker: jira`, or `tracker: none`), SPWF should behave exactly as it did before Beadsify was installed — no bd CLI invocations, no `.beads/` reads. To verify manually on first use of an MCP-tracker project:
+
+1. Set `tracker: youtrack` (or `jira`) in `.spwf/tracker.yaml`.
+2. Run `/spwf:capture "<test title>"` with `source: scratch`.
+3. Confirm the tracker MCP tool is invoked (e.g. `mcp__youtrack__*` appears in the dispatch trace) and **no** `bd` subprocess fires.
+4. The capture should produce a ticket id in the MCP backend's format (`PROJ-123` for Jira, the YouTrack id format for YouTrack), **not** the `<prefix>-<hash>` form Beads uses.
+
+If you see Beads activity in step 3 or 4, dispatch routing is broken — file an issue. This is the same check Phase 5.3 of `add-beadsify-tracker` defers to first real use; doing it deliberately on a known-good project is the regression-test path.
 
 ## Status
 

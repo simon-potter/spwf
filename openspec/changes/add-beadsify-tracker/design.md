@@ -160,7 +160,7 @@ The mapping below is established by reading `bd --help` against the installed bd
 | `create_issue` | `bd q "<title>"` | Quick capture; outputs only the issue id (e.g. `bd-a1b2`). Safer than `bd create` for programmatic dispatch — minimal output to parse. |
 | `get_issue` | `bd show <id>` | Returns issue details: title, status, dependencies, comments, labels. |
 | `add_comment` | `bd comment <id> "<text>"` | First-class command — earlier plan to use `bd remember` was based on incorrect research. `bd remember` is project-level persistent agent memory (loaded at `bd prime`), not per-issue commentary. |
-| `transition` (close) | `bd close <id>` | Confirmed. Reopen (`bd reopen <id>`) deferred — no v1 success criterion needs it. |
+| `set_state` (close) | `bd close <id>` | Confirmed. State values: accept the close-equivalent set `close`/`closed`/`Closed`/`done`/`Done` (matches what skills like `/spwf:close` typically pass per `done_state` in `.spwf/tracker.yaml`); reject other values until bd grows additional terminal states. Reopen (`bd reopen <id>`) deferred — no v1 success criterion needs it. |
 
 Out-of-scope for this change but worth recording for `add-beadsify-build-loop`: `bd remember` is the **insights store** (loaded at session prime); it fits the build-loop change's `openspec/changes/{id}/insights.md` export story naturally. `bd note` is a per-issue append-only note, distinct from `bd comment` — its role in the workflow is TBD.
 

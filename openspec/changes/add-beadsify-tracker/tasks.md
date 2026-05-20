@@ -23,7 +23,7 @@
 **Backend skill scaffold:**
 
 - [x] 2.3 `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` exists with valid frontmatter (name, description, `disable-model-invocation: true`, `allowed-tools` covering Read/Bash)
-- [x] 2.4 The backend module declares the dispatch operations it implements: `create_issue`, `get_issue`, `add_comment`, `transition` (close only in v1)
+- [x] 2.4 The backend module declares the dispatch operations it implements: `create_issue`, `get_issue`, `add_comment`, `set_state` (close-equivalent values only in v1; aligns with the tracker-dispatch.md contract operation name from the MCP backend table)
 
 **Per-operation implementation (each uses the Phase 2.2 invocation pattern):**
 
@@ -31,7 +31,7 @@
 - [x] 2.6 Backend's `create_issue` operation invokes `bd q "<title>"` and returns the resulting `<prefix>-<hash>` id (e.g. `spwf-a3f2dd` in this repo — bd uses the project directory name as the issue prefix by default) parsed from stdout (per design.md § "bd CLI mapping"). Title passes through input validation before subprocess invocation.
 - [x] 2.7 Backend's `get_issue` operation invokes `bd show <id>` and returns the structured result (title, status, dependencies, comments). The id is format-validated (`^[a-z0-9]+(-[a-z0-9]+)+$`) before subprocess invocation.
 - [x] 2.8 Backend's `add_comment` operation invokes `bd comment <id> --stdin` with body piped in via `printf '%s' "$body" | …` (per Decision 7 rule 4: stdin avoids shell-injection surface for special characters in `$body`). NOT `bd remember`, which is project-level persistent memory used elsewhere. Both the id and the comment body pass through input validation.
-- [x] 2.9 Backend's `transition` operation supports `close` only (`bd close <id>`). Unknown transition names are rejected with a clear error. The id is format-validated (`^[a-z0-9]+(-[a-z0-9]+)+$`) before subprocess invocation. (`reopen` and richer transitions are deliberately deferred — no v1 success criterion requires them.)
+- [x] 2.9 Backend's `set_state` operation accepts the close-equivalent state values (`close`/`closed`/`Closed`/`done`/`Done`) and maps them all to `bd close <id>`. Unknown state values are rejected with a clear error. The id is format-validated (`^[a-z0-9]+(-[a-z0-9]+)+$`) before subprocess invocation. (`reopen` and richer transitions are deliberately deferred — no v1 success criterion requires them. Operation name `set_state` matches the dispatch contract from tracker-dispatch.md's MCP backend table — discovered during review.)
 
 ## Phase 3 — Extend tracker-dispatch.md
 

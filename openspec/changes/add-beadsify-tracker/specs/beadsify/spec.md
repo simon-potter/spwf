@@ -27,7 +27,7 @@ The `.spwf/tracker.yaml` configuration SHALL accept `tracker: beads` as a valid 
 #### Scenario: Beads selected
 
 - **WHEN** `.spwf/tracker.yaml` contains `tracker: beads` and `spwf-beadsify` is installed
-- **THEN** tracker-dispatch SHALL route all tracker operations (create_issue, get_issue, add_comment, transition) to the Beads backend module
+- **THEN** tracker-dispatch SHALL route all tracker operations (create_issue, get_issue, add_comment, set_state) to the Beads backend module
 - **AND** no YouTrack or Jira API calls SHALL occur
 
 #### Scenario: Other backends unchanged

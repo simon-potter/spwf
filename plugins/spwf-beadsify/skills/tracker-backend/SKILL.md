@@ -1,6 +1,6 @@
 ---
 name: tracker-backend
-description: Internal Beads tracker-dispatch backend for spwf-beadsify. Implements the dispatch operations (create_issue, get_issue, add_comment, transition) by invoking the bd CLI. Routed to by plugins/spwf/skills/_shared/tracker-dispatch.md when .spwf/tracker.yaml sets tracker: beads. Never user-invoked — disable-model-invocation prevents accidental activation; users always call /spwf:capture, /spwf:tracker-comment, /spwf:close which dispatch through tracker-dispatch.md.
+description: Internal Beads tracker-dispatch backend for spwf-beadsify. Implements the dispatch operations (create_issue, get_issue, add_comment, set_state) by invoking the bd CLI. Routed to by plugins/spwf/skills/_shared/tracker-dispatch.md when .spwf/tracker.yaml sets tracker: beads. Never user-invoked — disable-model-invocation prevents accidental activation; users always call /spwf:capture, /spwf:tracker-comment, /spwf:close which dispatch through tracker-dispatch.md.
 disable-model-invocation: true
 allowed-tools: [Read, Bash]
 ---
@@ -20,7 +20,7 @@ This backend implements the four dispatch operations the spwf core skills need (
 | `create_issue` | `bd q "<title>"` | Create a new story; return its `<prefix>-<hash>` id | Used by `/spwf:capture`. Title is user input — validated and quoted. |
 | `get_issue` | `bd show <id>` | Fetch a story's current state | Used by anything that needs status / dependencies / comments. Id is format-validated. |
 | `add_comment` | `bd comment <id> "<text>"` (or stdin) | Append a comment to an existing story | Used by `/spwf:tracker-comment`. Both id and body validated; prefer stdin for multi-line content. |
-| `transition` | `bd close <id>` (v1) | Move a story to closed state | Used by `/spwf:close`. Only `close` is supported in v1 — `reopen` and richer transitions are deferred. |
+| `set_state` | `bd close <id>` (v1) | Move a story to a terminal state | Used by `/spwf:close`. v1 accepts the close-equivalent state set (`close`/`closed`/`Closed`/`done`/`Done`) — all map to `bd close`. Other states rejected until bd grows them. `reopen` and richer transitions deferred. |
 
 **Out of scope for this skill:** `bd remember`, `bd init`, `bd setup *`, any command that installs Claude Code integration. See `plugins/spwf-beadsify/README.md` § "Forbidden commands" for why.
 
@@ -157,23 +157,23 @@ if [ "$rc" -ne 0 ]; then
 fi
 ```
 
-### Operation: transition
+### Operation: set_state
 
-**Inputs:** `id` (string — `<prefix>-<hash>` form), `transition` (string — `close` in v1; any other value is rejected)
+**Inputs:** `id` (string — `<prefix>-<hash>` form), `state` (string — close-equivalent value; any other value is rejected)
 
-**Behaviour:** invoke `bd close <id>`. v1 supports `close` only; `reopen` and richer transitions are deferred (no v1 success criterion requires them).
+**Behaviour:** invoke `bd close <id>`. v1 accepts the close-equivalent state set so callers using different conventions (`close`, `Done`, etc., as set in `.spwf/tracker.yaml` `done_state:`) all reach the same outcome. Other states rejected until bd grows additional terminal states.
 
 ```bash
 id="$1"
-transition="$2"
+state="$2"
 
 if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
   echo "Error: invalid bd id format: $id" >&2
   exit 1
 fi
 
-case "$transition" in
-  close)
+case "$state" in
+  close|closed|Closed|done|Done)
     bd close "$id"
     rc=$?
     if [ "$rc" -ne 0 ]; then
@@ -182,11 +182,11 @@ case "$transition" in
     fi
     ;;
   '')
-    echo "Error: transition operation requires a transition name (e.g. 'close')" >&2
+    echo "Error: set_state requires a target state (e.g. 'close', 'done')" >&2
     exit 1
     ;;
   *)
-    echo "Error: unsupported transition '$transition' (v1 supports 'close' only)" >&2
+    echo "Error: unsupported state '$state' (v1 supports close-equivalent states: close, closed, Closed, done, Done)" >&2
     exit 1
     ;;
 esac
