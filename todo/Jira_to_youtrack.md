@@ -284,7 +284,7 @@ Jira artefacts continue to validate.
       "youtrack-spm": {
         "url": "https://projects.spottmedia.com/mcp",
         "transport": "sse",
-        "headers": { "Authorization": "Bearer ${YOUTRACK_FPC_TOKEN}" }
+        "headers": { "Authorization": "Bearer ${YOUTRACK_SPM_TOKEN}" }
       },
       "youtrack-clientx": {
         "url": "https://yt.clientx.com/mcp",
