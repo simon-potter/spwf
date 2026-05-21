@@ -206,7 +206,7 @@ your user-level Claude Code MCP settings using a YouTrack permanent token:
 {
   "mcpServers": {
     "youtrack": {
-      "url": "https://projects.firstpartycapital.com/mcp",
+      "url": "https://projects.spottmedia.com/mcp",
       "transport": "sse",
       "headers": { "Authorization": "Bearer ${YOUTRACK_TOKEN}" }
     }

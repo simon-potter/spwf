@@ -186,7 +186,7 @@ Setup, per instance:
    {
      "mcpServers": {
        "youtrack": {
-         "url": "https://projects.firstpartycapital.com/mcp",
+         "url": "https://projects.spottmedia.com/mcp",
          "transport": "sse",
          "headers": { "Authorization": "Bearer ${YOUTRACK_TOKEN}" }
        }
@@ -196,7 +196,7 @@ Setup, per instance:
 
    Name the entry `youtrack` for the default-detection path to work. If you run
    multiple YouTrack instances on the same workstation, name them distinctly
-   (`youtrack-fpc`, `youtrack-clientx`) and disambiguate per-repo with an `mcp_server:`
+   (`youtrack-spm`, `youtrack-clientx`) and disambiguate per-repo with an `mcp_server:`
    field in `.spwf/tracker.yaml` (rare; documented below).
 
 4. **Run a discovery session** in any repo: ask the model to list tools advertised by
@@ -214,7 +214,7 @@ one optional field to `.spwf/tracker.yaml`:
 
 ```yaml
 tracker: youtrack
-mcp_server: youtrack-fpc      # name of the MCP server entry for this repo's instance
+mcp_server: youtrack-spm      # name of the MCP server entry for this repo's instance
 project: ACAD
 done_state: Done
 ```
