@@ -144,9 +144,7 @@ Do not push — that remains the user's explicit action.
 Tracker close runs **before** OpenSpec archive (Step 7). Rationale: if the
 tracker transition fails after archive already succeeded, you end up with an
 archived change and an open ticket — exactly the drift this ordering prevents.
-Failed transitions are recoverable; failed un-archives are not. The spec for
-each tracker backend mandates this ordering (see `openspec/specs/marketplace/spec.md`
-"close transitions the … story" scenarios).
+Failed transitions are recoverable; failed un-archives are not.
 
 Decision tree:
 
