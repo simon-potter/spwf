@@ -159,7 +159,7 @@ of the underlying MCP tool names:
 | `update_issue(id, state)` | close | `mcp__atlassian__jira_update_issue` | `mcp__youtrack__*` (state field update; YouTrack uses field-set commands rather than Jira-style transitions) | `mcp__linear__update_issue` |
 
 **Decided:** the YouTrack MCP server is JetBrains' native, in-product MCP endpoint exposed
-by the YouTrack instance itself (e.g. `https://projects.firstpartycapital.com/mcp`).
+by the YouTrack instance itself (e.g. `https://projects.spottmedia.com/mcp`).
 This is HTTP/SSE-transport, not a `stdio`/`npx` subprocess — it's configured by URL plus
 a YouTrack permanent token, not by spawning a local process. Tool names and JSON shapes
 are whatever the JetBrains server advertises at runtime; we treat them as the canonical
@@ -252,7 +252,7 @@ Jira artefacts continue to validate.
 ## YouTrack MCP — practical notes
 
 - **Endpoint is per-instance, not global.** Each YouTrack instance serves its own MCP at
-  `{instance-url}/mcp` (e.g. `https://projects.firstpartycapital.com/mcp`). There is no
+  `{instance-url}/mcp` (e.g. `https://projects.spottmedia.com/mcp`). There is no
   shared `youtrack.com/mcp` — every team or client running YouTrack has its own URL,
   and a single workstation may need to address several at once.
 - Multiple repos can (and should) share one MCP server entry when they live on the same
@@ -281,10 +281,10 @@ Jira artefacts continue to validate.
   ```json
   {
     "mcpServers": {
-      "youtrack-fpc": {
-        "url": "https://projects.firstpartycapital.com/mcp",
+      "youtrack-spm": {
+        "url": "https://projects.spottmedia.com/mcp",
         "transport": "sse",
-        "headers": { "Authorization": "Bearer ${YOUTRACK_FPC_TOKEN}" }
+        "headers": { "Authorization": "Bearer ${YOUTRACK_SPM_TOKEN}" }
       },
       "youtrack-clientx": {
         "url": "https://yt.clientx.com/mcp",
@@ -339,7 +339,7 @@ Jira artefacts continue to validate.
   in-product MCP endpoint at `{youtrack-base-url}/mcp` (HTTP/SSE, permanent-token auth).
   One remaining sub-question: do we need to capture the tool-name list now (so the
   dispatch table is concrete) or wait until Phase 2 implementation? **Recommendation:** do
-  a 10-minute discovery session against the live `https://projects.firstpartycapital.com/mcp`
+  a 10-minute discovery session against the live `https://projects.spottmedia.com/mcp`
   endpoint and write the names into `references/tracker-mcp.md` before Phase 2 starts.
 - **Where does `.spwf/tracker.yaml` live — repo root, `.spwf/`, or inside `openspec/`?**
   Leaning toward `.spwf/tracker.yaml` so it's clearly plugin-owned and not confused with

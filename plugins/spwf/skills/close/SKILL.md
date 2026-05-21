@@ -10,13 +10,14 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atla
 Final phase of the SPWorkflow golden path. Retrospect, confirm, then permanently close the change.
 
 ```
-Step 1 → retrospective       (all 6 parts, including recap teaching summary)
-Step 2 → confirm closure     (explicit human gate)
-Step 3 → mark todo done      (status: complete + git mv to todo/_done/)
-Step 4 → commit changes      (git commit captures status edit + path move atomically)
-Step 5 → archive OpenSpec    (opsx:archive)
+Step 1 → identify the change (resolve $ARGUMENTS or context)
+Step 2 → retrospective       (all 6 parts, including recap teaching summary)
+Step 3 → confirm closure     (explicit human gate)
+Step 4 → mark todo done      (status: complete + git mv to todo/_done/)
+Step 5 → commit changes      (git commit captures status edit + path move atomically)
 Step 6 → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
-Step 7 → delete local branch  (default on, conscious skip with [Y/n])
+Step 7 → archive OpenSpec    (opsx:archive; runs only after tracker close succeeds)
+Step 8 → delete local branch  (default on, conscious skip with [Y/n])
 ```
 
 ---
@@ -138,31 +139,28 @@ Do not push — that remains the user's explicit action.
 
 ---
 
-## Step 6 — Archive OpenSpec change
+## Step 6 — Close tracker ticket
 
-Run:
-
-```bash
-openspec archive --change "{change-id}"
-```
-
-If the command fails, report the error and stop — do not proceed to Step 6 until this succeeds (a failed archive leaves artefacts in place, which is recoverable).
-
----
-
-## Step 7 — Close tracker ticket
+Tracker close runs **before** OpenSpec archive (Step 7). Rationale: if the
+tracker transition fails after archive already succeeded, you end up with an
+archived change and an open ticket — exactly the drift this ordering prevents.
+Failed transitions are recoverable; failed un-archives are not.
 
 Decision tree:
 
-| `ticket:` in frontmatter? | tracker MCP configured? | `tracker: none` set? | Action |
+| `ticket:` in frontmatter? | Tracker available for this project? | `tracker: none` set? | Action |
 |---|---|---|---|
 | no | — | — | Skip silently (no tracker action implied). Report "No tracker ticket linked." |
 | yes | — | yes | Skip silently (user has opted out). |
-| yes | no | no | **Fail fast.** "Cannot close `{ticket}` — no issue tracker MCP configured. Configure YouTrack or Atlassian MCP, or set `tracker: none` in `.spwf/tracker.yaml`." |
+| yes | no | no | **Fail fast.** "Cannot close `{ticket}` — configured tracker is not available in this session. For an MCP-backed tracker, configure YouTrack/Atlassian MCP; for a skill-based tracker (e.g. `tracker: beads`), install the owning plugin (e.g. `/plugin install spwf-beadsify@spwf`); or set `tracker: none` in `.spwf/tracker.yaml`." |
 | yes | yes | no | Run the transition. |
 
-Resolve the active tracker and `done_state` from `.spwf/tracker.yaml` (default
-YouTrack, default state `Done`). Dispatch via `_shared/tracker-dispatch.md`.
+"Tracker available" is determined per `_shared/tracker-dispatch.md`: an MCP
+backend is available when its tools respond; a skill-based backend is available
+when its backend module SKILL.md is loadable in the current session.
+
+Resolve the active tracker and `done_state` from `.spwf/tracker.yaml` (defaults
+documented in `_shared/tracker-dispatch.md`). Dispatch via that document.
 
 Verify the issue exists, then apply the done state:
 
@@ -177,10 +175,29 @@ Tracker-specific notes:
 - **Jira** uses named transitions; `done_state` should match an available transition
   ("Done" or "Closed" typically). If neither matches, report the available transitions
   and ask the user which to use.
+- **Beads** (skill backend, via `spwf-beadsify`) accepts the close-equivalent state
+  set (`close`/`closed`/`Closed`/`done`/`Done`); all map to `bd close <id>`. The
+  backend rejects other values with a clear error.
 
-If the MCP call fails for any reason (auth, network, unknown state): report the error
-verbatim and stop. Do not mark the closure as complete in the report — leave the
-ticket-transition row as failed.
+If the dispatch call fails for any reason (auth, network, unknown state, bd error):
+report the error verbatim and stop. **Do not proceed to Step 7** — the OpenSpec
+archive must not run while the tracker is still open. Leave the ticket-transition
+row as failed in the report and surface the error to the user.
+
+---
+
+## Step 7 — Archive OpenSpec change
+
+Runs only after Step 6 has succeeded (or was skipped silently). If Step 6 reported
+a failure, stop — do not archive.
+
+```bash
+openspec archive --change "{change-id}"
+```
+
+If the archive command itself fails, report the error and stop — a failed archive
+leaves the change in `openspec/changes/` and is recoverable by re-running once the
+underlying issue is resolved.
 
 ---
 

@@ -1,0 +1,6 @@
+# SPWorkflow tracker configuration for this project.
+# This project dogfoods all three plugins: spwf, spwf-agents, spwf-beadsify.
+# Beads (bd) is the canonical tracker — replaces YouTrack/Jira at the
+# tracker-dispatch layer. See plugins/spwf-beadsify/README.md.
+
+tracker: beads

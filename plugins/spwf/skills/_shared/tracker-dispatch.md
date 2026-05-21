@@ -4,8 +4,10 @@ Single source of truth for how tracker-touching skills (`capture`, `issue-to-tas
 `close`) and the `capturer` agent talk to issue trackers. Skills reference this
 document; they do not repeat the dispatch table inline.
 
-YouTrack is the default. Jira is supported. Linear and others slot in by adding a row
-to the dispatch table — no skill rewrites required.
+YouTrack is the default. Jira is supported. Linear and other MCP-based trackers slot
+in by adding a row to the MCP dispatch table — no skill rewrites required. Skill-based
+trackers (where dispatch delegates to a SKILL.md instead of an MCP) plug in by adding
+a row to the skill-based dispatch table; see "Backend types" below.
 
 ---
 
@@ -35,7 +37,7 @@ project-specific defaults so skills don't have to ask every time.
 
 ```yaml
 # .spwf/tracker.yaml — all fields optional
-tracker: youtrack          # youtrack | jira | linear | none
+tracker: youtrack          # youtrack | jira | linear | beads | none
 project: ACAD              # default project key for `create_issue`
 done_state: Done           # state name `close` transitions to
 ```
@@ -53,17 +55,33 @@ settings.** The repo carries no secrets and no per-instance routing.
 
 ---
 
+## Backend types
+
+The dispatch supports two kinds of backend:
+
+| Backend type | How dispatch happens | Examples |
+|---|---|---|
+| **MCP** | Skills call an MCP tool name (e.g. `mcp__youtrack__*`). The tool is provided by an MCP server configured in user-level Claude Code settings. | YouTrack, Jira, future Linear |
+| **Skill** | Skills delegate the operation to a named SKILL.md inside another plugin. That skill invokes whatever CLI / API / store the tracker requires and returns the same five logical operations defined below. | Beads (via `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md`; opt-in plugin install) |
+
+The two types are interchangeable from a skill's perspective — `capture` does not know
+which kind it's talking to. The dispatch resolves which backend to use, then routes
+the operation appropriately.
+
 ## Tracker type detection (default case)
 
 When `.spwf/tracker.yaml` is absent or `tracker:` is unset, skills probe in order:
 
-1. Is `mcp__youtrack__*` available? → use YouTrack.
-2. Is `mcp__atlassian__jira_*` available? → use Jira.
+1. Is `mcp__youtrack__*` available? → use YouTrack (MCP backend).
+2. Is `mcp__atlassian__jira_*` available? → use Jira (MCP backend).
 3. Neither → **fail fast** with: "No issue tracker MCP configured. Add YouTrack or
    Atlassian MCP in user settings, or set `tracker: none` in `.spwf/tracker.yaml` to
    skip tracker steps."
 
-Setting `tracker:` explicitly skips the probe and forces a single tracker.
+Setting `tracker:` explicitly skips the probe and forces a single tracker. Skill-based
+backends (e.g. `tracker: beads`) are **never auto-probed** — they require explicit
+opt-in via `.spwf/tracker.yaml`. This is intentional: a skill-based backend implies
+extra installed software (a plugin + a CLI) that no auto-probe should assume.
 
 ---
 
@@ -90,7 +108,9 @@ requests.
 
 ---
 
-## Dispatch table
+## MCP dispatch table
+
+For MCP-based backends, each operation maps to a concrete tool name. Skills' `allowed-tools` lists include the relevant glob (e.g. `mcp__youtrack__*`); the model picks the right tool when it makes the call.
 
 | Op | YouTrack (JetBrains native MCP) | Jira (Atlassian MCP) |
 |---|---|---|
@@ -106,6 +126,46 @@ skill's `allowed-tools` — the model picks the right tool when it makes the cal
 Teams that prefer concrete pins (for stricter `allowed-tools` scoping or for
 visibility) can capture names via a one-time discovery session and replace this
 column with the pinned values.
+
+---
+
+## Skill-based dispatch table
+
+For skill-based backends, each operation is implemented inside a SKILL.md owned by
+another plugin. Skills calling dispatch resolve to the backend module's path and
+delegate the operation there. The backend handles any CLI / DB / external-API work
+behind a uniform interface that returns the same five logical operations.
+
+| Tracker | Backend module path | Operations supported | Owning plugin (install required) |
+|---|---|---|---|
+| `beads` | `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` | `get_issue`, `create_issue`, `set_state` (close only), `add_comment` (no `search_issues` in v1 — defer) | [`spwf-beadsify`](../../../../spwf-beadsify/README.md) — opt-in third plugin; install via `/plugin install spwf-beadsify@spwf` |
+
+### Routing rules
+
+When `.spwf/tracker.yaml` contains `tracker: beads`, dispatch:
+
+1. **Verify the backend module exists** at the path above. If the file is not
+   loadable (the spwf-beadsify plugin is not installed in this Claude Code session),
+   halt with the verbatim error in the next subsection. Do not silently fall back to
+   another tracker.
+2. **Delegate the operation** to the backend by reading its SKILL.md and following
+   the operation-specific instructions there. The backend invokes the bd CLI on the
+   caller's behalf, handles input validation, and returns the result in the same
+   shape the MCP backends would.
+3. **Surface the backend's stderr verbatim** on non-zero exit. The backend follows
+   the Decision 7 safe-invocation pattern (see `openspec/changes/add-beadsify-tracker/design.md`),
+   so failures are bounded and the messages are useful.
+
+### Configured-but-not-installed error (verbatim)
+
+When `tracker: beads` is set in `.spwf/tracker.yaml` but `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` is not loadable:
+
+```
+tracker: beads requested but spwf-beadsify plugin not installed. Install: /plugin install spwf-beadsify@spwf. Or change tracker in .spwf/tracker.yaml.
+```
+
+This is the only failure mode dispatch raises on its own for skill-based backends —
+any other failure surfaces from the backend itself.
 
 ---
 
@@ -126,7 +186,7 @@ Setup, per instance:
    {
      "mcpServers": {
        "youtrack": {
-         "url": "https://projects.firstpartycapital.com/mcp",
+         "url": "https://projects.spottmedia.com/mcp",
          "transport": "sse",
          "headers": { "Authorization": "Bearer ${YOUTRACK_TOKEN}" }
        }
@@ -136,7 +196,7 @@ Setup, per instance:
 
    Name the entry `youtrack` for the default-detection path to work. If you run
    multiple YouTrack instances on the same workstation, name them distinctly
-   (`youtrack-fpc`, `youtrack-clientx`) and disambiguate per-repo with an `mcp_server:`
+   (`youtrack-spm`, `youtrack-clientx`) and disambiguate per-repo with an `mcp_server:`
    field in `.spwf/tracker.yaml` (rare; documented below).
 
 4. **Run a discovery session** in any repo: ask the model to list tools advertised by
@@ -154,7 +214,7 @@ one optional field to `.spwf/tracker.yaml`:
 
 ```yaml
 tracker: youtrack
-mcp_server: youtrack-fpc      # name of the MCP server entry for this repo's instance
+mcp_server: youtrack-spm      # name of the MCP server entry for this repo's instance
 project: ACAD
 done_state: Done
 ```
@@ -179,9 +239,16 @@ default `mcp__youtrack__{operation}`. This is the only reason to set `mcp_server
 
 ## Adding a new tracker
 
-To add Linear (or any other tracker) later:
+### MCP-based (e.g. Linear)
 
-1. Add a column to the dispatch table with the Linear MCP tool names.
-2. Add `linear` to the enum in skill frontmatter and the detection probe order.
-3. Note any Linear-specific quirks (ID format, description format, state model).
+1. Add a column to the **MCP dispatch table** with the new tool names.
+2. Add the tracker name (`linear`) to the enum in skill frontmatter and to the auto-detection probe order if appropriate.
+3. Note any tracker-specific quirks (ID format, description format, state model) in its own subsection.
 4. No skill body changes required.
+
+### Skill-based (e.g. Beads via spwf-beadsify)
+
+1. Ensure the tracker's backend module exists at a known path inside its plugin (`plugins/<plugin>/skills/<backend>/SKILL.md`) and implements the five logical operations.
+2. Add a row to the **skill-based dispatch table** (added by the change that introduces the first skill-based backend) naming the tracker, the backend module path, and any operations it does NOT implement (so dispatch can fail fast for unsupported ops).
+3. Add the tracker name to the enum in skill frontmatter — but **not** to the auto-detection probe (skill-based backends are explicit opt-in only).
+4. Document the install / prerequisites in the owning plugin's README, not here. tracker-dispatch.md just knows the routing.
