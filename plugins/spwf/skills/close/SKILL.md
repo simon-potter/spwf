@@ -10,13 +10,14 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atla
 Final phase of the SPWorkflow golden path. Retrospect, confirm, then permanently close the change.
 
 ```
-Step 1 → retrospective       (all 6 parts, including recap teaching summary)
-Step 2 → confirm closure     (explicit human gate)
-Step 3 → mark todo done      (status: complete + git mv to todo/_done/)
-Step 4 → commit changes      (git commit captures status edit + path move atomically)
-Step 5 → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
-Step 6 → archive OpenSpec    (opsx:archive; runs only after tracker close succeeds)
-Step 7 → delete local branch  (default on, conscious skip with [Y/n])
+Step 1 → identify the change (resolve $ARGUMENTS or context)
+Step 2 → retrospective       (all 6 parts, including recap teaching summary)
+Step 3 → confirm closure     (explicit human gate)
+Step 4 → mark todo done      (status: complete + git mv to todo/_done/)
+Step 5 → commit changes      (git commit captures status edit + path move atomically)
+Step 6 → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
+Step 7 → archive OpenSpec    (opsx:archive; runs only after tracker close succeeds)
+Step 8 → delete local branch  (default on, conscious skip with [Y/n])
 ```
 
 ---
@@ -138,9 +139,9 @@ Do not push — that remains the user's explicit action.
 
 ---
 
-## Step 5 — Close tracker ticket
+## Step 6 — Close tracker ticket
 
-Tracker close runs **before** OpenSpec archive (Step 6). Rationale: if the
+Tracker close runs **before** OpenSpec archive (Step 7). Rationale: if the
 tracker transition fails after archive already succeeded, you end up with an
 archived change and an open ticket — exactly the drift this ordering prevents.
 Failed transitions are recoverable; failed un-archives are not. The spec for
@@ -181,15 +182,15 @@ Tracker-specific notes:
   backend rejects other values with a clear error.
 
 If the dispatch call fails for any reason (auth, network, unknown state, bd error):
-report the error verbatim and stop. **Do not proceed to Step 6** — the OpenSpec
+report the error verbatim and stop. **Do not proceed to Step 7** — the OpenSpec
 archive must not run while the tracker is still open. Leave the ticket-transition
 row as failed in the report and surface the error to the user.
 
 ---
 
-## Step 6 — Archive OpenSpec change
+## Step 7 — Archive OpenSpec change
 
-Runs only after Step 5 has succeeded (or was skipped silently). If Step 5 reported
+Runs only after Step 6 has succeeded (or was skipped silently). If Step 6 reported
 a failure, stop — do not archive.
 
 ```bash
