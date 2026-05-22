@@ -17,7 +17,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 |---|---|---|
 | `capture` | `/spwf:capture [source]` | Classifies input as bug or change → bug path: investigation + `todo/BUG-{slug}.md`; change path: `issue-to-task` / `new-task` + `todo/{slug}.md` |
 | `build` | `/spwf:build` | `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` (Refactor) |
-| `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog) → mark todo complete → `opsx:archive` → tracker transition to done state (per `.spwf/tracker.yaml`; YouTrack default, Jira supported) |
+| `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog) → mark todo complete → tracker transition to done state → `opsx:archive` (per `.spwf/tracker.yaml`; YouTrack default, Jira and Beads via spwf-beadsify also supported) |
 
 ### Atomic skills
 
@@ -25,7 +25,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 |---|---|---|
 | `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation: where am I, what's next |
 | `pause` | `/spwf:pause [next-ref]` | Interrupt — Document state, commit + push in-flight work, switch to main ready for the next capture |
-| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (YouTrack default; Jira and others supported) |
+| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (YouTrack default; Jira and Beads via spwf-beadsify also supported via tracker-dispatch) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch |
 | `challenge` | `/spwf:challenge [file]` | Gate — Interview until all questions resolved; scope-sizing check recommends splitting or proceeding as one change |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
@@ -145,16 +145,23 @@ in `gh auth login` / `glab auth login`, never in the repo. Full reference
 
 ## Issue tracker integration
 
-`capture`, `issue-to-task`, and `close` assume an issue tracker MCP is configured. If
-it isn't and a tracker action is requested, the skill **fails fast** with an
-actionable message — no silent fallback.
+`capture`, `issue-to-task`, `tracker-comment`, and `close` dispatch to the active
+tracker via `_shared/tracker-dispatch.md`. Two backend types are supported:
 
-Default detection: probe `mcp__youtrack__*` then `mcp__atlassian__jira_*`. First match
-wins. Override per-project in `.spwf/tracker.yaml` (all fields optional):
+- **MCP backends** (YouTrack default, Jira supported) — auto-probed if `tracker:` is
+  unset; explicit via `tracker: youtrack` / `tracker: jira`.
+- **Skill backends** (Beads via `spwf-beadsify`) — opt-in only via `tracker: beads`;
+  never auto-probed. Requires the [Beads CLI](https://github.com/gastownhall/beads)
+  and the `spwf-beadsify` plugin installed.
+
+If a tracker action is requested and the active tracker is unavailable, the skill
+**fails fast** with an actionable, backend-type-aware message — no silent fallback.
+
+Override per-project in `.spwf/tracker.yaml` (all fields optional):
 
 ```yaml
-tracker: youtrack          # youtrack | jira | linear | none
-project: ACAD              # default project for create_issue
+tracker: youtrack          # youtrack | jira | linear | beads | none
+project: ACAD              # default project for create_issue (ignored for beads)
 done_state: Done           # state name for close transition
 ```
 

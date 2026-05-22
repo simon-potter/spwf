@@ -92,16 +92,18 @@ Step 3 — install the specialist agents:
 /plugin marketplace update spwf
 ```
 
-## Optional add-on: Beadsify (in development)
+## Optional add-on: Beadsify
 
 SPWorkflow is **fully usable without** [Beads](https://github.com/gastownhall/beads).
 The base install (`spwf` + `spwf-agents` above) gives you the complete workflow
 backed by YouTrack / Jira / none as the issue tracker.
 
 For projects where you want an **in-repo, agent-native tracker** instead of an
-external service, an optional third plugin `spwf-beadsify` is being built. It
-plugs into the existing tracker-dispatch abstraction, so every `/spwf:*` skill
-keeps working unchanged — only the backend differs.
+external service, an optional third plugin `spwf-beadsify` plugs into the existing
+tracker-dispatch abstraction, so every `/spwf:*` skill keeps working unchanged —
+only the backend differs. Install with `/plugin install spwf-beadsify@spwf`
+(requires the [Beads CLI](https://github.com/gastownhall/beads) — install via
+`bash scripts/install-beads.sh`).
 
 ### Two workflow profiles
 
@@ -115,13 +117,11 @@ either way; only the tracker backend is swapped.
 
 ### Status
 
-Beadsify is currently being built. Track progress:
+Beadsify v1 ships with this repo. The "SPWF only" profile remains the canonical default; Beadsify is the opt-in alternative.
 
-- Spec: [`openspec/changes/add-beadsify-tracker/`](openspec/changes/add-beadsify-tracker/) (proposal, design, tasks — 29-task plan)
-- Follow-up: [`todo/beadsify-build-loop.md`](todo/beadsify-build-loop.md) (build-loop integration, ships after the tracker layer)
-- You can install the Beads CLI today even without the plugin — it's harmless on its own: `bash scripts/install-beads.sh`
-
-When `spwf-beadsify` ships, this section gets updated with its install command and moves from "in development" to "available". The "SPWF only" profile remains the canonical default.
+- Source: [`plugins/spwf-beadsify/`](plugins/spwf-beadsify/) (README, install, forbidden-commands recovery, multi-session pattern)
+- Spec: [`openspec/changes/add-beadsify-tracker/`](openspec/changes/add-beadsify-tracker/) — archived post-merge into `openspec/specs/`
+- Follow-up: [`todo/beadsify-build-loop.md`](todo/beadsify-build-loop.md) — `bd next` / `bd done` integration with `/spwf:build` plus `/spwf-beadsify:remember`, ships separately
 
 ## Local install (from this repo)
 
