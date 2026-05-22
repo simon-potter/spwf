@@ -10,11 +10,21 @@ session without publishing:
 /plugin marketplace add ./
 /plugin install spwf
 /plugin install spwf-agents
+/plugin install spwf-beadsify   # optional — only for the Beadsify add-on
 /reload-plugins
 ```
 
-After any edit to `plugins/spwf/**` or `plugins/spwf-agents/**`, run
-`/reload-plugins` to pick the change up in the current session.
+After any edit to `plugins/spwf/**`, `plugins/spwf-agents/**`, or
+`plugins/spwf-beadsify/**`, run `/reload-plugins` to pick the change up in the
+current session.
+
+**Beadsify** (`spwf-beadsify`) is the optional third plugin that adds [Beads](https://github.com/gastownhall/beads) (`bd`)
+as a tracker-dispatch backend — replacing YouTrack/Jira at the tracker layer when
+`.spwf/tracker.yaml` is set to `tracker: beads`. SPWF is fully usable without it.
+This project dogfoods all three plugins. Beads itself is installed via
+[`scripts/install-beads.sh`](scripts/install-beads.sh). For the Beadsify-specific
+"do NOT run plain `bd init` or `bd setup claude`" rule and the safe init command,
+see [`plugins/spwf-beadsify/README.md`](plugins/spwf-beadsify/README.md).
 
 **Do not hand-roll symlinks** from `.claude/skills/` or `.claude/agents/`
 into `plugins/` — let the plugin install own discovery and hook wiring

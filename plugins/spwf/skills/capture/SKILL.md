@@ -101,14 +101,25 @@ Read `$ARGUMENTS`:
 For tracker fetches, extract: summary, description, acceptance criteria, issue type,
 labels/tags, priority/state.
 
-**Fail fast on missing MCP.** If the user supplied a ticket-shaped argument and no
-tracker MCP is configured (no `mcp__youtrack__*` and no `mcp__atlassian__jira_*` tools
-respond), stop with: *"No issue tracker MCP configured. Add YouTrack or Atlassian MCP
-in user settings, or set `tracker: none` in `.spwf/tracker.yaml` to skip tracker steps."*
-Do not silently fall back to freeform.
+**Fail fast on missing tracker.** If the user supplied a ticket-shaped argument and
+no tracker is available in this session, stop with the dispatch-resolved error and
+do not silently fall back to freeform. "Available" depends on which kind of backend
+is configured (see `_shared/tracker-dispatch.md`):
 
-Tracker selection: see `_shared/tracker-dispatch.md`. Default is to probe YouTrack then
-Jira; override via `tracker:` in `.spwf/tracker.yaml`.
+- **MCP backend** (`tracker: youtrack` / `jira`, or unset and one of the MCPs is
+  configured): available iff the MCP's tools (`mcp__youtrack__*`,
+  `mcp__atlassian__jira_*`, etc.) respond. If neither responds and `tracker:` is
+  unset, halt with: *"No issue tracker MCP configured. Add YouTrack or Atlassian MCP
+  in user settings, or set `tracker: none` in `.spwf/tracker.yaml` to skip tracker
+  steps. (For an in-repo tracker, set `tracker: beads` and install spwf-beadsify.)"*
+- **Skill backend** (`tracker: beads` and similar): available iff the backend
+  module SKILL.md is loadable in this session. If `tracker: beads` is set but
+  `spwf-beadsify` is not installed, halt with the verbatim error from
+  `_shared/tracker-dispatch.md` § "Configured-but-not-installed error".
+
+Tracker selection: see `_shared/tracker-dispatch.md`. The default probe is YouTrack
+→ Jira (MCP backends only — skill backends are never auto-probed; they require an
+explicit `tracker:` setting in `.spwf/tracker.yaml`).
 
 ---
 
@@ -279,23 +290,32 @@ status: ideation
 
 ## Tracker prompt (non-tracker sources only)
 
-After writing the artefact, if the source was **not** an issue tracker (i.e. slack, file,
-or scratch), and a tracker MCP is configured, ask:
+After writing the artefact, if the source was **not** an issue tracker (i.e. slack,
+file, or scratch), and a tracker is available for this project, ask whether to create
+a ticket. The exact wording depends on which backend the tracker resolves to per
+`_shared/tracker-dispatch.md`:
 
-> "Is there a ticket for this? If not, I can create one — just give me the project key."
+| Backend type | Tracker config | Prompt to user |
+|---|---|---|
+| MCP (YouTrack / Jira) | `tracker: youtrack` / `tracker: jira` (or unset + MCP responds) | *"Is there a ticket for this? If not, I can create one — just give me the project key."* |
+| Skill (Beads via spwf-beadsify) | `tracker: beads` | *"Is there a ticket for this? If not, I can create one in Beads. [Y/n]"* (no project key — bd uses the project directory's prefix automatically) |
+| None / unavailable | `tracker: none`, or the configured backend is not available in this session (MCP not responding, skill plugin not installed) | Skip this step entirely — no prompt, no error. The artefact is still written. |
 
-If `tracker: none` is set in `.spwf/tracker.yaml`, or no tracker MCP is configured
-(neither `mcp__youtrack__*` nor `mcp__atlassian__jira_*` available), skip this step
-entirely — no error.
+If the user provides a project key (MCP backends) or says yes (skill backends):
 
-If the user provides a project key:
 - Dispatch to the configured tracker's `create_issue` operation per
-  `_shared/tracker-dispatch.md`, with the artefact title as summary and
-  hypothesis/context as description
-- If MCP call fails (auth, network, bad project key): report the error verbatim and
-  stop — do not pretend the ticket was created
-- On success: add the resulting id to the artefact frontmatter
-  (`ticket: {ID}`, `tracker: {tracker}`) and report the created ticket URL
+  `_shared/tracker-dispatch.md`. The dispatch contract is
+  `create_issue(project, title, body)`:
+  - **MCP backends:** pass the user-supplied project key as `project`; artefact title
+    as `title`; ideation file body (Context + What we know, or BUG: Hypothesis +
+    Evidence) as `body`.
+  - **Skill backends:** pass empty string as `project` (Beads ignores it — the prefix
+    comes from the project directory at `bd init` time); same `title` and `body`.
+- If the dispatch fails (auth, network, bad project key, bd error): report the error
+  verbatim and stop — do not pretend the ticket was created.
+- On success: add the resulting id to the artefact frontmatter (`ticket: {ID}`,
+  `tracker: {tracker-name}`) and report the created ticket (URL for MCP backends; for
+  Beads, just the id — `bd show <id>` retrieves it locally).
 
 If the user says no or skips: proceed without creating a ticket.
 

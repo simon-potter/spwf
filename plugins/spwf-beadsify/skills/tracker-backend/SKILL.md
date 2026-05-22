@@ -1,0 +1,197 @@
+---
+name: tracker-backend
+description: Internal Beads tracker-dispatch backend for spwf-beadsify. Implements the dispatch operations (create_issue, get_issue, add_comment, set_state) by invoking the bd CLI. Routed to by plugins/spwf/skills/_shared/tracker-dispatch.md when .spwf/tracker.yaml sets tracker: beads. Never user-invoked — disable-model-invocation prevents accidental activation; users always call /spwf:capture, /spwf:tracker-comment, /spwf:close which dispatch through tracker-dispatch.md.
+disable-model-invocation: true
+allowed-tools: [Read, Bash]
+---
+
+# tracker-backend (spwf-beadsify)
+
+Internal dispatch module. Implements the tracker-dispatch contract using the [Beads](https://github.com/gastownhall/beads) (`bd`) CLI as the in-repo tracker for this project.
+
+> This skill is **never invoked directly by the user**. `disable-model-invocation: true` is set so the model cannot auto-activate it. Routing happens via `plugins/spwf/skills/_shared/tracker-dispatch.md` when `.spwf/tracker.yaml` contains `tracker: beads`.
+
+## Operations declared
+
+This backend implements the four dispatch operations the spwf core skills need (capture / tracker-comment / close). Each is a thin wrapper over one `bd` subcommand, with input validation and the safe-invocation pattern from `openspec/changes/add-beadsify-tracker/design.md` § Decision 7 applied verbatim.
+
+| Operation | bd CLI command | Purpose | Notes |
+|---|---|---|---|
+| `create_issue` | `bd create --silent` (with `--body-file -` if body supplied) | Create a new story; return its `<prefix>-<hash>` id | Used by `/spwf:capture`. Title is user input — validated and quoted. Body (when supplied) is piped via stdin so adversarial content can't escape into the shell. `--silent` makes bd output only the id, same as `bd q`. |
+| `get_issue` | `bd show <id> --json` | Fetch a story's current state as structured JSON | Used by anything that needs status / dependencies / comments. Id is format-validated. **Returns JSON**, not human-formatted text — matches the dispatch contract in `tracker-dispatch.md` which promises structured data. |
+| `add_comment` | `bd comment <id> --stdin` (body piped) | Append a comment to an existing story | Used by `/spwf:tracker-comment`. Both id and body validated. Stdin is always used (not the positional `<text>` form) to avoid any shell-injection surface for body content — see Decision 7 rule 4. |
+| `set_state` | `bd close <id>` (v1) | Move a story to a terminal state | Used by `/spwf:close`. v1 accepts the close-equivalent state set (`close`/`closed`/`Closed`/`done`/`Done`) — all map to `bd close`. Other states rejected until bd grows them. `reopen` and richer transitions deferred. |
+
+**Out of scope for this skill:** `bd remember`, `bd init`, `bd setup *`, any command that installs Claude Code integration. See `plugins/spwf-beadsify/README.md` § "Forbidden commands" for why.
+
+## Safe invocation pattern (mandatory)
+
+Every `bd` subprocess invocation in this skill MUST follow the rules below. These reproduce Decision 7 from `openspec/changes/add-beadsify-tracker/design.md` so they can be applied without leaving this file:
+
+1. **Always quote substituted variables.** `bd q "$title"`, never `bd q $title`.
+2. **Never `eval` / `bash -c` / `sh -c` with substituted user input.** Re-parsing through the shell defeats quoting.
+3. **Validate ids against `^[a-z0-9]+(-[a-z0-9]+)+$` before invocation.** Exact match or reject — no cleaning, no normalisation. The pattern is intentionally prefix-agnostic: bd uses the project directory name as the issue prefix by default, so ids look like `<prefix>-<hash>` where `<prefix>` is project-specific (e.g. `spwf-a3f2dd` in this repo, `auth-92ff01` in an "auth" project). The regex requires at least one hyphen and only lowercase alphanumeric+hyphen — shell-injection-safe regardless of prefix.
+4. **Prefer stdin for multi-line or special-character content.** `echo "$body" | bd comment "$id" --stdin` rather than inlining `$body` as an arg.
+5. **Capture exit codes; fail loudly.** Non-zero from `bd` halts the dispatch operation with bd's stderr surfaced verbatim.
+
+**Shell-portability note:** the bash below is designed to run in whatever shell Claude Code is configured with (commonly bash or zsh; the code stays POSIX-compatible for the parts that matter — id validation uses `grep -qE` rather than `[[ =~ ]]` so no extended-test support is required). Avoid zsh-readonly variable names when capturing values — most notably **`$status`** (zsh refuses assignment). Use `$rc` for return codes throughout.
+
+## Implementation
+
+### Preflight (.beads/ existence check)
+
+Before invoking any dispatch operation, verify that Beads is initialised in this project. Anchor the check at the git project root so the result is independent of the caller's working directory:
+
+```bash
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || PROJECT_ROOT="$PWD"
+if [ ! -d "$PROJECT_ROOT/.beads" ]; then
+  cat >&2 <<'EOF'
+Error: Beads not initialised in this project.
+
+To fix, run in the project root:
+
+  bd init --skip-agents --skip-hooks --non-interactive
+
+IMPORTANT: do not run plain `bd init`. It writes CLAUDE.md and AGENTS.md
+to the project root, creates .claude/settings.json, and registers
+SessionStart + PreCompact hooks of Beads' own design — all of which
+conflict with SPWorkflow's existing Claude Code integration. The
+--skip-agents and --skip-hooks flags prevent this.
+
+After running the safe init, re-run the operation.
+EOF
+  exit 1
+fi
+```
+
+If the check fails (non-zero exit), the operation halts immediately and the error reaches the user via tracker-dispatch.md. **Do not auto-initialise** — this is a conscious user decision per `openspec/changes/add-beadsify-tracker/design.md` § "`bd init` safety". No files are modified by this preflight; it is read-only.
+
+### Operation: create_issue
+
+**Inputs:** `title` (string from user), `body` (string, optional — may be empty for title-only stories or multi-line markdown for full ideation bodies). Matches the dispatch contract signature `create_issue(project, title, body)` in `_shared/tracker-dispatch.md`. (`project` is unused for Beads — bd derives the issue prefix from the project directory at `bd init` time, not per call.)
+
+**Behaviour:** invoke `bd create --silent` (with `--body-file -` piping `$body` via stdin if non-empty) and return the resulting `<prefix>-<hash>` id. `--silent` makes bd's stdout just the id.
+
+```bash
+title="$1"
+body="${2:-}"
+
+# Validate: title must be non-empty.
+if [ -z "$title" ]; then
+  echo "Error: create_issue requires a non-empty title" >&2
+  exit 1
+fi
+
+# Invoke. Title is positional quoted arg; body (if any) via stdin so
+# adversarial content can't escape into the shell (Decision 7 rule 4).
+if [ -n "$body" ]; then
+  id=$(printf '%s' "$body" | bd create --silent --body-file - "$title")
+else
+  id=$(bd create --silent "$title")
+fi
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "Error: bd create failed with exit $rc" >&2
+  exit "$rc"
+fi
+
+# Validate the returned id matches Beads' documented format. If bd ever
+# changes id shape, we want to fail loudly here rather than propagate
+# a malformed id to the caller.
+if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
+  echo "Error: bd create returned unexpected id format: $id" >&2
+  exit 1
+fi
+
+echo "$id"
+```
+
+### Operation: get_issue
+
+**Inputs:** `id` (string — `<prefix>-<hash>` form)
+
+**Behaviour:** invoke `bd show <id> --json` and return structured JSON on stdout. Matches the dispatch contract which promises a payload containing `{id, title, description, type, state, labels, ...}`. Callers parse the JSON to extract fields — they do not pattern-match human-readable text. Issue not found is a non-zero bd exit and surfaces verbatim.
+
+```bash
+id="$1"
+
+# Validate id format before any subprocess invocation. Decision 7 rule 3:
+# exact match or reject — no cleaning.
+if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
+  echo "Error: invalid bd id format: $id" >&2
+  exit 1
+fi
+
+bd show "$id" --json
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "Error: bd show $id --json failed with exit $rc" >&2
+  exit "$rc"
+fi
+```
+
+### Operation: add_comment
+
+**Inputs:** `id` (string — `<prefix>-<hash>` form), `body` (string — may contain newlines, shell metacharacters)
+
+**Behaviour:** invoke `bd comment <id> --stdin` and pipe `body` in. Stdin is used (Decision 7 rule 4) so the body's content cannot accidentally re-enter the shell.
+
+```bash
+id="$1"
+body="$2"
+
+if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
+  echo "Error: invalid bd id format: $id" >&2
+  exit 1
+fi
+
+if [ -z "$body" ]; then
+  echo "Error: add_comment requires a non-empty body" >&2
+  exit 1
+fi
+
+# Use stdin to avoid any shell-injection surface for $body. printf %s
+# prevents trailing newline issues and doesn't interpret escapes inside
+# $body. (Compare echo, which on some shells interprets backslash escapes.)
+printf '%s' "$body" | bd comment "$id" --stdin
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "Error: bd comment $id --stdin failed with exit $rc" >&2
+  exit "$rc"
+fi
+```
+
+### Operation: set_state
+
+**Inputs:** `id` (string — `<prefix>-<hash>` form), `state` (string — close-equivalent value; any other value is rejected)
+
+**Behaviour:** invoke `bd close <id>`. v1 accepts the close-equivalent state set so callers using different conventions (`close`, `Done`, etc., as set in `.spwf/tracker.yaml` `done_state:`) all reach the same outcome. Other states rejected until bd grows additional terminal states.
+
+```bash
+id="$1"
+state="$2"
+
+if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
+  echo "Error: invalid bd id format: $id" >&2
+  exit 1
+fi
+
+case "$state" in
+  close|closed|Closed|done|Done)
+    bd close "$id"
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+      echo "Error: bd close $id failed with exit $rc" >&2
+      exit "$rc"
+    fi
+    ;;
+  '')
+    echo "Error: set_state requires a target state (e.g. 'close', 'done')" >&2
+    exit 1
+    ;;
+  *)
+    echo "Error: unsupported state '$state' (v1 supports close-equivalent states: close, closed, Closed, done, Done)" >&2
+    exit 1
+    ;;
+esac
+```

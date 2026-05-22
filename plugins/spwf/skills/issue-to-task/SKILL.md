@@ -1,23 +1,25 @@
 ---
 # Adapted from: ~/.claude/skills/jira-to-openspec/ — original by Simon Potter. Strips all OpenSpec generation; output is a lightweight ideation file only. Tracker-agnostic via _shared/tracker-dispatch.md (YouTrack default; Jira and others supported).
 name: issue-to-task
-description: Pre-phase — Capture an issue tracker ticket (YouTrack default; Jira and others supported) as a lightweight ideation file at todo/{slug}.md. Fetches the ticket via the configured tracker MCP, extracts context and open questions, and produces an ideation file ready for /spwf:challenge. Does NOT generate OpenSpec — that is spec's job.
+description: Pre-phase — Capture an issue tracker ticket (YouTrack default; Jira, Beads via spwf-beadsify, and others supported via tracker-dispatch) as a lightweight ideation file at todo/{slug}.md. Fetches the ticket via the configured tracker (MCP or skill backend), extracts context and open questions, and produces an ideation file ready for /spwf:challenge. Does NOT generate OpenSpec — that is spec's job.
 disable-model-invocation: true
-allowed-tools: [Read, Write, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
+allowed-tools: [Read, Write, Bash, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
 ---
 
 # issue-to-task
 
 Fetch an issue tracker ticket and produce a lightweight ideation file at `todo/{slug}.md`. This file is the input to `challenge` and eventually `spec`. It is intentionally lightweight — not an OpenSpec.
 
-This skill is by definition tracker-bound. If no tracker MCP is configured, it fails
-fast — see `_shared/tracker-dispatch.md` for setup. Tracker selection follows the
-default probe (YouTrack → Jira) unless overridden in `.spwf/tracker.yaml`.
+This skill is by definition tracker-bound. If no tracker is available, it fails
+fast — see `_shared/tracker-dispatch.md` for setup. Tracker selection: read
+`.spwf/tracker.yaml` if present; otherwise probe MCP defaults (YouTrack → Jira).
+Skill backends (e.g. Beads via spwf-beadsify) are opt-in — only used when
+`.spwf/tracker.yaml` sets `tracker:` to a skill-backend value.
 
 ## Step 1: Fetch the ticket
 
-If `$ARGUMENTS` contains a ticket id (e.g. `ACAD-42`, `PROJ-123`), dispatch to the
-active tracker's `get_issue` operation:
+If `$ARGUMENTS` contains a ticket id (e.g. `ACAD-42`, `PROJ-123`, `spwf-a3f2dd`),
+dispatch to the active tracker's `get_issue` operation per `_shared/tracker-dispatch.md`:
 
 ```
 get_issue(id="{TICKET}", include_all_fields=true)
@@ -25,11 +27,24 @@ get_issue(id="{TICKET}", include_all_fields=true)
 
 If `$ARGUMENTS` is empty, ask for the ticket id.
 
-**Fail fast on missing MCP.** If neither `mcp__youtrack__*` nor `mcp__atlassian__jira_*`
-is available, stop with: *"No issue tracker MCP configured. Add YouTrack or Atlassian
-MCP in user settings — see plugins/spwf/skills/_shared/tracker-dispatch.md."* Do not
-fall back to interactive content gathering — the user invoked this skill specifically
-to fetch from a tracker.
+**Fail fast on missing tracker.** If the active tracker is not available in this
+session (and `tracker:` isn't `none`), stop with the dispatch-resolved error and do
+not silently fall back to interactive content gathering — the user invoked this
+skill specifically to fetch from a tracker. "Available" depends on backend type
+(see `_shared/tracker-dispatch.md` § "Backend types"):
+
+- **MCP backend** (`tracker: youtrack` / `jira`, or unset and one of the MCPs is
+  configured): available iff the MCP's tools (`mcp__youtrack__*`,
+  `mcp__atlassian__jira_*`) respond. If neither responds and `tracker:` is unset,
+  halt with: *"No issue tracker MCP configured. Add YouTrack or Atlassian MCP in
+  user settings, or set `tracker: beads` and install spwf-beadsify for an in-repo
+  tracker. See `plugins/spwf/skills/_shared/tracker-dispatch.md`."*
+- **Skill backend** (`tracker: beads`): available iff the backend module SKILL.md is
+  loadable in the current session. If not, use the verbatim error from
+  `_shared/tracker-dispatch.md` § "Configured-but-not-installed error".
+- **Opted out** (`tracker: none`): halt with: *"Tracker integration is opted out
+  for this repo (`tracker: none`). Cannot fetch a ticket — use `/spwf:new-task`
+  instead."*
 
 ## Step 2: Extract content
 
