@@ -234,9 +234,9 @@ The file is optional. Absent fields are asked once on first need and offered for
 Auth tokens never live in this file. Full reference (including discovery session for
 pinning tool names): `plugins/spwf/skills/_shared/tracker-dispatch.md`.
 
-> **Beads** is coming as an optional fourth tracker via the `spwf-beadsify` add-on —
-> see "Optional add-on: Beadsify (in development)" earlier in this README. Not
-> required for normal SPWF use.
+> **Beads** is available as an optional fourth tracker via the `spwf-beadsify`
+> add-on — see "Optional add-on: Beadsify" earlier in this README. Not required
+> for normal SPWF use.
 
 ### 5. `jq` (for `claudemd-curator`, `workspace-health`, and hooks)
 
