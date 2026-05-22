@@ -69,8 +69,8 @@ Retrospective complete. Ready to close this change permanently.
 The following will happen:
   1. todo/{slug}.md          → status: complete, moved to todo/_done/{slug}.md
   2. git commit              → "chore: close {change-id}" (staged files + todo update + move)
-  3. openspec/changes/{id}/  → archived (opsx:archive)
-  4. {ACAD-42}               → tracker state: {done_state}   ← only if ticket is linked
+  3. {ACAD-42}               → tracker state: {done_state}   ← only if ticket is linked
+  4. openspec/changes/{id}/  → archived (opsx:archive; runs only after tracker close succeeds)
   5. local branch `{name}`   → deleted (with safety checks; conscious skip available)
 
 Type "yes" to close, anything else to stop.
