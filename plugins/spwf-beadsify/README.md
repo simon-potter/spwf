@@ -2,7 +2,7 @@
 
 Optional SPWorkflow add-on: makes [Beads](https://github.com/gastownhall/beads) (`bd`) the project's tracker by plugging into spwf core's `_shared/tracker-dispatch.md` abstraction. Every `/spwf:*` skill that talks to a tracker (capture, tracker-comment, close) keeps working unchanged — only the backend differs.
 
-**SPWF works without this plugin.** Install only if you want Beads as your tracker. See the parent project's `README.md` § "Optional add-on: Beadsify (in development)" for the two workflow profiles.
+**SPWF works without this plugin.** Install only if you want Beads as your tracker. See the parent project's `README.md` § "Optional add-on: Beadsify" for the two workflow profiles.
 
 ## Install
 
