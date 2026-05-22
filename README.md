@@ -16,7 +16,7 @@ Simplify is a two-pass step: a mechanical cleanup (dead code, debug prints, uncl
 | Step | Command | Invokes | Why | Produces |
 |---|---|---|---|---|
 | **Orient** | `/spwf:wfstatus` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
-| **Capture** | `/spwf:capture [source]` | Issue tracker MCP (YouTrack default; Jira supported) | Accepts a tracker ticket (e.g. `ACAD-42`), file, or freeform description; classifies as bug or change automatically. Runs a lightweight git-smell check first (uncommitted changes, already-merged branch, very stale branch — warn-and-confirm); soft notes for being on main or behind base. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md` |
+| **Capture** | `/spwf:capture [source]` | Tracker dispatch (YouTrack default; Jira and Beads via spwf-beadsify also supported) | Accepts a tracker ticket (e.g. `ACAD-42`, `spwf-a3f2dd`), file, or freeform description; classifies as bug or change automatically. Runs a lightweight git-smell check first (uncommitted changes, already-merged branch, very stale branch — warn-and-confirm); soft notes for being on main or behind base. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md` |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Interviews relentlessly until all open questions are resolved, then runs a scope-sizing check — recommends splitting into independent changes if the work spans natural boundaries, or proceeds as one change if tightly coupled | Resolved ideation file; or N child todo files + original marked `status: split` |
 | **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
@@ -25,7 +25,7 @@ Simplify is a two-pass step: a mechanical cleanup (dead code, debug prints, uncl
 | **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; CI/CD owns the rest | PR / MR URL |
 | **PR / MR Review** | `/spwf:pr-review <ref>` | forge CLI (`glab mr view/diff` default; `gh pr view/diff` supported) | Structured review before merge; catches regressions and drift | Review report with verdict |
 | **Address Review** | `/spwf:address-review [report.md \| <ref>]` | forge CLI for `list_comments` | Turns the review report — or human comments fetched from the open PR/MR — into committed fixes (or reasoned push-backs). Per item: READ → VERIFY → EVALUATE → implement-or-push-back. Forbids performative agreement. Adapted from obra/superpowers `receiving-code-review` | Updated report + commits + one structured reply per thread |
-| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → `opsx:archive` → Issue tracker MCP → branch cleanup | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, **recap** teaching summary, optional changelog), then after explicit confirmation marks the todo `status: complete`, **moves it to `todo/_done/`**, archives the OpenSpec change, transitions the linked tracker ticket, and deletes the local feature branch with safety checks (clean tree, merged via ancestor check + forge CLI fallback, no unpushed commits; `[Y/n]` default-delete with conscious skip) | `todo/_done/{slug}.md`, archived change, optional `recap.md`, tracker done, local branch deleted |
+| **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → tracker dispatch → `opsx:archive` → branch cleanup | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, **recap** teaching summary, optional changelog), then after explicit confirmation marks the todo `status: complete`, **moves it to `todo/_done/`**, transitions the linked tracker ticket (YouTrack / Jira / Beads), archives the OpenSpec change (only after tracker transition succeeds), and deletes the local feature branch with safety checks (clean tree, merged via ancestor check + forge CLI fallback, no unpushed commits; `[Y/n]` default-delete with conscious skip) | `todo/_done/{slug}.md`, tracker done, archived change, optional `recap.md`, local branch deleted |
 
 ## Quality tools
 
@@ -191,12 +191,19 @@ no silent fallback. For self-hosted GitLab on a non-`gitlab.*` domain, or to opt
 out of forge integration entirely (`forge: none`), see
 `plugins/spwf/skills/_shared/forge-dispatch.md`.
 
-### 4. Issue tracker MCP (for `capture`, `issue-to-task`, and `close`)
+### 4. Issue tracker (for `capture`, `issue-to-task`, `tracker-comment`, and `close`)
 
-Tracker-touching skills assume an issue tracker MCP is configured. If it isn't and you
-ask for a tracker action, the skill **fails fast** with an actionable message. There
-is no silent fallback — configure the MCP, or skip tracker steps explicitly with
-`tracker: none`.
+Tracker-touching skills dispatch to the active tracker via
+`plugins/spwf/skills/_shared/tracker-dispatch.md`. Two backend types are supported:
+
+- **MCP backends** (YouTrack default, Jira also supported) — auto-probed when
+  `tracker:` is unset; explicit via `tracker: youtrack` / `tracker: jira`.
+- **Skill backends** (Beads via the `spwf-beadsify` plugin) — opt-in only, set
+  `tracker: beads` in `.spwf/tracker.yaml`. Never auto-probed.
+
+If a tracker action is requested and the active tracker is unavailable, the skill
+**fails fast** with a backend-type-aware message. There is no silent fallback —
+configure the backend, or skip tracker steps explicitly with `tracker: none`.
 
 **YouTrack (default)** — every YouTrack instance exposes its own MCP endpoint at
 `{instance-url}/mcp`. The endpoint is per-installation, not global. Add an entry to
@@ -225,8 +232,8 @@ appear under `mcp__atlassian__*`.
 skills don't have to ask every time:
 
 ```yaml
-tracker: youtrack          # youtrack | jira | linear | none
-project: ACAD              # default project key for create_issue
+tracker: youtrack          # youtrack | jira | linear | beads | none
+project: ACAD              # default project key for create_issue (ignored for beads)
 done_state: Done           # state name for close transition
 ```
 
