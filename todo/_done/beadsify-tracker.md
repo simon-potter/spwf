@@ -1,7 +1,7 @@
 ---
 source: scratch
 created: 2026-05-17
-status: ideation
+status: complete
 parent: beadsify.md
 ---
 
