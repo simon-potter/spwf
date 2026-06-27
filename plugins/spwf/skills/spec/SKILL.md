@@ -30,6 +30,11 @@ If `$ARGUMENTS` contains a file path, use it. Otherwise list files in `todo/` an
 
 Read the source file completely.
 
+Note the ideation file's `ticket:` frontmatter field if present (written by
+`capture` / `issue-to-task` for tracker-sourced work). Carry it into the
+proposal in Step 3. If there is no `ticket:` field, omit the Tracker line
+entirely in Step 3 — do **not** prompt for or invent a ticket.
+
 ## Step 2: Determine change-id
 
 Use a verb-led kebab-case slug: `add-`, `refactor-`, `update-`, `remove-`.
@@ -56,6 +61,7 @@ Generate these files:
 **Status**: Draft
 **Created**: {date}
 **Source**: [todo/{slug}.md](../../../todo/{slug}.md)
+**Tracker**: {ticket}   ← include ONLY if the ideation file had a `ticket:` field; omit this line entirely otherwise
 
 ---
 
@@ -139,6 +145,35 @@ Fix any validation errors, then report:
 - Files created
 - Any items from the ideation file needing a decision
 - Suggested next step: `/spwf:approve-plan`
+
+## Step 5.5: Ensure feature branch
+
+Before committing, make sure the spec commit lands on `feature/{change-id}`,
+not on the base branch. Delegates to
+[`_shared/branch-management.md` §3 "Auto-branch operation"](../_shared/branch-management.md#3-auto-branch-operation).
+
+Read `.spwf/branch.yaml` (defaults: `prefix: feature/`, `base: main`,
+`auto_branch: always`, `enforce: true`) per
+[§1](../_shared/branch-management.md#1-config-schema-spwfbranchyaml).
+
+**Opt-outs (skip this step silently, no output):**
+- `.spwf/branch.yaml: enforce: false`
+- `.spwf/branch.yaml: auto_branch: never`
+
+Otherwise classify the current branch per the
+[detect-state table §2](../_shared/branch-management.md#2-detect-state-decision-table)
+and act — emitting **exactly one** confirmation line:
+
+| State | Action | Confirmation line |
+|---|---|---|
+| On `base` | `git checkout -b feature/{change-id}` (auto). If `auto_branch: ask`, prompt `Create branch feature/{change-id} from {base}? [Y/n]` first | `✓ Branched to feature/{change-id} (auto)` |
+| On `feature/{change-id}` already | no-op | `✓ Already on feature/{change-id}` |
+| `feature/{change-id}` exists but not checked out | `git checkout feature/{change-id}` (not `-b`). If the existing branch is behind HEAD, halt with `branch exists but is behind HEAD — manual merge or rebase required` | `✓ Switched to existing feature/{change-id}` |
+| On another branch | Ask once: `You're on {current}, not {base} and not feature/{change-id}. Spec on {current} or create feature/{change-id}?` — proceed per the answer | (per answer) |
+
+If the working tree carries uncommitted changes unrelated to the spec
+artefacts about to be committed, halt per
+[§3 failure handling](../_shared/branch-management.md#3-auto-branch-operation).
 
 ## Step 6: Commit
 

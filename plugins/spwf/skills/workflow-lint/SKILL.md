@@ -17,6 +17,7 @@ Audit the coherence of the full golden path. Catch drift before it accumulates.
 | **Agent coverage** | Every golden path step has a corresponding agent in the spwf-agents plugin | P1 |
 | **Cross-reference validity** | All skill/agent name references in SKILL.md bodies, agent bodies, and READMEs resolve to existing files | P1 |
 | **Stale names** | No deprecated names (grill-me invocations, plan-signoff, task-to-spec, ship, pr-reviewer, test-creator, test-runner, incremental-implementation, openspec:apply) in active skill/agent bodies | P1 |
+| **Successor handoff** | Every phase orchestrator skill names its successor phase in its terminal output (e.g. `pr-create` points at `close`) so an agent following the flow does not stop early | P2 |
 | **Attribution presence** | All seeded skills carry the required attribution comment | P2 |
 | **Orphaned skills/agents** | Skills or agents not referenced in any README or golden path table | P2 |
 | **Diagram↔table consistency** | Workflow diagram in root README matches the golden path table | P2 |

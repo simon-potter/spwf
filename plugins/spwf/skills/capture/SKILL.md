@@ -46,7 +46,7 @@ If the repo has no commits at all (`git log` fails), skip this step entirely.
 | Working tree has uncommitted changes | `DIRTY_COUNT > 0` | **Hard** |
 | Branch is already merged into base (and isn't the base) | `ALREADY_MERGED == yes` and `AHEAD == 0` | **Hard** — the branch is leftover; new work should probably start fresh |
 | Branch is very stale | `LAST_COMMIT_DAYS > 30` AND `BEHIND > 50` | **Hard** |
-| Currently on `main` / `master` / base | `BRANCH == DEFAULT_BASE` or `master` | Soft note — capture writes ideation only; branching happens at spec/build |
+| Currently on `main` / `master` / base | `BRANCH == DEFAULT_BASE` or `master` | Soft note — capture writes ideation only; spec will branch (or run /spwf:branch-rescue if commits already on main) |
 | Branch is behind base | `BEHIND > 0` (and not already covered by stale rule) | Soft note |
 
 ### Hard warnings (interrupt with single confirmation)
@@ -71,7 +71,7 @@ don't ask repeatedly.
 For each soft note, print one line and continue:
 
 ```
-ℹ On `main` — capture writes the ideation file; spec or build will branch.
+ℹ On `main` — capture writes the ideation file; spec will branch (or run /spwf:branch-rescue if commits already on main).
 ℹ Branch `feature/x` is 4 commits behind `main`.
 ```
 

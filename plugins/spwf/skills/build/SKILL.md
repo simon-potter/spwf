@@ -27,6 +27,46 @@ If the suite is still red after implementation, invoke `debug-recovery` before p
 
 ---
 
+## Phase 0 — Verify branch
+
+Before any test or commit, confirm the build is not about to commit per-task
+onto the base branch. Delegates to
+[`_shared/branch-management.md` §2 "Detect-state decision table"](../_shared/branch-management.md#2-detect-state-decision-table).
+
+Read `.spwf/branch.yaml` (defaults: `base: main`, `prefix: feature/`,
+`enforce: true`).
+
+**Opt-out:** if `enforce: false`, skip Phase 0 silently and begin Phase 1 — the
+build commits on the base branch as the pre-change baseline did.
+
+Otherwise classify the current branch:
+
+- **On `feature/{change-id}`** → pass silently; begin Phase 1.
+- **On `base` with an active change** (`openspec/changes/{change-id}/` exists
+  with incomplete tasks) → halt with the offer:
+
+  ```
+  You're on `{base}` with active change `{change-id}`. Build will commit per
+  task — that pollutes `{base}`. Switch to `feature/{change-id}` (I'll create
+  it from HEAD)? [Y/n]
+  ```
+
+  - On **Y / enter**: run `git checkout -b feature/{change-id}` (or
+    `git checkout feature/{change-id}` if it already exists ahead of HEAD), then
+    begin Phase 1.
+  - On **n**: halt with:
+
+    ```
+    Build cancelled — set `.spwf/branch.yaml: enforce: false` to commit on
+    `{base}` intentionally.
+    ```
+
+This is the safety net for Layer 1 (spec): legacy specs predating this change,
+imported specs, `auto_branch: never`, or a manual checkout between spec and
+build all surface here.
+
+---
+
 ## Phase 1 — Red: write failing tests
 
 Invoke `spwf:write-tests`:
