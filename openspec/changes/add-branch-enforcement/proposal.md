@@ -18,6 +18,19 @@ shipping. This is workflow drift, fixed by adding branching as a
 first-class concern of the golden path — with defence in depth so single
 failure points don't reintroduce the problem.
 
+**Scope addendum (2026-06-27, downstream feedback).** A project using SPWF
+reported its agent shipped a change and "closed the ticket" without ever
+running the retrospective. Investigation showed the close-out machinery
+already exists (`/spwf:close` runs the full retrospective; `/spwf:capture`
+records the `ticket:`) — but two seams let an agent fall off the path:
+(1) `/spwf:pr-create` ends with no forward pointer to `/spwf:close`, so an
+agent executing "merge and close" literally has nothing in-flow telling it
+retrospective is the next step; (2) `/spwf:spec` does not carry the
+ideation file's `ticket:` into the proposal, so the tracker link is absent
+from the OpenSpec artefact (it survives only in the todo file). Both are
+workflow-handoff gaps adjacent to the branching seam this change already
+fixes, so they are folded in here rather than tracked separately.
+
 ## What Changes
 
 - **NEW** `plugins/spwf/skills/_shared/branch-management.md` — centralised
@@ -44,6 +57,19 @@ failure points don't reintroduce the problem.
   golden-path table.
 - **MODIFIED** `plugins/spwf/README.md` — document the new branching
   contract and `.spwf/branch.yaml`.
+- **MODIFIED** `plugins/spwf/skills/pr-create/SKILL.md` — Layer 4
+  (handoff). Final output gains a "Next step" block naming `/spwf:close`
+  as the canonical post-merge action, stating that retrospective runs
+  inside close. Does not invoke close automatically — points forward only.
+- **MODIFIED** `plugins/spwf/skills/spec/SKILL.md` — carry the ideation
+  file's `ticket:` into `proposal.md` (a `**Tracker**:` header line) when
+  present; omit silently when absent.
+- **MODIFIED** `plugins/spwf/skills/close/SKILL.md` — Step 1 ticket
+  resolution gains a proposal-frontmatter fallback so the tracker link
+  survives even if the todo file is edited or moved.
+- **MODIFIED** `plugins/spwf/skills/workflow-lint/SKILL.md` — add a
+  coherence check that each phase orchestrator names its successor phase
+  (flags a missing pr-create → close pointer as P2).
 - **NEW SCHEMA** `.spwf/branch.yaml` — documented inside the shared module:
   `prefix:`, `base:`, `auto_branch: ask | always | never`,
   `enforce: true | false`.
@@ -52,8 +78,9 @@ failure points don't reintroduce the problem.
 
 ## Impact
 
-- **Affected areas**: 5 spwf skills modified, 2 new skill/module files,
-  2 READMEs updated, new optional config file.
+- **Affected areas**: 8 spwf skills modified (spec, build, pr-create,
+  capture, wfstatus, close, workflow-lint, plus the new branch-rescue),
+  2 new skill/module files, 2 READMEs updated, new optional config file.
 - **No breaking changes** — defaults preserve current ability to opt out
   (`.spwf/branch.yaml: enforce: false`). First spec invocation post-upgrade
   auto-branches; that's the one visible behaviour change without explicit
@@ -126,3 +153,11 @@ With this change shipped:
 6. Capture's Step 0 soft note matches reality (no longer misleading).
 7. Backward-compat: a legacy spec (predates this change) building on main
    gets the same Layer 2 offer as a fresh spec on main — same UX.
+8. `/spwf:pr-create` ends by naming `/spwf:close` as the next step and
+   stating retrospective runs inside it. Confirmed by reading the
+   pr-create terminal output; an agent following the flow can no longer
+   "close the ticket" without the retrospective being surfaced.
+9. Running `/spwf:spec X` from an ideation file with `ticket: ACAD-42`
+   produces a `proposal.md` carrying `**Tracker**: ACAD-42`; an ideation
+   file with no `ticket:` produces a proposal with no Tracker line.
+   Confirmed by inspecting both proposals.

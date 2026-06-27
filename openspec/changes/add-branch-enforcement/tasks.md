@@ -16,7 +16,7 @@
 
 - [ ] 2.1 `plugins/spwf/skills/branch-rescue/SKILL.md` exists with valid frontmatter — `name: branch-rescue`, `description`, `disable-model-invocation: true`, `allowed-tools: [Read, Bash]`
 - [ ] 2.2 Skill body resolves the active change-id via `openspec list --json | jq -r '.[0].name'`. If no active change found, halts with a clear "no active change to rescue" message
-- [ ] 2.3 Skill body resolves the pre-spec base commit via `git log main --grep "^spec: add OpenSpec change ${change-id}" --format=%H | head -1` then `git rev-parse ${commit}^`. If grep returns no match, falls back to interactive `git log main --oneline | head -20` + user selection
+- [ ] 2.3 Skill body resolves the pre-spec base commit. Validates `${change-id}` against `^[a-z][a-z0-9-]+$` (OpenSpec slug rules) before any substitution; runs `git log "${base}" --grep "^spec: add OpenSpec change ${change-id}$" --format=%H | head -1` then `git rev-parse "${commit}^"`. If grep returns no match, falls back to interactive `git log "${base}" --oneline | head -20` plus user-supplied SHA plus an explicit confirmation prompt. (Hyphens in OpenSpec slugs are regex-literal so the grep pattern is safe given the upstream validation; this follows Beadsify's Decision 7 safe-subprocess pattern.)
 - [ ] 2.4 Skill performs the three local-only safe operations atomically — `git checkout -b feature/{change-id}` (from HEAD); `git checkout main && git reset --hard ${base}`; verifies `origin/main == ${base}` before declaring success
 - [ ] 2.5 Skill surfaces the force-push command as plain text (no automatic execution): `Local main reset to ${base}. To publish: git push --force-with-lease origin main` — exactly that wording
 - [ ] 2.6 Smoke test — sandbox setup: create a temp branch from main, plant 3 commits with subject prefix `spec:` / `feat:` / `fix:`, invoke the rescue operation, verify (a) HEAD is on the new feature branch with all 3 commits, (b) local main is at the pre-`spec:` commit, (c) origin/main unchanged
@@ -24,11 +24,13 @@
 ## Phase 3 — Layer 1: spec auto-branches
 
 - [ ] 3.1 `plugins/spwf/skills/spec/SKILL.md` gains a new Step 5.5 "Ensure feature branch" between Step 4 (validate) and Step 6 (commit). The step delegates to `_shared/branch-management.md` § "Auto-branch operation"
-- [ ] 3.2 Step 5.5's behaviour matches the detect-state table in Phase 1.3: on `base` → auto-branch; on `feature/{change-id}` → no-op; on other branch → ask once
+- [ ] 3.2 Step 5.5 implements all three primary branches of the detect-state table — on `base` (run `git checkout -b feature/{change-id}`, emit `✓ Branched to feature/{change-id} (auto)`), on `feature/{change-id}` (no-op, emit `✓ Already on feature/{change-id}`), on other branch (ask once, proceed per the user's answer). Each branch SHALL emit exactly one visible confirmation line per Phase 1.4
 - [ ] 3.3 Step 5.5 respects `.spwf/branch.yaml: auto_branch: never` (skip silently) and `enforce: false` (skip silently). Both opt-outs documented in the new step body
 - [ ] 3.4 Smoke — from `main`, invoke `/spwf:spec my-test-change`: verify spec creates the change AND switches to `feature/my-test-change` AND the spec commit lands on `feature/my-test-change` (not on main)
 - [ ] 3.5 Smoke — from `feature/my-test-change`, invoke `/spwf:spec my-test-change`: verify no branch operation occurs and the spec commit lands on the existing branch
 - [ ] 3.6 Smoke — from `feature/some-other-thing`, invoke `/spwf:spec my-test-change`: verify the skill asks once and proceeds based on the answer
+- [ ] 3.7 Step 5.5 detects when `feature/{change-id}` already exists (e.g. from an interrupted prior spec attempt) and switches to it via `git checkout feature/{change-id}` rather than failing on `git checkout -b`. If the existing branch is behind HEAD, the skill SHALL halt with "branch exists but is behind HEAD — manual merge or rebase required" rather than auto-merging. Mirrors Phase 0's branch-exists handling (4.3)
+- [ ] 3.8 Smoke — pre-create `feature/test-change` on the sandbox, then invoke `/spwf:spec test-change` from `main`: verify the skill emits `✓ Switched to existing feature/test-change` and the spec commit lands on the existing branch (no `checkout -b` crash)
 
 ## Phase 4 — Layer 2: build verifies branch
 
@@ -59,10 +61,12 @@
 - [ ] 7.1 Root `README.md` golden-path table reflects that branching happens at spec. Update the `Spec` row's "What it does" cell to mention `feature/{change-id}` auto-creation
 - [ ] 7.2 Root `README.md` adds a short subsection (under "How it works" or similar) titled "Branching" describing the three layers and `.spwf/branch.yaml` overrides
 - [ ] 7.3 `plugins/spwf/README.md` reflects the new branching contract — at least the `spec`, `build`, `pr-create`, `branch-rescue` rows are updated
-- [ ] 7.4 `.spwf/branch.yaml` schema is documented in the shared module (delivered in Phase 1.2) AND linked from both READMEs
+- [ ] 7.4 Both READMEs (root + `plugins/spwf/`) add a one-line cross-link to `_shared/branch-management.md § config schema` near the install or config sections. The schema itself is delivered in 1.2; this task is the cross-link only
 - [ ] 7.5 `plugins/spwf/.claude-plugin/plugin.json` version bumped 1.14.0 → 1.15.0. Bump lands in the Phase 7 commit, after Phases 1–6 are structurally complete
 
 ## Phase 8 — Acceptance (full lifecycle)
+
+> **Sandbox protocol for Phase 8 (and 2.6).** Every smoke test in this phase runs destructive git operations (`reset --hard`, mass branch moves, force-push surfacing). Each test SHALL be executed in a `git worktree add` scratch worktree (or an equivalent isolated clone), NOT against the live working tree's `main`. Clean up the worktree after each test.
 
 - [ ] 8.1 **Greenfield** — On a fresh feature branch, run `/spwf:capture` → `/spwf:challenge` → `/spwf:spec test-change` from `main`. Verify spec auto-branched to `feature/test-change`. Run `/spwf:build` and confirm Phase 0 passes silently. Confirm at no point did a commit land on `main`
 - [ ] 8.2 **Legacy / mid-flow** — Simulate a legacy spec by manually creating `openspec/changes/legacy-test/` and committing a spec on main without branching. Run `/spwf:build legacy-test`. Verify Phase 0 halts with the expected offer. Accept (Y) and verify build proceeds on the new branch
@@ -70,3 +74,25 @@
 - [ ] 8.4 **Opt-out** — Set `.spwf/branch.yaml: enforce: false`. Run `/spwf:spec opt-out-test` from `main`. Verify no branching occurs — spec commit lands on `main`. Restore `enforce: true` after the test
 - [ ] 8.5 **Standalone rescue** — Outside the pr-create flow, with 3 commits on main and an active change, invoke `/spwf:branch-rescue` directly. Verify the same outcome as 8.3
 - [ ] 8.6 **Branch-drift detection** — With the same state as 8.3 (commits on main, no feature branch), run `/spwf:wfstatus`. Verify the P2 branch-drift warning surfaces and points at `/spwf:branch-rescue`
+- [ ] 8.7 **Failure modes** — exercise three known failure paths: (a) uncommitted changes block auto-branch — confirm Phase 1.4's "uncommitted changes halt" message fires; (b) rescue base detection finds no matching spec commit — confirm the manual-confirm fallback (2.3) prompts the user, uses their SHA, and runs only after confirmation; (c) branch-already-exists divergence — confirm "branch exists but is behind HEAD" halt from 3.7 fires when the state is set up to trigger it
+
+## Phase 9 — Layer 4: pr-create → close handoff (Decision 10)
+
+> **Folded-in scope.** Fixes the downstream report where an agent "closed the ticket" without running the retrospective. Independent of Phases 1–8. See [`design.md`](./design.md) Decision 10.
+
+- [ ] 9.1 `plugins/spwf/skills/pr-create/SKILL.md` final report (after the PR/MR URL is printed) gains a "Next step" block naming `/spwf:close` as the canonical post-merge action. The block states that close runs the retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, recap) and then archives the change + transitions the tracker ticket
+- [ ] 9.2 The Next-step block explicitly states that "merge and close the ticket" is NOT complete until `/spwf:close` runs — the retrospective is part of close, not an optional extra. Exact wording documented in the skill body
+- [ ] 9.3 pr-create SHALL NOT invoke `/spwf:close` automatically — it points forward only (close is a human-gated destructive final phase; pr-create does not even merge). This non-action is stated in the skill body so a future author does not "helpfully" auto-chain it
+- [ ] 9.4 `plugins/spwf/skills/workflow-lint/SKILL.md` adds a coherence check: every phase orchestrator skill names its successor phase in its terminal output. The check fires P2 if `pr-create` lacks a forward pointer to `close`. Documented in workflow-lint's check list
+- [ ] 9.5 `plugins/spwf/README.md` pr-create row (and root `README.md` golden-path pr-create row) note that pr-create ends by pointing at `/spwf:close`. (Cross-link only; the block itself is delivered in 9.1)
+- [ ] 9.6 Smoke — run `/spwf:pr-create` to completion against a sandbox PR: verify the output ends with the `/spwf:close` next-step block, and that the block names the retrospective. Verify close was NOT auto-invoked
+
+## Phase 10 — Spec carries the tracker ticket into the proposal (Decision 11)
+
+> **Folded-in scope.** Makes the archived OpenSpec change self-describing about its tracker ticket. Independent of Phases 1–9. See [`design.md`](./design.md) Decision 11.
+
+- [ ] 10.1 `plugins/spwf/skills/spec/SKILL.md` Step 1 reads the `ticket:` field from the ideation file frontmatter (written by `capture` / `issue-to-task`) when present, and carries it forward to Step 3
+- [ ] 10.2 Step 3's `proposal.md` template gains a `**Tracker**: {ticket}` line in the header block (alongside `**Change ID**` / `**Status**` / `**Created**` / `**Source**`), populated from the ideation `ticket:` when present
+- [ ] 10.3 When the ideation file has no `ticket:` field, spec SHALL omit the `**Tracker**:` line entirely — it SHALL NOT invent a ticket and SHALL NOT prompt for one. Documented in the step body
+- [ ] 10.4 `plugins/spwf/skills/close/SKILL.md` Step 1 ticket resolution gains a fallback: when the todo file has no `ticket:`, read `**Tracker**:` from `openspec/changes/{change-id}/proposal.md`. Todo file remains the primary source; proposal is the fallback
+- [ ] 10.5 Smoke — (a) capture a tracker ticket (`ticket:` present) → `/spwf:spec`: verify `proposal.md` carries `**Tracker**: {id}`; (b) `new-task` freeform (no `ticket:`) → `/spwf:spec`: verify `proposal.md` has no `**Tracker**:` line; (c) delete the `ticket:` from the todo and run `/spwf:close`: verify it resolves the ticket from the proposal fallback

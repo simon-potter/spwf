@@ -23,6 +23,21 @@ respectively.
 - **AND** a single visible confirmation line `✓ Branched to feature/{change-id} (auto)`
   SHALL be emitted
 
+#### Scenario: Spec from base branch with target branch already existing
+
+- **WHEN** the working tree is on the base branch and `feature/{change-id}`
+  already exists (e.g. from an interrupted prior spec attempt)
+- **AND** `/spwf:spec {change-id}` runs with default config
+- **THEN** the skill SHALL run `git checkout feature/{change-id}` (NOT
+  `git checkout -b`) and proceed with the spec commit on the existing
+  branch
+- **AND** SHALL emit `✓ Switched to existing feature/{change-id}` as the
+  confirmation line
+- **AND** if the existing branch is behind HEAD (the base branch has
+  commits not present on the branch tip), the skill SHALL halt with
+  "branch exists but is behind HEAD — manual merge or rebase required"
+  rather than auto-merging
+
 #### Scenario: Spec already on the target branch
 
 - **WHEN** the working tree is already on `feature/{change-id}` and

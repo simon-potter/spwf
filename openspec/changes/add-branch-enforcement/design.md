@@ -224,6 +224,45 @@ committing to `main`. Run `/spwf:branch-rescue` to move commits.").
 Useful for projects that upgrade mid-flow without having read the
 release notes. Phase 6 of the build plan covers this.
 
+### 10. pr-create points forward to close; it does not invoke it
+
+**Decision:** `/spwf:pr-create`'s final report gains a "Next step" block
+naming `/spwf:close` as the canonical post-merge action and stating that
+the retrospective (learn-from-mistakes, spec audit, doc-lint,
+workflow-lint, recap) runs *inside* close. pr-create does **not** call
+close automatically.
+
+**Rationale:** The downstream failure was an agent treating "merge and
+close the ticket" as terminal because nothing in-flow named the next
+step — the golden-path table in the README documents close, but the skill
+running immediately before it does not hand off. A forward pointer fixes
+the discoverability gap at the exact point the agent loses the thread.
+Auto-invoking close is rejected: close is a human-gated, destructive
+final phase (archives the change, transitions the ticket, deletes the
+branch) and must not fire as a side effect of opening a PR — pr-create
+explicitly does not even merge. A `workflow-lint` check (Phase 9) guards
+against the pointer regressing: every phase orchestrator should name its
+successor.
+
+### 11. Spec carries the tracker ticket into the proposal; never invents one
+
+**Decision:** `/spwf:spec` reads `ticket:` from the ideation file
+frontmatter (written by `capture` / `issue-to-task`) and, when present,
+emits a `**Tracker**: {ticket}` line in the proposal header block. When
+absent, the line is omitted entirely — spec never prompts for or invents
+a ticket. `close`'s Step 1 gains a proposal-frontmatter fallback so the
+link survives if the todo file is later edited or moved.
+
+**Rationale:** The ticket link already flows capture → todo → close, but
+the OpenSpec artefact (which travels into the archive) drops it. Carrying
+it into the proposal makes the archived change self-describing and gives
+close a second source. Silent omission matters because most changes have
+no tracker ticket (freeform `new-task` captures); prompting would add
+friction to the common case. Header line over a `closes:` frontmatter key
+because the existing proposal template uses prose `**Field**:` header
+lines (`**Change ID**`, `**Status**`, `**Source**`) — `**Tracker**:` is
+consistent; a YAML frontmatter block would be a new convention.
+
 ---
 
 ## Risks and Trade-offs
@@ -258,6 +297,15 @@ release notes. Phase 6 of the build plan covers this.
   schema documented + version bump 1.14.0 → 1.15.0.
 - **Phase 8**: Acceptance — full lifecycle smoke (greenfield, legacy,
   rescue, opt-out).
+- **Phase 9**: Layer 4 — pr-create → close handoff block + workflow-lint
+  successor-pointer check (Decision 10).
+- **Phase 10**: spec carries `ticket:` into the proposal + close
+  proposal-fallback resolution (Decision 11).
+
+Phases 9–10 are independent of the branching layers (1–8) and of each
+other; they may be built in any order relative to those phases. They were
+folded into this change because they fix workflow-handoff seams adjacent
+to the branching seam (see proposal § Scope addendum).
 
 Phase ordering matters: the shared module must exist before any skill
 delegates to it (Phase 1 before 2–5); the rescue operation is consumed
