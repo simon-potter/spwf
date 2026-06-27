@@ -56,9 +56,18 @@ branch by accident:
   work already leaked onto the base — local-only moves, force-push surfaced for
   manual execution.
 
-Configure or opt out via an optional `.spwf/branch.yaml` (`prefix:`, `base:`,
-`auto_branch: always | ask | never`, `enforce: true | false`). Full schema and
-the detect-state / auto-branch / rescue logic:
+Configure or opt out via an optional `.spwf/branch.yaml`:
+
+```yaml
+# .spwf/branch.yaml — all fields optional
+base: develop        # protect a non-main integration branch
+auto_branch: ask     # prompt before auto-branching (default: always)
+enforce: false       # opt out of all three layers (not recommended)
+```
+
+Fields: `prefix:`, `base:`, `auto_branch: always | ask | never`,
+`enforce: true | false`. Full schema and the detect-state / auto-branch /
+rescue logic:
 [`skills/_shared/branch-management.md` § config schema](skills/_shared/branch-management.md#1-config-schema-spwfbranchyaml).
 
 ## Quality tools

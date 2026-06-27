@@ -70,13 +70,19 @@ Run atomically, in order ([§4 recipe](../_shared/branch-management.md#4-rescue-
 ```bash
 git checkout -b "${PREFIX}${CHANGE_ID}"            # 1. preserve work on the feature branch
 git checkout "${BASE}" && git reset --hard "${BASE_COMMIT}"   # 2. reset local base
-git rev-parse "${BASE}" "origin/${BASE}"           # 3. verify base vs origin
+# 3. verify base vs origin (explicit equality — rev-parse with two args only prints, never compares)
+if git rev-parse --verify -q "origin/${BASE}" >/dev/null; then
+  [ "$(git rev-parse "${BASE}")" = "$(git rev-parse "origin/${BASE}")" ] \
+    && echo "origin/${BASE} unchanged" \
+    || echo "⚠ local ${BASE} diverged from origin/${BASE}"
+fi
 ```
 
-Verify `${BASE}` now equals `origin/${BASE}` to declare the local-only part
-clean. If they differ, the base had unpushed commits that this change did not
-create — surface the divergence and let the user resolve it rather than
-force-resetting further.
+The verification declares the local-only part clean only when `${BASE}` equals
+`origin/${BASE}`. If they differ, the leaked commits had been pushed — that is
+expected, and Step 4 surfaces the manual force-push. If `origin/${BASE}` does
+not exist locally (never pushed), the check is skipped and there is nothing to
+publish.
 
 ## Step 4 — Surface the force-push (never execute it)
 

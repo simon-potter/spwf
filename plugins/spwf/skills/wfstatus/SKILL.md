@@ -96,9 +96,21 @@ Fire a **P2 drift warning** when **all** hold:
 
 1. `openspec/changes/{change-id}/` exists with incomplete tasks, AND
 2. `feature/{change-id}` does not exist **OR** is not the current branch, AND
-3. `git log origin/{base}..{base} --oneline` returns ≥ 1 commit, AND
-4. at least one of those commits touches a path in the change's affected areas
-   (from `openspec/changes/{change-id}/proposal.md` Impact section)
+3. the change's own spec commit has leaked onto the base branch:
+
+```bash
+git log "origin/${base}..${base}" \
+    --grep "^spec: add OpenSpec change ${change_id}$" --format=%H | head -1
+```
+
+returns a commit.
+
+Condition 3 is tied to the change's spec-commit subject — the same marker
+`branch-rescue` uses for base detection (§4). This makes the check
+deterministic and avoids parsing the proposal's free-form "Affected areas"
+prose: commits on `{base}` are attributed to *this* change only when its spec
+commit is among them, so unrelated commits on `{base}` (a hotfix, a doc tweak)
+do not trip a false drift warning.
 
 ```
 ⚠ Branch drift — change `{change-id}` may be committing to `{base}`.

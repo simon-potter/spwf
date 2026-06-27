@@ -248,9 +248,11 @@ the base branch instead of on its feature branch.
 - **WHEN** `openspec/changes/{change-id}/` exists with incomplete tasks
 - **AND** `feature/{change-id}` does not exist OR the current branch is
   not `feature/{change-id}`
-- **AND** `git log origin/{base}..{base} --oneline` returns ≥ 1 commit
-- **AND** at least one of those commits touches a path matching the
-  affected areas listed in `openspec/changes/{change-id}/proposal.md`
+- **AND** the change's spec commit has leaked onto the base —
+  `git log origin/{base}..{base} --grep "^spec: add OpenSpec change {change-id}$"`
+  returns ≥ 1 commit (the same spec-commit marker `branch-rescue` uses for
+  base detection, so the leaked commits are attributable to this change without
+  parsing the proposal's free-form affected-areas prose)
 - **THEN** `/spwf:wfstatus` SHALL emit a P2 warning:
   "⚠ Branch drift — change `{change-id}` may be committing to `{base}`.
    Run `/spwf:branch-rescue` to move commits."

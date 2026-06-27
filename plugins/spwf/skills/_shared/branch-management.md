@@ -126,7 +126,11 @@ git checkout -b "${prefix}${change_id}"        # from current HEAD (on base)
 git checkout "${base}" && git reset --hard "${base_commit}"
 
 # 3. Verify local base now matches origin (nothing leaked remotely yet)
-git rev-parse "${base}" "origin/${base}"        # expect equal
+if git rev-parse --verify -q "origin/${base}" >/dev/null; then
+  [ "$(git rev-parse "${base}")" = "$(git rev-parse "origin/${base}")" ] \
+    && echo "origin/${base} unchanged" \
+    || echo "⚠ local ${base} diverged from origin/${base} — see force-push note below"
+fi
 ```
 
 **Force-push is never executed.** Step 2 diverges local `base` from
