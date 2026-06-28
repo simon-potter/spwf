@@ -123,7 +123,7 @@ The recovery operation used by Layer 3 (pr-create) and the standalone
 git checkout -b "${prefix}${change_id}"        # from current HEAD (on base)
 
 # 2. Reset local base back to the pre-spec commit
-git checkout "${base}" && git reset --hard "${base_commit}"
+git checkout "${base}" && git reset --hard "${BASE_COMMIT}"
 
 # 3. Verify local base now matches origin (nothing leaked remotely yet)
 if git rev-parse --verify -q "origin/${base}" >/dev/null; then
@@ -138,7 +138,7 @@ fi
 publish command as plain text for the user to run manually — exactly:
 
 ```
-Local main reset to ${base_commit}. To publish: git push --force-with-lease origin main
+Local main reset to ${BASE_COMMIT}. To publish: git push --force-with-lease origin main
 ```
 
 (Substitute the resolved `base` for `main` when `base` is overridden.)

@@ -20,12 +20,15 @@ default; GitHub supported.
 Run each check in order. If any blocking check fails, stop and report — do not proceed to PR creation.
 
 ```bash
-# Check 1: Not on main
+# Resolve the base branch (.spwf/branch.yaml: base, else main)
+BASE=$(grep -E '^base:' .spwf/branch.yaml 2>/dev/null | awk '{print $2}'); BASE=${BASE:-main}
+
+# Check 1: Not on base
 BRANCH=$(git branch --show-current)
-echo "Branch: $BRANCH"
+echo "Branch: $BRANCH (base: $BASE)"
 
 # Check 2: Commits exist ahead of base
-git log main...HEAD --oneline
+git log "${BASE}...HEAD" --oneline
 
 # Check 3: No uncommitted changes
 git status --short
@@ -197,7 +200,7 @@ Do not silently skip. Report each missing tool with its setup path:
 
 Read these files to derive the PR title and body:
 - `openspec/changes/*/proposal.md` — for the change description
-- `git log main...HEAD --oneline` — for commit summary
+- `git log "${BASE}...HEAD" --oneline` — for commit summary (`BASE` resolved in Step 1)
 
 ## Step 3: Resolve forge and create the request
 

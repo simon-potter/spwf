@@ -136,8 +136,8 @@ change exists.
   three local-only operations
 - **AND** on completion: SHALL continue into Step 1b (security
   pre-flight) on the newly-created `feature/{change-id}` branch
-- **AND** SHALL surface as plain text (not auto-execute): "Local main is
-  now diverged from origin/main. Push when ready: `git push --force-with-lease origin main`"
+- **AND** SHALL surface as plain text (not auto-execute): "Local {base}
+  reset to {base-commit}. To publish: `git push --force-with-lease origin {base}`"
 
 #### Scenario: Rescue declined
 
@@ -159,7 +159,7 @@ operation for ad-hoc use outside the pr-create flow.
   with commits ahead of `origin/{base}` and an active OpenSpec change
 - **THEN** the skill SHALL identify the change-id via `openspec list`
 - **AND** SHALL identify the pre-spec base commit via
-  `git log {base} --grep "^spec: add OpenSpec change ${change-id}" --format=%H | head -1` followed by `git rev-parse ${commit}^`
+  `git log {base} --grep "^spec: add OpenSpec change ${change-id}$" --format=%H | head -1` followed by `git rev-parse ${commit}^`
 - **AND** SHALL run `git checkout -b feature/{change-id}` from current HEAD
 - **AND** SHALL run `git checkout {base} && git reset --hard {pre-spec-commit}`
 - **AND** SHALL print the force-push command for the user to run manually
@@ -168,7 +168,7 @@ operation for ad-hoc use outside the pr-create flow.
 #### Scenario: Rescue base detection falls back to manual confirm
 
 - **WHEN** the rescue skill runs and
-  `git log {base} --grep "^spec: add OpenSpec change ${change-id}"`
+  `git log {base} --grep "^spec: add OpenSpec change ${change-id}$"`
   returns no match
 - **THEN** the skill SHALL display the last 20 commits via `git log {base} --oneline | head -20`
 - **AND** SHALL prompt the user to enter the SHA of the pre-spec base
