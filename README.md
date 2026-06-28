@@ -18,14 +18,34 @@ Simplify is a two-pass step: a mechanical cleanup (dead code, debug prints, uncl
 | **Orient** | `/spwf:wfstatus` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
 | **Capture** | `/spwf:capture [source]` | Tracker dispatch (YouTrack default; Jira and Beads via spwf-beadsify also supported) | Accepts a tracker ticket (e.g. `ACAD-42`, `spwf-a3f2dd`), file, or freeform description; classifies as bug or change automatically. Runs a lightweight git-smell check first (uncommitted changes, already-merged branch, very stale branch — warn-and-confirm); soft notes for being on main or behind base. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md` |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Interviews relentlessly until all open questions are resolved, then runs a scope-sizing check — recommends splitting into independent changes if the work spans natural boundaries, or proceeds as one change if tightly coupled | Resolved ideation file; or N child todo files + original marked `status: split` |
-| **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/` |
+| **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec, then **auto-creates `feature/{change-id}`** so the spec commit (and all later work) lands off the base branch (see [Branching](#branching)) | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/`, on `feature/{change-id}` |
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
 | **Build** | `/spwf:build` | `write-tests` → `opsx:apply` → `run-tests` → `debug-recovery` → `opsx:verify` | Red-Green-Verify per task, loops until all done; spec sign-off after all tasks complete | All tasks complete, tests green, spec aligned |
 | **Simplify** (TDD Refactor + Self-Review) | `/spwf:simplify` | `reviewer` agent (local-diff mode) | Two passes: (1) mechanical cleanup of dead code, debug prints, and unclear names with tests as a safety net; (2) dispatches the `reviewer` subagent against the pinned commit range with the openspec proposal + tasks as the intent baseline, applying Critical/Important/Minor tiering. Pass 2 short-circuits for trivial diffs. Adapted from obra/superpowers `requesting-code-review` | Cleaner diff + flag list + `{branch}-self-review.md` + verdict |
-| **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; CI/CD owns the rest | PR / MR URL |
+| **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) · `branch-rescue` (if on base) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; if run from the base branch with commits, offers automated [branch-rescue](#branching); ends by pointing at `/spwf:close` for the post-merge retrospective; CI/CD owns the rest | PR / MR URL + next-step pointer to `/spwf:close` |
 | **PR / MR Review** | `/spwf:pr-review <ref>` | forge CLI (`glab mr view/diff` default; `gh pr view/diff` supported) | Structured review before merge; catches regressions and drift | Review report with verdict |
 | **Address Review** | `/spwf:address-review [report.md \| <ref>]` | forge CLI for `list_comments` | Turns the review report — or human comments fetched from the open PR/MR — into committed fixes (or reasoned push-backs). Per item: READ → VERIFY → EVALUATE → implement-or-push-back. Forbids performative agreement. Adapted from obra/superpowers `receiving-code-review` | Updated report + commits + one structured reply per thread |
 | **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → tracker dispatch → `opsx:archive` → branch cleanup | Final phase — runs the full retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, **recap** teaching summary, optional changelog), then after explicit confirmation marks the todo `status: complete`, **moves it to `todo/_done/`**, transitions the linked tracker ticket (YouTrack / Jira / Beads), archives the OpenSpec change (only after tracker transition succeeds), and deletes the local feature branch with safety checks (clean tree, merged via ancestor check + forge CLI fallback, no unpushed commits; `[Y/n]` default-delete with conscious skip) | `todo/_done/{slug}.md`, tracker done, archived change, optional `recap.md`, local branch deleted |
+
+## Branching
+
+Branching is a first-class concern of the golden path, enforced in three layers
+so a single missed step never lets commits pile up on the base branch:
+
+1. **Spec (Layer 1)** auto-creates `feature/{change-id}` before its commit, so
+   the spec and everything after it land off the base branch.
+2. **Build (Layer 2)** verifies the branch before committing per task; if you're
+   on the base with an active change it halts and offers to switch (catches
+   legacy specs, imports, or a manual checkout).
+3. **PR Create (Layer 3)** offers an automated [`/spwf:branch-rescue`](plugins/spwf/skills/branch-rescue/SKILL.md)
+   if work already leaked onto the base — moving commits to a feature branch and
+   resetting local base, surfacing the force-push command for you to run
+   manually (never auto-pushed). `branch-rescue` also runs standalone.
+
+Override or opt out via an optional `.spwf/branch.yaml` — `prefix:`, `base:`,
+`auto_branch: always | ask | never`, `enforce: true | false`. Full schema and
+the detect-state / rescue logic live in
+[`_shared/branch-management.md` § config schema](plugins/spwf/skills/_shared/branch-management.md#1-config-schema-spwfbranchyaml).
 
 ## Quality tools
 

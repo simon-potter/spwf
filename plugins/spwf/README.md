@@ -1,6 +1,6 @@
 # spwf
 
-32 engineering workflow skills covering the full cycle: capture, challenge, spec, plan, build, test, simplify (with self-review), ship, peer review, address review, learn, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
+34 engineering workflow skills covering the full cycle: capture, challenge, spec, plan, build, test, simplify (with self-review), ship, peer review, address review, learn, branch-rescue, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
 
 ## Two-tier architecture
 
@@ -16,7 +16,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | Skill | Invoke | Composes |
 |---|---|---|
 | `capture` | `/spwf:capture [source]` | Classifies input as bug or change → bug path: investigation + `todo/BUG-{slug}.md`; change path: `issue-to-task` / `new-task` + `todo/{slug}.md` |
-| `build` | `/spwf:build` | `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` (Refactor) |
+| `build` | `/spwf:build` | Phase 0 verifies the feature branch (Layer 2 — halts/offers if on base with an active change) → `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` (Refactor) |
 | `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog) → mark todo complete → tracker transition to done state → `opsx:archive` (per `.spwf/tracker.yaml`; YouTrack default, Jira and Beads via spwf-beadsify also supported) |
 
 ### Atomic skills
@@ -29,19 +29,46 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch |
 | `challenge` | `/spwf:challenge [file]` | Gate — Interview until all questions resolved; scope-sizing check recommends splitting or proceeding as one change |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
-| `spec` | `/spwf:spec` | 1 — Convert ideation file into full OpenSpec change proposal |
+| `spec` | `/spwf:spec` | 1 — Convert ideation file into full OpenSpec change proposal; auto-creates `feature/{change-id}` before committing (Layer 1, see [Branching](#branching)); carries the ideation `ticket:` into the proposal `**Tracker**:` line |
 | `approve-plan` | `/spwf:approve-plan` | 2 — Quality-check task list; human sign-off gate |
 | `write-tests` | `/spwf:write-tests` | 3 — Red phase: write failing tests before implementation |
 | `run-tests` | `/spwf:run-tests` | 3 — Run full test suite; stop on first failure |
 | `debug-recovery` | `/spwf:debug-recovery` | 3 — Diagnose failing test or broken build; minimal fix |
 | `simplify` | `/spwf:simplify` | 4 — Two-pass cleanup: (1) mechanical removal of dead code + unnecessary complexity; (2) `reviewer` subagent in local-diff mode against pinned commit range with openspec proposal + tasks as intent baseline (adapted from obra/superpowers `requesting-code-review`) |
-| `pr-create` | `/spwf:pr-create` | 5 — Pre-flight checks then PR creation |
+| `pr-create` | `/spwf:pr-create` | 5 — Pre-flight checks then PR creation; if on base with commits, offers automated `branch-rescue` (Layer 3); ends by pointing at `/spwf:close` for the post-merge retrospective |
+| `branch-rescue` | `/spwf:branch-rescue` | Recovery — moves commits that leaked onto the base branch onto `feature/{change-id}` and resets local base (local-only; surfaces the force-push command, never auto-pushes). Standalone or invoked by `pr-create`. See [Branching](#branching) |
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — Fetch and review a PR; structured report |
 | `address-review` | `/spwf:address-review [report \| ref]` | 6.5 — Turn review feedback (report file or fetched PR/MR comments) into commits or reasoned push-backs; forbids performative agreement (adapted from obra/superpowers `receiving-code-review`) |
 | `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Extract learnings from commits (rules for the project) |
 | `recap` | `/spwf:recap [change-id]` | Post — Teaching summary for the user: concepts touched, decisions made, surprises, growth pointers |
 | `tracker-comment` | `/spwf:tracker-comment [issue-id]` | On-demand — Post an audience-aware comment to the linked tracker issue. Classifies as human (rewrites for plain English, ≤150 words, one clear ask) or record (light cleanup, full technical detail allowed). |
 | `changelog` | `/spwf:changelog [ref]` | Post — Release notes from conventional commits |
+
+## Branching
+
+Branching is enforced in three layers so commits never pile up on the base
+branch by accident:
+
+- **Layer 1 — `spec`** auto-creates `feature/{change-id}` before its commit.
+- **Layer 2 — `build`** verifies the branch in Phase 0; halts with a switch
+  offer if on the base with an active change.
+- **Layer 3 — `pr-create` / `branch-rescue`** offers an automated rescue when
+  work already leaked onto the base — local-only moves, force-push surfaced for
+  manual execution.
+
+Configure or opt out via an optional `.spwf/branch.yaml`:
+
+```yaml
+# .spwf/branch.yaml — all fields optional
+base: develop        # protect a non-main integration branch
+auto_branch: ask     # prompt before auto-branching (default: always)
+enforce: false       # opt out of all three layers (not recommended)
+```
+
+Fields: `prefix:`, `base:`, `auto_branch: always | ask | never`,
+`enforce: true | false`. Full schema and the detect-state / auto-branch /
+rescue logic:
+[`skills/_shared/branch-management.md` § config schema](skills/_shared/branch-management.md#1-config-schema-spwfbranchyaml).
 
 ## Quality tools
 

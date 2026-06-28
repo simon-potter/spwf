@@ -37,6 +37,13 @@ Read the identified todo file. Extract:
 - `ticket:` field (if present)
 - The title
 
+**Ticket resolution fallback.** The todo file is the primary source for
+`ticket:`. If it has no `ticket:` field, read the change's
+`openspec/changes/{change-id}/proposal.md` and use its `**Tracker**:` header
+line (written by `spec`) as a fallback. This keeps the tracker link alive even
+if the todo file was edited or moved. If neither source has a ticket, treat the
+change as having no linked ticket (Step 6 skips silently).
+
 If `status` is already `complete`, report: "This change is already closed." and stop.
 
 Confirm the OpenSpec change id: check `openspec/changes/` for a directory matching the change. If `$ARGUMENTS` provided a change id use it directly. If derived from the todo file, ask the user to confirm the mapping before proceeding.

@@ -20,23 +20,64 @@ default; GitHub supported.
 Run each check in order. If any blocking check fails, stop and report — do not proceed to PR creation.
 
 ```bash
-# Check 1: Not on main
+# Resolve the base branch (.spwf/branch.yaml: base, else main)
+BASE=$(grep -E '^base:' .spwf/branch.yaml 2>/dev/null | awk '{print $2}'); BASE=${BASE:-main}
+
+# Check 1: Not on base
 BRANCH=$(git branch --show-current)
-echo "Branch: $BRANCH"
+echo "Branch: $BRANCH (base: $BASE)"
 
 # Check 2: Commits exist ahead of base
-git log main...HEAD --oneline
+git log "${BASE}...HEAD" --oneline
 
 # Check 3: No uncommitted changes
 git status --short
 ```
 
-**Check 1 — Not on main:**
-If branch is `main` or `master`, halt:
+**Check 1 — Not on main (with rescue offer):**
+
+If branch is the base (`main` / `master`, or `.spwf/branch.yaml: base`), do not
+halt with a bare error. Detect whether this is the rescuable failure state and,
+if so, offer to fix it automatically. Delegates the operation to
+[`_shared/branch-management.md` §4](../_shared/branch-management.md#4-rescue-operation)
+via the `branch-rescue` skill.
+
+Detect:
+- active change: `CHANGE_ID=$(openspec list --json 2>/dev/null | jq -r '.[0].name')`
+- commits ahead of the remote base: `git log origin/{base}..HEAD --oneline` non-empty
+- pre-spec base commit (subject-line grep, §4)
+
+If an active change exists **and** there are commits ahead, present the rescue
+plan inline with the exact commands, then ask:
+
 ```
-✗ Cannot ship from main branch.
-Create a feature branch first: git checkout -b {branch-name}
+You're on `{base}` with {N} commit(s) for active change `{change-id}`.
+I can rescue this — local-only, nothing pushed:
+
+  1. git checkout -b feature/{change-id}              # preserve your work
+  2. git checkout {base} && git reset --hard {base-commit}   # reset local base
+  3. (verify {base} == origin/{base})
+
+After rescue, local `{base}` is diverged from origin only if commits were
+pushed; publish manually when ready:
+  git push --force-with-lease origin {base}
+
+Proceed with rescue? [Y/n]
 ```
+
+- On **Y / enter**: delegate to `/spwf:branch-rescue` for the three local-only
+  operations, then continue into **Step 1b** (security pre-flight) on the
+  newly-created `feature/{change-id}` branch.
+- On **n**: halt with the legacy message so manual handling is not surprised by
+  silent skipping:
+
+  ```
+  ✗ Cannot ship from main branch.
+  Create a feature branch first: git checkout -b {branch-name}
+  ```
+
+If no active change is found, fall back to the legacy halt above (nothing to
+rescue automatically).
 
 **Check 2 — Commits exist:**
 If no commits found ahead of base, halt:
@@ -159,7 +200,7 @@ Do not silently skip. Report each missing tool with its setup path:
 
 Read these files to derive the PR title and body:
 - `openspec/changes/*/proposal.md` — for the change description
-- `git log main...HEAD --oneline` — for commit summary
+- `git log "${BASE}...HEAD" --oneline` — for commit summary (`BASE` resolved in Step 1)
 
 ## Step 3: Resolve forge and create the request
 
@@ -203,11 +244,31 @@ gh pr create --title "$TITLE" --body "$BODY"
 
 Use the active forge's vocabulary. GitHub: "PR created". GitLab: "MR created".
 
+Always end with the **Next step** block pointing at `/spwf:close`. This is the
+handoff that keeps the golden path from ending at "merge and close the ticket"
+— the retrospective lives *inside* close, and an agent that stops here skips it.
+
 ```
 ✓ {PR | MR} created: {URL}
 
 CI/CD will handle deployment after merge.
+
+── Next step ───────────────────────────────────────────────────
+After this {PR | MR} merges, run /spwf:close to finish the change:
+  • runs the retrospective (learn-from-mistakes, spec audit, doc-lint,
+    workflow-lint, recap)
+  • archives the OpenSpec change
+  • transitions the linked tracker ticket to its done state
+  • deletes the local feature branch (with safety checks)
+
+"Merge and close the ticket" is NOT complete until /spwf:close runs —
+the retrospective is part of close, not an optional extra.
 ```
+
+**Do not invoke `/spwf:close` automatically.** pr-create points forward only.
+Close is a human-gated, destructive final phase (archives the change,
+transitions the ticket, deletes the branch) and must not fire as a side effect
+of opening a request — pr-create does not even merge.
 
 ## Gotchas
 

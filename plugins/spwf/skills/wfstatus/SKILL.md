@@ -84,6 +84,42 @@ When an OpenSpec change is the current focus, find the next concrete task:
 2. If the change has a `design.md` or `proposal.md`, confirm the task aligns with what was planned
 3. If `openspec instructions apply --change <name>` is available, run it to get the canonical next-task instruction
 
+### Branch-drift check
+
+After the focus heuristics, run one extra check for the failure mode that
+`add-branch-enforcement` prevents: an active change accumulating commits on the
+base branch instead of on its feature branch. Read `.spwf/branch.yaml`
+(defaults: `base: main`, `prefix: feature/`) per
+[`_shared/branch-management.md` §1](../_shared/branch-management.md#1-config-schema-spwfbranchyaml).
+
+Fire a **P2 drift warning** when **all** hold:
+
+1. `openspec/changes/{change-id}/` exists with incomplete tasks, AND
+2. `feature/{change-id}` does not exist **OR** is not the current branch, AND
+3. the change's own spec commit has leaked onto the base branch:
+
+```bash
+git log "origin/${base}..${base}" \
+    --grep "^spec: add OpenSpec change ${change_id}$" --format=%H | head -1
+```
+
+returns a commit.
+
+Condition 3 is tied to the change's spec-commit subject — the same marker
+`branch-rescue` uses for base detection (§4). This makes the check
+deterministic and avoids parsing the proposal's free-form "Affected areas"
+prose: commits on `{base}` are attributed to *this* change only when its spec
+commit is among them, so unrelated commits on `{base}` (a hotfix, a doc tweak)
+do not trip a false drift warning.
+
+```
+⚠ Branch drift — change `{change-id}` may be committing to `{base}`.
+   Run `/spwf:branch-rescue` to move commits.
+```
+
+Do **not** fire when the current branch is `feature/{change-id}` — commit volume
+on the feature branch is expected and never drift.
+
 ## Step 3 — Format the dashboard
 
 Produce a concise, scannable dashboard. No walls of text. Use tables and one-liners.
@@ -94,6 +130,8 @@ Produce a concise, scannable dashboard. No walls of text. Use tables and one-lin
 ### Current focus
 {High | Medium | Low} confidence: **{change name or description}**
 Signal: {one sentence explaining the heuristic that fired}
+
+{⚠ Branch drift — change `{change-id}` may be committing to `{base}`. Run `/spwf:branch-rescue` to move commits.   ← only when the branch-drift check fired}
 
 ### Active OpenSpec changes
 
