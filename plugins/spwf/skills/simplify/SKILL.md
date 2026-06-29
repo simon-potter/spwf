@@ -1,9 +1,10 @@
 ---
 # Source (Pass 1, mechanical simplification): https://github.com/addyosmani/agent-skills — MIT licence.
+# Source (Pass 1, DRY/reuse + deslop lenses): https://github.com/brianlovin/agent-config — skills `simplify` and `deslop`. Concepts adapted (rule-of-three DRY, reuse-existing-helper, AI over-engineering patterns: defensive bloat / `as any` / YAGNI, "explicit > compact" restraint).
 # Source (Pass 2, pre-PR reviewer dispatch): https://github.com/obra/superpowers — MIT licence, skill `requesting-code-review`. Authors: Jesse Vincent and the Prime Radiant team.
-# No SKILL.md content is reproduced verbatim from either source; only concepts (severity tiers, "review early, review often", local-diff dispatch shape) are adapted.
+# No SKILL.md content is reproduced verbatim from any source; only concepts (severity tiers, "review early, review often", local-diff dispatch shape, DRY/deslop lenses) are adapted.
 name: simplify
-description: Phase 4 — Simplify + Self-Review. Two-pass cleanup of the current branch before PR. Pass 1 (mechanical) — review changed files for dead code, unclear names, and unnecessary complexity; apply safe unambiguous removals directly; flag judgment calls without touching them; never touch test files. Pass 2 (judgment) — dispatch the `reviewer` subagent in local-diff mode against the pinned commit range to catch correctness, security, missing-test, and contract issues while amend is still cheap. Produces a simplify report and a {branch}-self-review.md.
+description: Phase 4 — Simplify + Self-Review. Two-pass cleanup of the current branch before PR. Pass 1 (mechanical) reviews changed files through three lenses — mechanical removals, DRY/reuse (rule of three; reuse existing helpers), and deslop (AI over-engineering: defensive bloat, `as any`, YAGNI) — applying safe unambiguous changes and flagging judgment calls, with a restraint guardrail (explicit > compact); never touches test files. Pass 2 (judgment) dispatches the `reviewer` subagent in local-diff mode against the pinned commit range to catch correctness, security, missing-test, contract, and reuse/DRY issues while amend is still cheap. Produces a simplify report and a {branch}-self-review.md.
 disable-model-invocation: true
 allowed-tools: [Read, Edit, Grep, Glob, Bash, Task]
 ---
@@ -31,22 +32,51 @@ If no files remain after exclusion, report "No non-test files changed." Skip to 
 
 ### Step 2: Review each file
 
-Read each file. Look for:
+Read each file through three lenses. For the reuse lens, also read the shared
+util / helper modules adjacent to the change. Apply only unambiguously-safe
+changes directly; flag everything that needs judgment.
 
-#### Apply directly — unambiguously correct removals
+#### Lens 1 — Mechanical (apply directly)
 
 - Commented-out code blocks (code in comments, not documentation)
 - Debug statements: `print(`, `console.log(`, `debugger`, `pprint(`
 - Unused imports (only when certain — a symbol that appears nowhere else in the file)
-- Duplicate blank lines (more than two consecutive blank lines)
+- Duplicate blank lines (more than two consecutive)
+- Redundant comments that merely restate the code, or break the file's comment style (deslop)
 
-#### Flag without changing — requires judgment
+Clarity smells — **flag, don't apply**: unclear names (suggest a rename),
+functions doing more than one thing (flag for splitting), magic numbers/strings
+(suggest a named constant), nesting > 3 deep (flag for flattening), dead /
+unreachable function or class (flag, don't delete).
 
-- Unclear variable names — suggest a rename but do not apply
-- Functions doing more than one thing — flag for splitting
-- Magic numbers or strings — suggest named constants
-- Deeply nested conditions (> 3 levels) — flag for flattening
-- Dead function or class — one that appears to be unreachable (flag, don't delete)
+#### Lens 2 — DRY / reuse
+
+Remove duplication and reuse what already exists — without manufacturing the
+wrong abstraction (see Restraint).
+
+- **Apply directly:** an exact-duplicate block already present verbatim elsewhere in the *same file* that collapses with zero behaviour change.
+- **Flag — rule of three:** copy-paste-with-variation appearing **3+ times** — suggest one helper and name where it should live. Two occurrences that may diverge: leave them.
+- **Flag — reinvention:** new code that re-implements something the repo already provides. `grep` the adjacent `*/utils`, `*/shared`, `*/lib`, and same-directory modules; if a helper exists, flag "call `{existing}` instead of the new inline copy."
+- **Flag — scattered source of truth:** the same constant / type / data shape duplicated across files — suggest a single definition.
+
+#### Lens 3 — Deslop (AI over-engineering)
+
+Agent-written diffs accumulate defensive bloat. Flag these (apply only when the fix is trivial and local):
+
+- Defensive checks or `try`/`catch` abnormal for that area — especially on trusted, already-validated codepaths.
+- `as any` / type-escape casts that paper over a real type — fix the type, don't cast.
+- Speculative generality — a config flag, parameter, or abstraction layer with a **single caller** and no current use (YAGNI).
+- Code or comments whose style is inconsistent with the surrounding file (align if trivial; else flag).
+
+#### Restraint — what NOT to simplify
+
+Simplify for clarity and maintainability, **not line count**. Leave it alone when:
+
+- The change trades an explicit form for a clever/compact one that reads worse — **explicit > compact**.
+- Duplication appears only **twice** and the cases may diverge — a little duplication is cheaper than the wrong abstraction; don't abstract yet.
+- A helper or abstraction is load-bearing or aids readability even if it looks "extra."
+
+This restraint is what stops the DRY and deslop lenses from over-firing.
 
 ### Step 3: Apply safe changes
 
@@ -65,7 +95,7 @@ Make each edit minimal — remove the exact line or block, nothing more.
 
 ### Flagged (judgment needed)
 
-- {file}:{line}: {issue} — {suggested fix}
+- {file}:{line}: [{clarity | DRY | deslop}] {issue} — {suggested fix}
 
 ### Clean
 
@@ -185,12 +215,18 @@ Use the `Task` tool with `subagent_type=reviewer`. Compose the prompt from this 
 > - 🟡 **Important** — should fix before opening PR (missing tests, missing error handling, unclear logic at trust boundaries, public API drift not in spec)
 > - 🟢 **Minor** — nice to have, can defer (naming, micro-perf, comment quality)
 >
+> **Also weigh reuse, DRY, and over-engineering** (Important if they add real maintenance cost, else Minor) — these complement Pass 1's mechanical sweep:
+> - **Reuse:** new code re-implementing an existing repo helper — name the helper to call instead.
+> - **DRY:** the same logic duplicated 3+ times (rule of three) — name where the single helper should live. (Do NOT flag duplication that appears only twice, or abstractions that would couple unrelated cases — a little duplication beats the wrong abstraction.)
+> - **Over-engineering (deslop):** defensive checks / `try`/`catch` on trusted codepaths, `as any` casts papering over a real type, single-caller abstractions or unused config (YAGNI).
+>
 > **Do not flag**:
 > - Formatting / style — linters handle this
 > - Existing code outside the diff — out of scope
 > - Mechanical cleanup already done in Pass 1 (debug prints, dead imports, commented-out code)
-> - Speculative refactors that aren't tied to a concrete defect
+> - Speculative refactors that aren't tied to a concrete duplication or defect
 > - "What about X?" hypotheticals without a codebase-grounded example
+> - DRY consolidation that would create a premature/forced abstraction (explicit > compact)
 >
 > **Output**: write the report to `{BRANCH}-self-review.md` in the current directory using the standard pr-review report format. Include the pinned SHAs (`{BASE_SHA}..{HEAD_SHA}`) in the header so it's unambiguous what was reviewed. The Verdict line should be one of: `✅ Ready for PR`, `🔄 Fix Critical/Important before PR`, or `💬 Minor only — proceed at discretion`.
 

@@ -34,7 +34,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `write-tests` | `/spwf:write-tests` | 3 — Red phase: write failing tests before implementation |
 | `run-tests` | `/spwf:run-tests` | 3 — Run full test suite; stop on first failure |
 | `debug-recovery` | `/spwf:debug-recovery` | 3 — Diagnose failing test or broken build; minimal fix |
-| `simplify` | `/spwf:simplify` | 4 — Two-pass cleanup: (1) mechanical removal of dead code + unnecessary complexity; (2) `reviewer` subagent in local-diff mode against pinned commit range with openspec proposal + tasks as intent baseline (adapted from obra/superpowers `requesting-code-review`) |
+| `simplify` | `/spwf:simplify` | 4 — Two-pass cleanup: (1) three lenses — mechanical removal, DRY/reuse (rule of three; reuse existing helpers), deslop (AI over-engineering: defensive bloat, `as any`, YAGNI), with an "explicit > compact" restraint; (2) `reviewer` subagent in local-diff mode against pinned commit range (intent = openspec proposal + tasks), also weighing reuse/DRY/over-engineering (adapted from obra/superpowers `requesting-code-review` + brianlovin/agent-config `simplify`/`deslop`) |
 | `pr-create` | `/spwf:pr-create` | 5 — Pre-flight checks then PR creation; if on base with commits, offers automated `branch-rescue` (Layer 3); ends by pointing at `/spwf:close` for the post-merge retrospective |
 | `branch-rescue` | `/spwf:branch-rescue` | Recovery — moves commits that leaked onto the base branch onto `feature/{change-id}` and resets local base (local-only; surfaces the force-push command, never auto-pushes). Standalone or invoked by `pr-create`. See [Branching](#branching) |
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — Fetch and review a PR; structured report |
@@ -242,4 +242,10 @@ From [obra/superpowers](https://github.com/obra/superpowers) (MIT licence; autho
 | `simplify` (Pass 2) | `requesting-code-review` — folded into simplify as the post-cleanup reviewer dispatch against local diff |
 | `address-review` | `receiving-code-review` — verify-before-implement posture, no performative agreement |
 
-No SKILL.md content from either upstream source is reproduced verbatim — concepts (severity tiers, "review early, review often", READ → VERIFY → EVALUATE loop, the forbidden-phrase list) are adapted into our own prose with this codebase's conventions. Upstream copyright notices are preserved via the frontmatter comments in each affected SKILL.md.
+From [brianlovin/agent-config](https://github.com/brianlovin/agent-config):
+
+| Skill | Source |
+|---|---|
+| `simplify` (Pass 1 DRY/deslop lenses) | `simplify` + `deslop` — rule-of-three DRY, reuse-existing-helper, AI over-engineering patterns (defensive bloat, `as any`, YAGNI) and the "explicit > compact" restraint |
+
+No SKILL.md content from any upstream source is reproduced verbatim — concepts (severity tiers, "review early, review often", READ → VERIFY → EVALUATE loop, the forbidden-phrase list, DRY/deslop lenses) are adapted into our own prose with this codebase's conventions. Upstream copyright notices are preserved via the frontmatter comments in each affected SKILL.md.
