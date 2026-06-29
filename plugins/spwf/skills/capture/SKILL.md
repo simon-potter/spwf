@@ -321,6 +321,39 @@ If the user says no or skips: proceed without creating a ticket.
 
 ---
 
+## Move the ticket to in-progress
+
+Starting capture means work on the ticket has begun, so move it to the
+project's start state. Applies whenever a `ticket:` is now linked — one fetched
+in Step 1 **or** one just created in the Tracker prompt. This is the step the
+SPWF lifecycle expects at capture time (stage → Doing); without it the board
+silently lies about what's in flight.
+
+Resolve `start_state` from `.spwf/tracker.yaml` (default `In Progress`; kanban /
+YouTrack boards typically set `Doing`) and dispatch `set_state` per
+[`_shared/tracker-dispatch.md`](../_shared/tracker-dispatch.md).
+
+| Condition | Action |
+|---|---|
+| No `ticket:` linked (slack / file / scratch, no ticket created) | Skip silently. |
+| `tracker: none`, or `start_state: none` | Skip silently (opted out). |
+| Ticket already in `start_state`, or already in a later state (in-review / done / closed) | Skip — **never move a ticket backward**. Note "ticket already in {state}". |
+| Otherwise | `set_state(id="{ticket}", state="{start_state}")`. |
+
+**Courtesy flip — never blocks capture.** The ideation artefact is the
+deliverable. If the transition fails (auth, network, unknown state name), emit a
+single soft note and continue — do **not** halt:
+
+```
+ℹ Couldn't move {ticket} to "{start_state}" ({reason}). Set it manually, or
+  configure `start_state:` in .spwf/tracker.yaml (or `start_state: none` to skip).
+```
+
+(Contrast with `close`, whose `done_state` transition is load-bearing and halts
+on failure — see `_shared/tracker-dispatch.md`.)
+
+---
+
 ## Report
 
 **Bug path:**
@@ -328,6 +361,7 @@ If the user says no or skips: proceed without creating a ticket.
 ✓ Bug artefact created: todo/BUG-{slug}.md
 
 Source: {youtrack ACAD-42 | jira PROJ-123 | slack | scratch}
+{Ticket: {ticket} → {start_state}   | ticket already {state}   | omit if no ticket}
 Classified as: bug ({signal that triggered classification})
 Hypothesis: {one-line summary}
 Fix type: {content/config only | trivial code fix | non-trivial code fix}
@@ -344,6 +378,7 @@ Recommended next step:
 ✓ Ideation file created: todo/{slug}.md
 
 Source: {youtrack ACAD-42 | jira PROJ-123 | slack | file path | scratch}
+{Ticket: {ticket} → {start_state}   | ticket already {state}   | omit if no ticket}
 Classified as: change ({signal that triggered classification, or "confirmed by user"})
 Qualify: {passed cleanly | 1 question asked | 2 questions asked — {N} gaps remain}
 Open questions: {count}

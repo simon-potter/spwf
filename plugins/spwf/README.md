@@ -15,7 +15,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 
 | Skill | Invoke | Composes |
 |---|---|---|
-| `capture` | `/spwf:capture [source]` | Classifies input as bug or change → bug path: investigation + `todo/BUG-{slug}.md`; change path: `issue-to-task` / `new-task` + `todo/{slug}.md` |
+| `capture` | `/spwf:capture [source]` | Classifies input as bug or change → bug path: investigation + `todo/BUG-{slug}.md`; change path: `issue-to-task` / `new-task` + `todo/{slug}.md`. When a tracker ticket is linked (fetched or created), moves it to `start_state` (default `In Progress`; kanban/YouTrack: `Doing`) — courtesy flip, soft-note on failure, `start_state: none` to disable |
 | `build` | `/spwf:build` | Phase 0 verifies the feature branch (Layer 2 — halts/offers if on base with an active change) → `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` (Refactor) |
 | `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog) → mark todo complete → tracker transition to done state → `opsx:archive` (per `.spwf/tracker.yaml`; YouTrack default, Jira and Beads via spwf-beadsify also supported) |
 
@@ -25,7 +25,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 |---|---|---|
 | `wfstatus` | `/spwf:wfstatus` | Pre — Session orientation: where am I, what's next |
 | `pause` | `/spwf:pause [next-ref]` | Interrupt — Document state, commit + push in-flight work, switch to main ready for the next capture |
-| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (YouTrack default; Jira and Beads via spwf-beadsify also supported via tracker-dispatch) |
+| `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (YouTrack default; Jira and Beads via spwf-beadsify also supported via tracker-dispatch); moves the ticket to `start_state` when fetched (same courtesy flip as `capture`) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch |
 | `challenge` | `/spwf:challenge [file]` | Gate — Interview until all questions resolved; scope-sizing check recommends splitting or proceeding as one change |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
