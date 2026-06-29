@@ -1,7 +1,7 @@
 ---
 source: scratch
 created: 2026-05-31
-status: challenged
+status: complete
 ---
 
 # Enforce feature-branching at the right phase of the SPWF golden path

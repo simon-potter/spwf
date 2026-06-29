@@ -2,6 +2,8 @@
 
 > **Authoritative Reference:** [`todo/branch-enforcement.md`](../../../todo/branch-enforcement.md)
 > **Architecture Reference:** [`design.md`](./design.md) — Decisions 1 (Layer 1 at spec), 2 (Layer 2 at build), 3 (Layer 3 rescue), 5 (shared module pattern), 8 (rescue base detection).
+>
+> **Closed at 51/58 (2026-06-29).** Implementation shipped in spwf 1.15.0–1.18.0; deterministic logic sandbox-verified. The 7 still-unchecked items (3.6, 4.5, 4.6, 5.5, 8.1, 8.2, 8.3) are live-interactive / test-suite-dependent acceptance smokes — extracted to [`todo/branch-enforcement-acceptance.md`](../../../todo/branch-enforcement-acceptance.md) for real-project verification rather than fake-completed here.
 
 ## Phase 1 — Shared module foundation
 
