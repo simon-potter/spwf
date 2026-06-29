@@ -27,7 +27,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `pause` | `/spwf:pause [next-ref]` | Interrupt — Document state, commit + push in-flight work, switch to main ready for the next capture |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (YouTrack default; Jira and Beads via spwf-beadsify also supported via tracker-dispatch); moves the ticket to `start_state` when fetched (same courtesy flip as `capture`) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch |
-| `challenge` | `/spwf:challenge [file]` | Gate — Interview until all questions resolved; scope-sizing check recommends splitting or proceeding as one change |
+| `challenge` | `/spwf:challenge [file]` | Gate — Question map (provable coverage) → one-at-a-time interview across a 13-dimension taxonomy → adversarial premortem + red-team → completeness self-audit → scope-sizing check (split vs one change). Records `## Residual risks` when any are carried into spec |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
 | `spec` | `/spwf:spec` | 1 — Convert ideation file into full OpenSpec change proposal; auto-creates `feature/{change-id}` before committing (Layer 1, see [Branching](#branching)); carries the ideation `ticket:` into the proposal `**Tracker**:` line |
 | `approve-plan` | `/spwf:approve-plan` | 2 — Quality-check task list; human sign-off gate |

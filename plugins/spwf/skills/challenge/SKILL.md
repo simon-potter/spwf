@@ -1,7 +1,7 @@
 ---
-# Adapted from: https://github.com/mattpocock/skills/grill-me (via npx skills@latest add mattpocock/skills/grill-me). Added $ARGUMENTS file path support and file-first read step.
+# Adapted from: https://github.com/mattpocock/skills/grill-me (via npx skills@latest add mattpocock/skills/grill-me). Added $ARGUMENTS file path support and file-first read step. Extended beyond the upstream cooperative interview with: an explicit question map for provable coverage, a 13-dimension probe taxonomy, an adversarial pass (premortem + red-team, drawing on grill-with-docs/domain-modeling rigor), and a completeness self-audit.
 name: challenge
-description: Gate — Challenge a plan, ideation file, or design relentlessly. Accepts a file path as $ARGUMENTS (defaults to the most recent file in todo/ if omitted). Reads the file first, interviews until all open questions are resolved, then runs a scope-sizing check — recommends splitting into multiple changes if the work spans independent boundaries, or proceeding as one change if tightly coupled.
+description: Gate — Challenge a plan, ideation file, or design relentlessly. Accepts a file path as $ARGUMENTS (defaults to the most recent file in todo/ if omitted). Builds an explicit question map, interviews one question at a time across a 13-dimension taxonomy, runs an adversarial premortem + red-team pass, then a completeness self-audit so coverage is provable rather than vibes — finishing with a scope-sizing check that recommends splitting independent work or proceeding as one change.
 disable-model-invocation: true
 allowed-tools: [Read, Write, Grep, Glob, Bash]
 ---
@@ -22,41 +22,93 @@ ls -t todo/*.md | head -1
 
 Read the file completely.
 
-## Step 2: Begin the interview
+## Step 2: Build the question map
 
-Walk through every aspect of the plan — every decision, every assumption, every open question — asking one question at a time.
+Before interviewing, enumerate the decision tree so coverage is **provable, not a
+feeling** — this is what stops a challenge from being "light." Produce an explicit
+working checklist (in your reply, not the file yet) of every point that must be
+resolved, drawn from:
 
-For each question:
-- Provide your recommended answer based on what you know from the codebase and context
-- Wait for the user to confirm, override, or expand
-- Do not move to the next question until the current one is resolved
+- Every `## What we know` item open to more than one reading
+- Every entry in `## Open questions`
+- Every dimension in the taxonomy below that plausibly applies
 
-Work through these categories in order, but skip any that are already clearly resolved in the file:
+The interview is not complete until every item on the map is either **resolved**
+or **consciously marked N/A with a one-line reason** — never silently skipped.
+Silent skipping is the failure mode this map exists to prevent.
 
-1. **Ambiguous requirements** — any "what we know" item that could be interpreted multiple ways
-2. **Open questions** — the explicitly listed ones in the file, one by one
-3. **Scope creep risks** — things the rough scope implies but doesn't state
-4. **Hidden dependencies** — other systems, people, or decisions this depends on
-5. **Failure modes** — what could go wrong at each step
-6. **Success definition** — is "done" clearly defined?
+### Probe taxonomy
 
-If a question can be answered by exploring the codebase, explore it before asking.
+Walk these in order. For each: ask (one question at a time) or mark `N/A — {reason}`.
 
-## Step 3: Continue until done
+1. **Ambiguous requirements** — any "what we know" item open to multiple readings
+2. **Open questions** — the explicitly listed ones, one by one
+3. **Scope creep risks** — what the rough scope implies but doesn't state
+4. **Explicit non-goals** — what is deliberately out of scope (state it, don't leave it implied)
+5. **Hidden dependencies** — other systems, people, data, or decisions this rides on
+6. **Alternatives considered** — which approaches were rejected and why (guards against tunnel vision)
+7. **Non-functional requirements** — performance, security, accessibility, scale, data volume, concurrency, cost
+8. **Edge & boundary cases** — empty / null / zero, maximum, duplicate, concurrent, partial failure
+9. **Backwards-compat & migration** — existing data, users, and API consumers; rollout and rollback path
+10. **Failure modes** — what breaks at each step, and what happens when it does
+11. **Observability & testability** — how we'll know it works, debug it, and verify it
+12. **Reversibility / blast radius** — how hard to undo; the worst realistic outcome
+13. **Success definition** — is "done" unambiguous and measurable?
 
-Keep going until every branch of the decision tree is resolved. Do not summarise prematurely. Do not accept vague answers — if the answer raises another question, ask it.
+## Step 3: Interview — one question at a time
 
-The interview is complete only when there are no remaining open questions and the rough scope is unambiguous enough to write a spec from.
+Drive the map to zero. For each unresolved item:
 
-## Step 4: Write decisions back to the todo file
+- Provide your recommended answer from the codebase and context — **explore the codebase before asking** when it can answer the question
+- Ask exactly one question; wait for the user to confirm, override, or expand
+- Do not advance until it is resolved; if an answer raises a new question, add it to the map and resolve that too
+- Do not accept vague answers
 
-Once the interview is complete, update the source todo file:
+Walk down each branch of the decision tree, resolving dependencies between
+decisions one by one. Tick items off the map as they resolve.
+
+## Step 4: Adversarial pass
+
+Cooperative questioning surfaces what the planner already half-knows; this step
+**attacks the plan** to surface what they don't. It is where "misses nothing"
+actually comes from — do not skip it.
+
+1. **Premortem.** Pose: *"Assume this shipped and failed badly in production six
+   months from now — what went wrong?"* Generate 3–5 **concrete, evidence-grounded**
+   failure stories (not vague hypotheticals). For each plausible one, ask the
+   question it implies and resolve it.
+2. **Red-team the riskiest decisions.** Take the 2–3 highest-stakes or
+   least-certain decisions from the map and argue the *opposing* case for each
+   ("a skeptic would say…"). Any decision that can't survive its counter-argument
+   goes back onto the map for resolution.
+
+Every new issue found here re-enters Step 3.
+
+## Step 5: Completeness self-audit
+
+Before declaring done, run one explicit meta-check — the guard against a
+*confidently incomplete* interview:
+
+- Is every item on the question map resolved or consciously marked N/A?
+- For each dimension marked N/A: is it genuinely irrelevant, or did I dodge it?
+- *"What would a domain expert in this area notice is still missing?"* — answer
+  honestly; resolve anything that surfaces.
+
+State the outcome: either **"no open items — every branch resolved,"** or the
+explicit **residual risks** carried into spec, each tagged with confidence. The
+challenge is complete only when the map is clear and this audit surfaces nothing
+new. Do not summarise before this passes.
+
+## Step 6: Write decisions back to the todo file
+
+Once the interview, adversarial pass, and self-audit are complete, update the source todo file:
 
 - Replace the `## Open questions` section with the resolved answers — each question followed by its answer in one or two sentences
-- Append a `## Challenge decisions` section listing every new decision made during the interview that was not already in the file
+- Append a `## Challenge decisions` section listing every new decision made during the interview that was not already in the file (include the ones surfaced by the premortem / red-team in Step 4)
+- If the self-audit (Step 5) carried any **residual risks** into spec, append a `## Residual risks` section listing each with its confidence — so spec and build inherit them explicitly rather than rediscovering them
 - Do not touch any other section
 
-## Step 5: Scope-sizing check
+## Step 7: Scope-sizing check
 
 With all questions resolved and the rough scope now clear, assess whether this is one coherent OpenSpec change or whether it should be split.
 
@@ -82,7 +134,7 @@ With all questions resolved and the rough scope now clear, assess whether this i
 
 **If keeping as one change:**
 
-If the scope is large but tightly coupled, recommend structuring `tasks.md` with explicit phases so `build` can commit between phases. Note this in the summary. Proceed to Step 6.
+If the scope is large but tightly coupled, recommend structuring `tasks.md` with explicit phases so `build` can commit between phases. Note this in the summary. Proceed to Step 8.
 
 **If splitting is recommended:**
 
@@ -114,7 +166,7 @@ Note "kept as one change" in the summary and proceed.
 
 ---
 
-## Step 6: Summarise and commit
+## Step 8: Summarise and commit
 
 Print the summary:
 
