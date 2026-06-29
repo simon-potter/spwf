@@ -3,7 +3,7 @@
 name: issue-to-task
 description: Pre-phase — Capture an issue tracker ticket (YouTrack default; Jira, Beads via spwf-beadsify, and others supported via tracker-dispatch) as a lightweight ideation file at todo/{slug}.md. Fetches the ticket via the configured tracker (MCP or skill backend), extracts context and open questions, and produces an ideation file ready for /spwf:challenge. Does NOT generate OpenSpec — that is spec's job.
 disable-model-invocation: true
-allowed-tools: [Read, Write, Bash, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues]
+allowed-tools: [Read, Write, Bash, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_search_issues, mcp__atlassian__jira_update_issue]
 ---
 
 # issue-to-task
@@ -100,6 +100,27 @@ status: ideation
 {High-level what needs to change — from ticket task lists and scope description, no implementation detail}
 ```
 
+## Step 4b: Move the ticket to in-progress
+
+Fetching the ticket into a todo means work has begun, so move it to the project's
+start state — the transition the SPWF lifecycle expects at capture time
+(stage → Doing). Resolve `start_state` from `.spwf/tracker.yaml` (default
+`In Progress`; kanban / YouTrack boards typically set `Doing`) and dispatch
+`set_state` per `_shared/tracker-dispatch.md`.
+
+- Skip silently if `tracker: none` or `start_state: none`.
+- Skip if the ticket is already in `start_state` or a later state (in-review /
+  done / closed) — **never move a ticket backward**.
+- Otherwise `set_state(id="{TICKET}", state="{start_state}")`.
+
+**Courtesy flip — never blocks.** The ideation file is the deliverable. On
+failure (auth, network, unknown state name) emit one soft note and continue:
+
+```
+ℹ Couldn't move {TICKET} to "{start_state}" ({reason}). Set it manually, or
+  configure `start_state:` in .spwf/tracker.yaml (or `start_state: none` to skip).
+```
+
 ## Step 5: Report
 
 ```
@@ -107,6 +128,7 @@ status: ideation
 
 Source: {TICKET-ID}
 Title: {title}
+{Ticket: {TICKET-ID} → {start_state}   | ticket already {state}   | omit if start_state: none}
 
 Recommended next step: /spwf:challenge todo/{slug}.md
 ```

@@ -16,7 +16,7 @@ Simplify is a two-pass step: a mechanical cleanup (dead code, debug prints, uncl
 | Step | Command | Invokes | Why | Produces |
 |---|---|---|---|---|
 | **Orient** | `/spwf:wfstatus` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
-| **Capture** | `/spwf:capture [source]` | Tracker dispatch (YouTrack default; Jira and Beads via spwf-beadsify also supported) | Accepts a tracker ticket (e.g. `ACAD-42`, `spwf-a3f2dd`), file, or freeform description; classifies as bug or change automatically. Runs a lightweight git-smell check first (uncommitted changes, already-merged branch, very stale branch — warn-and-confirm); soft notes for being on main or behind base. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md` |
+| **Capture** | `/spwf:capture [source]` | Tracker dispatch (YouTrack default; Jira and Beads via spwf-beadsify also supported) | Accepts a tracker ticket (e.g. `ACAD-42`, `spwf-a3f2dd`), file, or freeform description; classifies as bug or change automatically. Runs a lightweight git-smell check first (uncommitted changes, already-merged branch, very stale branch — warn-and-confirm); soft notes for being on main or behind base. **Moves a linked ticket to its `start_state` (e.g. Doing) when work begins** — courtesy flip, soft-note on failure. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md`, ticket → in-progress |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Interviews relentlessly until all open questions are resolved, then runs a scope-sizing check — recommends splitting into independent changes if the work spans natural boundaries, or proceeds as one change if tightly coupled | Resolved ideation file; or N child todo files + original marked `status: split` |
 | **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec, then **auto-creates `feature/{change-id}`** so the spec commit (and all later work) lands off the base branch (see [Branching](#branching)) | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/`, on `feature/{change-id}` |
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
@@ -254,6 +254,8 @@ skills don't have to ask every time:
 ```yaml
 tracker: youtrack          # youtrack | jira | linear | beads | none
 project: ACAD              # default project key for create_issue (ignored for beads)
+start_state: In Progress   # capture/issue-to-task move a ticket here when work starts
+                           #   (kanban/YouTrack boards often use "Doing"; "none" disables)
 done_state: Done           # state name for close transition
 ```
 

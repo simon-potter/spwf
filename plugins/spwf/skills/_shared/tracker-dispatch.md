@@ -39,6 +39,8 @@ project-specific defaults so skills don't have to ask every time.
 # .spwf/tracker.yaml — all fields optional
 tracker: youtrack          # youtrack | jira | linear | beads | none
 project: ACAD              # default project key for `create_issue`
+start_state: In Progress   # state `capture` / `issue-to-task` move a ticket to when work starts
+                           #   (kanban / YouTrack boards often use "Doing"; set `none` to disable)
 done_state: Done           # state name `close` transitions to
 ```
 
@@ -94,12 +96,24 @@ Every tracker-touching skill needs at most five logical operations.
 | `get_issue(id)` | id, title, description, type, state, labels, recent commenters | `capture`, `issue-to-task`, `close`, `tracker-comment` |
 | `search_issues(query)` | list of `{id, title}` | `capture`, `issue-to-task` |
 | `create_issue(project, title, body)` | new issue id | `capture` (when source was not a tracker) |
-| `set_state(id, state)` | confirmation of new state | `close` |
+| `set_state(id, state)` | confirmation of new state | `capture` / `issue-to-task` (→ `start_state` when work begins), `close` (→ `done_state`) |
 | `add_comment(id, body)` | new comment id or confirmation | `tracker-comment` |
 
 YouTrack uses **field-set commands** to change state (`State Done`); Jira uses **named
 transitions** (`Done`, `Closed`). Both fall under the abstract `set_state` — the
 dispatch row hides the difference.
+
+**`start_state` vs `done_state`.** `set_state` serves both ends of the lifecycle:
+`capture` / `issue-to-task` move a ticket to `start_state` when work begins;
+`close` moves it to `done_state`. They differ in failure handling:
+
+- `close`'s transition is load-bearing (it gates the OpenSpec archive) — it
+  **halts** on failure.
+- `capture`'s transition is a courtesy flip — the ideation artefact is the
+  deliverable, so a failed or unmatched `start_state` is a **soft note, never a
+  halt**. It is also **idempotent and forward-only**: skip if the ticket is
+  already in `start_state` or any later state (in-review / done / closed) so
+  capture never drags a ticket backward. Set `start_state: none` to disable.
 
 `add_comment` posts a comment on an existing issue thread. Distinct from
 `create_issue` (which records a new issue) and from `set_state` (which has no
