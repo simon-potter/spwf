@@ -10,15 +10,24 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atla
 Final phase of the SPWorkflow golden path. Retrospect, confirm, then permanently close the change.
 
 ```
-Step 1 → identify the change (resolve $ARGUMENTS or context)
-Step 2 → retrospective       (all 6 parts, including recap teaching summary)
-Step 3 → confirm closure     (explicit human gate)
-Step 4 → mark todo done      (status: complete + git mv to todo/_done/)
-Step 5 → commit changes      (git commit captures status edit + path move atomically)
-Step 6 → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
-Step 7 → archive OpenSpec    (opsx:archive; runs only after tracker close succeeds)
-Step 8 → delete local branch  (default on, conscious skip with [Y/n])
+Step 1  → identify the change (resolve $ARGUMENTS or context)
+Step 1b → move to base branch (closure must land on permanent history, then pull)
+Step 2  → retrospective       (all 6 parts, including recap teaching summary)
+Step 3  → confirm closure     (explicit human gate)
+Step 4  → mark todo done      (status: complete + git mv to todo/_done/)
+Step 5  → commit + push       (closure commit lands on origin/{base})
+Step 6  → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
+Step 7  → archive OpenSpec    (opsx:archive, then commit + push the move)
+Step 8  → delete local branch  (default on, conscious skip with [Y/n])
 ```
+
+> **Why closure runs on the base branch (Step 1b).** Everything `close`
+> produces — retrospective edits, the `status: complete` flip, the `todo/_done/`
+> move, and the OpenSpec archive — is permanent repository housekeeping. If it
+> is committed on the *merged feature branch*, those commits never reach
+> `{base}` and are lost when Step 8 deletes the branch. So `close` moves to
+> `{base}` up front and pushes its commits there. Unlike feature code (which
+> ships via PR), closure housekeeping is committed straight to `{base}`.
 
 ---
 
@@ -50,6 +59,48 @@ Confirm the OpenSpec change id: check `openspec/changes/` for a directory matchi
 
 ---
 
+## Step 1b — Move closure to the base branch
+
+`close` is the post-merge phase. Before producing any closure output, move to the
+base branch so retrospective edits (Step 2), the todo flip + move (Step 4), the
+closure commit (Step 5), and the archive (Step 7) all land on permanent history
+rather than on a feature branch that Step 8 deletes.
+
+Resolve the base from `.spwf/branch.yaml: base` (default `main`):
+
+```bash
+BASE=$(grep -E '^base:' .spwf/branch.yaml 2>/dev/null | awk '{print $2}'); BASE=${BASE:-main}
+CURRENT=$(git branch --show-current)
+```
+
+**If already on `${BASE}`** (e.g. the feature branch was deleted at merge time):
+run `git pull --ff-only` and proceed to Step 2.
+
+**If on a feature branch:**
+
+1. **Clean tree required.** If `git status --porcelain` is non-empty, halt:
+   *"Commit or stash before closing — closure runs on `${BASE}`."* Closure must
+   not drag stray edits across the switch.
+2. **Confirm the change is merged to `${BASE}`** — closing before merge is what
+   strands the commits. Try, in order:
+   - `git merge-base --is-ancestor HEAD "${BASE}"` → merged (merge-commit / rebase / fast-forward).
+   - Else (squash-merge breaks ancestry): `git cat-file -e "${BASE}:openspec/changes/{change-id}/proposal.md" 2>/dev/null` → the change's artefacts are on `${BASE}` ⇒ merged. (For a bug-only change with no OpenSpec dir, check the forge PR/MR state per [`_shared/forge-dispatch.md`](../_shared/forge-dispatch.md), or ask.)
+   - If neither confirms, ask: *"Has `{change-id}` been merged to `${BASE}`? [y/N]"* — default **no**, and on no halt: *"Merge the PR/MR first, then re-run /spwf:close."*
+3. **Record and switch.** Save the feature branch for Step 8, then move to base:
+
+   ```bash
+   FEATURE_BRANCH="${CURRENT}"
+   git checkout "${BASE}" && git pull --ff-only
+   ```
+
+   The feature branch is left untouched until Step 8 — if anything fails midway,
+   it remains a backup.
+
+If `git pull --ff-only` fails (local `${BASE}` diverged from origin), halt and
+report rather than force-anything — the user resolves the divergence first.
+
+---
+
 ## Step 2 — Run retrospective
 
 Invoke `spwf:retrospective` with the change id.
@@ -71,13 +122,13 @@ Wait for retrospective to complete before proceeding.
 Present a summary of what will be permanently changed, then ask for a single yes/no:
 
 ```
-Retrospective complete. Ready to close this change permanently.
+Retrospective complete. Ready to close this change permanently (on `{base}`).
 
 The following will happen:
   1. todo/{slug}.md          → status: complete, moved to todo/_done/{slug}.md
-  2. git commit              → "chore: close {change-id}" (staged files + todo update + move)
+  2. git commit + push       → "chore: close {change-id}" onto origin/{base}
   3. {ACAD-42}               → tracker state: {done_state}   ← only if ticket is linked
-  4. openspec/changes/{id}/  → archived (opsx:archive; runs only after tracker close succeeds)
+  4. openspec/changes/{id}/  → archived + committed + pushed (opsx:archive; runs only after tracker close succeeds)
   5. local branch `{name}`   → deleted (with safety checks; conscious skip available)
 
 Type "yes" to close, anything else to stop.
@@ -132,7 +183,7 @@ If the file is not tracked by git for some reason
 
 ---
 
-## Step 5 — Commit closure changes
+## Step 5 — Commit and push closure changes
 
 Run `git status` to show the user what will be committed (includes the todo file update and any retrospective spec/doc edits). Then commit:
 
@@ -140,9 +191,21 @@ Run `git status` to show the user what will be committed (includes the todo file
 git commit -m "chore: close {change-id}"
 ```
 
-If there is nothing to commit (`git status` shows a clean tree), skip silently and note "Nothing to commit."
+If there is nothing to commit (`git status` shows a clean tree), skip the commit silently and note "Nothing to commit."
 
-Do not push — that remains the user's explicit action.
+**Push the closure commit to `${BASE}`.** Closure is permanent repository
+housekeeping, not feature code — it must reach the remote, otherwise it strands
+on the local base and is lost the next time `${BASE}` is reset or re-cloned:
+
+```bash
+git push origin "${BASE}"
+```
+
+If the push is rejected because `${BASE}` moved on the remote, run
+`git pull --ff-only` then retry the push. If `${BASE}` is a protected branch that
+refuses direct pushes, stop and report — the user must land the closure commit
+via their protected-branch process (the commit is already made locally, nothing
+is lost).
 
 ---
 
@@ -206,6 +269,19 @@ If the archive command itself fails, report the error and stop — a failed arch
 leaves the change in `openspec/changes/` and is recoverable by re-running once the
 underlying issue is resolved.
 
+**Commit and push the archive move.** `openspec archive` only moves files in the
+working tree — it does not commit. Capture the move on `${BASE}` and push it, or
+the archived state never reaches the remote:
+
+```bash
+git add -A
+git commit -m "chore: archive {change-id}"
+git push origin "${BASE}"
+```
+
+(Same protected-branch caveat as Step 5: if the push is refused, report and let
+the user land it — the commit is already made locally.)
+
 ---
 
 ## Step 8 — Delete local feature branch
@@ -215,16 +291,20 @@ conscious 'n'.
 
 ### Identify the feature branch
 
+After Step 1b the working tree is on `${BASE}`, so prefer the `FEATURE_BRANCH`
+recorded there.
+
 ```bash
-CURRENT=$(git branch --show-current)
-DEFAULT_BASE=${DEFAULT_BASE:-main}
+DEFAULT_BASE=${BASE:-main}
+CANDIDATE="${FEATURE_BRANCH:-}"   # recorded in Step 1b when close switched off a feature branch
 ```
 
 | Situation | Candidate branch |
 |---|---|
-| `CURRENT` is not `main`/`master`/`DEFAULT_BASE` | `CURRENT` is the candidate. |
-| `CURRENT` is `main`/`master` | Look at `git branch --merged main` for branches related to the change-id slug (substring match). If multiple, list and ask. |
-| No candidates found | Skip this step silently. Note "No feature branch identified." in the report. |
+| `FEATURE_BRANCH` was recorded in Step 1b | `FEATURE_BRANCH` is the candidate. (Reliable even after a squash-merge, where `git branch --merged` cannot see it.) |
+| Not recorded, and current branch is not `main`/`master`/`DEFAULT_BASE` | the current branch is the candidate. |
+| Not recorded, on `main`/`master` | Look at `git branch --merged main` for a branch matching the change-id slug (substring). If multiple, list and ask. |
+| Branch already deleted (e.g. removed at merge time) or no candidate found | Skip this step silently. Note "No feature branch identified." in the report. |
 
 ### Safety checks (halt or warn on each)
 
@@ -366,10 +446,10 @@ stale remote-tracking refs locally.
 ### Retrospective
 {brief summary of retrospective findings — learnings count, drift items, doc issues, workflow issues}
 
-### Closure
+### Closure (on `{base}`)
 ✓ todo/{slug}.md              → status: complete, moved to todo/_done/{slug}.md
-✓ git commit                  → chore: close {change-id}
-✓ openspec/changes/{id}/      → archived
+✓ git commit + push           → chore: close {change-id} → origin/{base}
+✓ openspec/changes/{id}/      → archived, committed + pushed → origin/{base}
 {✓ {ticket}                   → {done_state}     | — No tracker ticket linked}
 {✓ branch `{name}`            → deleted     | ⊘ branch `{name}` kept ({reason}) | — No feature branch identified}
 {ℹ Remote `origin/{name}` still exists. Delete with `git push origin --delete {name}` if desired.}
