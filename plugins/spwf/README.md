@@ -17,7 +17,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 |---|---|---|
 | `capture` | `/spwf:capture [source]` | Classifies input as bug or change → bug path: investigation + `todo/BUG-{slug}.md`; change path: `issue-to-task` / `new-task` + `todo/{slug}.md`. When a tracker ticket is linked (fetched or created), moves it to `start_state` (default `In Progress`; kanban/YouTrack: `Doing`) — courtesy flip, soft-note on failure, `start_state: none` to disable |
 | `build` | `/spwf:build` | Phase 0 verifies the feature branch (Layer 2 — halts/offers if on base with an active change) → `write-tests` (Red) → `opsx:apply` (Green) → `run-tests` (Verify) → `debug-recovery` on failure → `opsx:verify` (spec sign-off) → recommends `simplify` (Refactor) |
-| `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog) → mark todo complete → tracker transition to done state → `opsx:archive` (per `.spwf/tracker.yaml`; YouTrack default, Jira and Beads via spwf-beadsify also supported) |
+| `close` | `/spwf:close [todo/{slug}.md]` | `retrospective` on the feature branch (learn-from-mistakes → spec audit → `doc-lint` → `workflow-lint` → optional changelog — mines granular history a squash-merge leaves only there) → mark todo complete → **land closure on `{base}`** (commit + cherry-pick + push, never stranded on the deleted feature branch) → tracker transition to done state → `opsx:archive` + commit/push the move (per `.spwf/tracker.yaml`; YouTrack default, Jira and Beads via spwf-beadsify also supported) |
 
 ### Atomic skills
 
