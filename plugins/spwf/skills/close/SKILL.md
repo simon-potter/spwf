@@ -11,23 +11,31 @@ Final phase of the SPWorkflow golden path. Retrospect, confirm, then permanently
 
 ```
 Step 1  → identify the change (resolve $ARGUMENTS or context)
-Step 1b → move to base branch (closure must land on permanent history, then pull)
-Step 2  → retrospective       (all 6 parts, including recap teaching summary)
+Step 1b → confirm merged + plan landing (record feature branch; DON'T switch yet)
+Step 2  → retrospective       (runs on the feature branch — granular history intact)
 Step 3  → confirm closure     (explicit human gate)
 Step 4  → mark todo done      (status: complete + git mv to todo/_done/)
-Step 5  → commit + push       (closure commit lands on origin/{base})
+Step 5  → commit, then land on base (cherry-pick closure onto {base} + push)
 Step 6  → close tracker ticket (if linked — dispatches per .spwf/tracker.yaml)
-Step 7  → archive OpenSpec    (opsx:archive, then commit + push the move)
+Step 7  → archive OpenSpec    (opsx:archive on {base}, then commit + push the move)
 Step 8  → delete local branch  (default on, conscious skip with [Y/n])
 ```
 
-> **Why closure runs on the base branch (Step 1b).** Everything `close`
-> produces — retrospective edits, the `status: complete` flip, the `todo/_done/`
-> move, and the OpenSpec archive — is permanent repository housekeeping. If it
-> is committed on the *merged feature branch*, those commits never reach
-> `{base}` and are lost when Step 8 deletes the branch. So `close` moves to
-> `{base}` up front and pushes its commits there. Unlike feature code (which
-> ships via PR), closure housekeeping is committed straight to `{base}`.
+> **Two competing requirements, and how the ordering satisfies both.**
+> 1. **Learn from full history.** The retrospective (Step 2 — learn-from-mistakes,
+>    recap) mines the change's *granular* commit history. After a squash-merge
+>    that history survives only on the feature branch, so the retrospective MUST
+>    run while the feature branch is still HEAD — **before** any switch to base.
+> 2. **Closure must be durable.** Everything `close` then commits (status flip,
+>    `todo/_done/` move, retrospective edits, archive) is permanent housekeeping;
+>    committed on the merged feature branch it is lost when Step 8 deletes it.
+>
+> So the order is: retrospect on the feature branch (Step 2), commit the closure
+> there (Step 5), then **cherry-pick that commit onto `{base}` and push** (Step
+> 5) before archiving and deleting. Unlike feature code (which ships via PR),
+> closure housekeeping is pushed straight to `{base}`. If `close` is already on
+> `{base}` (feature branch deleted at merge time), it commits directly — the
+> granular history is already gone, so the retrospective uses what remains.
 
 ---
 
@@ -59,12 +67,11 @@ Confirm the OpenSpec change id: check `openspec/changes/` for a directory matchi
 
 ---
 
-## Step 1b — Move closure to the base branch
+## Step 1b — Confirm merge and plan where closure lands
 
-`close` is the post-merge phase. Before producing any closure output, move to the
-base branch so retrospective edits (Step 2), the todo flip + move (Step 4), the
-closure commit (Step 5), and the archive (Step 7) all land on permanent history
-rather than on a feature branch that Step 8 deletes.
+`close` is the post-merge phase. Decide *now* where the closure commits will
+land, but **do not switch branches yet** — Step 2's retrospective must run on the
+feature branch while its granular commit history is still reachable.
 
 Resolve the base from `.spwf/branch.yaml: base` (default `main`):
 
@@ -73,35 +80,33 @@ BASE=$(grep -E '^base:' .spwf/branch.yaml 2>/dev/null | awk '{print $2}'); BASE=
 CURRENT=$(git branch --show-current)
 ```
 
-**If already on `${BASE}`** (e.g. the feature branch was deleted at merge time):
-run `git pull --ff-only` and proceed to Step 2.
+**If already on `${BASE}`** (the feature branch was deleted at merge time) — set
+`MODE=direct` and run `git pull --ff-only`. The granular history is gone with the
+branch, so Step 2 will mine what remains on `${BASE}` (note this in the report).
 
-**If on a feature branch:**
+**If on a feature branch** — set `MODE=port` and:
 
 1. **Clean tree required.** If `git status --porcelain` is non-empty, halt:
-   *"Commit or stash before closing — closure runs on `${BASE}`."* Closure must
-   not drag stray edits across the switch.
+   *"Commit or stash before closing."* Closure must not mix with stray edits.
 2. **Confirm the change is merged to `${BASE}`** — closing before merge is what
    strands the commits. Try, in order:
    - `git merge-base --is-ancestor HEAD "${BASE}"` → merged (merge-commit / rebase / fast-forward).
    - Else (squash-merge breaks ancestry): `git cat-file -e "${BASE}:openspec/changes/{change-id}/proposal.md" 2>/dev/null` → the change's artefacts are on `${BASE}` ⇒ merged. (For a bug-only change with no OpenSpec dir, check the forge PR/MR state per [`_shared/forge-dispatch.md`](../_shared/forge-dispatch.md), or ask.)
    - If neither confirms, ask: *"Has `{change-id}` been merged to `${BASE}`? [y/N]"* — default **no**, and on no halt: *"Merge the PR/MR first, then re-run /spwf:close."*
-3. **Record and switch.** Save the feature branch for Step 8, then move to base:
+3. **Record the feature branch** for Step 5's port and Step 8's deletion. Stay on it:
 
    ```bash
    FEATURE_BRANCH="${CURRENT}"
-   git checkout "${BASE}" && git pull --ff-only
    ```
-
-   The feature branch is left untouched until Step 8 — if anything fails midway,
-   it remains a backup.
-
-If `git pull --ff-only` fails (local `${BASE}` diverged from origin), halt and
-report rather than force-anything — the user resolves the divergence first.
 
 ---
 
 ## Step 2 — Run retrospective
+
+> Runs on the **current branch**. In `MODE=port` that is the feature branch, so
+> learn-from-mistakes and recap see the change's full granular commit history —
+> the reason the switch to `${BASE}` is deferred to Step 5. Do not switch
+> branches before this step completes.
 
 Invoke `spwf:retrospective` with the change id.
 
@@ -183,29 +188,51 @@ If the file is not tracked by git for some reason
 
 ---
 
-## Step 5 — Commit and push closure changes
+## Step 5 — Commit closure, then land it on the base branch
 
-Run `git status` to show the user what will be committed (includes the todo file update and any retrospective spec/doc edits). Then commit:
+### 5a. Commit on the current branch
+
+Run `git status` to show what will be committed (the todo flip + move plus any retrospective spec/doc edits). Then commit:
 
 ```bash
 git commit -m "chore: close {change-id}"
+CLOSURE_SHA=$(git rev-parse HEAD)
 ```
 
-If there is nothing to commit (`git status` shows a clean tree), skip the commit silently and note "Nothing to commit."
+If there is nothing to commit (clean tree), skip the commit silently, note "Nothing to commit," and skip the rest of Step 5.
 
-**Push the closure commit to `${BASE}`.** Closure is permanent repository
-housekeeping, not feature code — it must reach the remote, otherwise it strands
-on the local base and is lost the next time `${BASE}` is reset or re-cloned:
+### 5b. Land the closure commit on `${BASE}`
+
+Closure is permanent repository housekeeping, not feature code — it must reach
+`origin/${BASE}`, or it is lost when the feature branch is deleted (Step 8) or
+the next time `${BASE}` is reset / re-cloned.
+
+**`MODE=port`** (Step 5a committed on the feature branch) — move to base and
+cherry-pick the closure commit across:
+
+```bash
+git checkout "${BASE}" && git pull --ff-only
+git cherry-pick "${CLOSURE_SHA}"
+git push origin "${BASE}"
+```
+
+The cherry-pick applies cleanly because `${BASE}` already holds the merged
+feature content, so the closure commit touches the same file versions. **On a
+cherry-pick conflict, stop and report** — do NOT proceed to Step 6. The feature
+branch still holds the closure commit as a backup; the user resolves the
+conflict, then re-runs from here. After this step the working tree is on
+`${BASE}` for Steps 6–8.
+
+**`MODE=direct`** (Step 5a committed on `${BASE}` already) — just push:
 
 ```bash
 git push origin "${BASE}"
 ```
 
-If the push is rejected because `${BASE}` moved on the remote, run
-`git pull --ff-only` then retry the push. If `${BASE}` is a protected branch that
-refuses direct pushes, stop and report — the user must land the closure commit
-via their protected-branch process (the commit is already made locally, nothing
-is lost).
+**Push rejected?** If `${BASE}` moved on the remote, `git pull --ff-only` and
+retry. If `${BASE}` is a protected branch that refuses direct pushes, stop and
+report — the closure commit is already made locally; the user lands it via their
+protected-branch process. Nothing is lost.
 
 ---
 
@@ -384,6 +411,14 @@ Run in order. Halt on any failure unless noted.
    If the branch has no upstream tracking ref at all, treat that as
    "nothing to push" and proceed silently — local-only branches don't have
    anything to lose at the remote level.
+
+   **Carve-out for the ported closure commit.** In `MODE=port` the feature
+   branch carries the `CLOSURE_SHA` commit, which Step 5b already cherry-picked
+   onto `${BASE}` and pushed. It will show here as one "unpushed" commit — that
+   is expected and safe (its content lives on `${BASE}`). If the only unpushed
+   commit is `CLOSURE_SHA` (compare `git rev-list {candidate}@{u}..{candidate}`
+   against `CLOSURE_SHA`, or by patch-id), proceed without the warning; warn only
+   if there are *other* unpushed commits.
 
 ### Confirm and delete
 
