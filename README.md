@@ -1,15 +1,49 @@
 # SPWorkflow
 
-Simon's engineering workflow, packaged as two installable Claude Code plugins.
+**A guided, step-by-step process for building software with an AI coding assistant** — Simon's engineering workflow, packaged as two core [Claude Code](https://docs.claude.com/en/docs/claude-code) plugins (plus an optional third).
+
+## Why this exists
+
+Left to run freely, an AI coding agent tends to skip tests, over-engineer simple things, lose track of the original goal, and pile commits onto your main branch. You move fast and lose control at the same time.
+
+SPWorkflow breaks the work into small, single-purpose steps with **human checkpoints** between them. You get the speed of an AI assistant without giving up review, testing, or a clean git history — the discipline is built into the process instead of relying on you to remember it.
+
+Think of it as an assembly line with inspection stations: each step has one job, hands off to the next, and stops at the **gates** to wait for your go-ahead.
+
+**Who it's for:** solo developers and small teams using Claude Code who want a repeatable path from "an idea" to "a spec'd, tested, reviewed, cleanly-branched change" — every time, not just when they remember the steps.
+
+## Key terms
+
+A handful of words appear throughout. In this project they mean:
+
+| Term | What it is |
+|---|---|
+| **skill** | A `/command` that runs one workflow step (e.g. `/spwf:build`) |
+| **agent** | A specialist Claude that a skill hands a focused job to (e.g. the `reviewer`) |
+| **hook** | An automatic background check that runs on its own (e.g. "warn on uncommitted changes") |
+| **OpenSpec** | The tool that stores the written spec, plan, and task list for a change |
+| **tracker** | Your issue tracker — YouTrack, Jira, or Beads |
+| **forge** | Where pull/merge requests live — GitHub or GitLab |
 
 ## The workflow
+
+Each step has one job and hands off to the next. The steps marked below stop and wait for a human decision; the rest run start-to-finish.
 
 ```
 [status] → [Capture] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Address Review → Close
  (orient)    (pre)      (gate)      (1)        (2)          (3)      (4)         (5)        (6)          (6.5)         (post)
 ```
 
-Simplify is a two-pass step: Pass 1 reviews the diff through three lenses — mechanical cleanup (dead code, debug prints, unclear names), DRY/reuse (rule of three; reuse existing helpers), and deslop (AI over-engineering: defensive bloat, `as any`, YAGNI) under an "explicit > compact" restraint — followed by a `reviewer` subagent dispatch against the pinned commit range for a deeper pre-PR read (correctness, security, missing tests, reuse/DRY). Address Review then turns either that report — or human comments on the open PR/MR — into committed fixes or reasoned push-backs. Both pre- and post- review passes are adapted from [obra/superpowers](https://github.com/obra/superpowers) — `requesting-code-review` (folded into Simplify) and `receiving-code-review` (Address Review).
+The row of labels under the diagram groups the steps by kind:
+
+| Label | Meaning |
+|---|---|
+| **orient / pre** | Setup — work out where you are, then capture what you're about to do |
+| **gate** | Stops and waits for you — pressure-tests the idea before any code is written |
+| **1–6.5** | The numbered build phases — spec, approve, build, clean up, then open and review the request |
+| **post** | Cleanup after merge — retrospective, archive, branch deletion |
+
+The [Golden path](#golden-path) table below walks through every step in full — what it does, why, and what it produces.
 
 ## Golden path
 
@@ -350,7 +384,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 
 ### `spwf-agents` — 13 specialist subagents
 
-Fourteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
+Thirteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
 
 | Agent | Phase | Model |
 |---|---|---|
@@ -391,7 +425,7 @@ spwf/
 │       └── archive/                       # completed changes (opsx:archive)
 │
 ├── plugins/
-│   ├── spwf/                              # workflow skills plugin (28 skills)
+│   ├── spwf/                              # workflow skills plugin (32 skills)
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json                # name, version, author
 │   │   ├── hooks/                         # auto-registered on plugin install
@@ -418,3 +452,12 @@ spwf/
 └── todo/                                  # ideation files produced by /spwf:capture
     └── {slug}.md                          # status: ideation → complete lifecycle
 ```
+
+---
+
+## Credits
+
+The two review steps adapt prior art:
+
+- **Simplify** and **Address Review** are based on [obra/superpowers](https://github.com/obra/superpowers) — `requesting-code-review` (folded into Simplify) and `receiving-code-review` (Address Review).
+- **Simplify**'s cleanup lenses also draw on brianlovin/agent-config (`simplify` / `deslop`).
