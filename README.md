@@ -30,8 +30,8 @@ A handful of words appear throughout. In this project they mean:
 Each step has one job and hands off to the next. The steps marked below stop and wait for a human decision; the rest run start-to-finish.
 
 ```
-[status] → [Capture] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Address Review → Close
- (orient)    (pre)      (gate)      (1)        (2)          (3)      (4)         (5)        (6)          (6.5)         (post)
+[status] → [Capture] → [Enrich] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Address Review → Close
+ (orient)    (pre)      (shape)    (gate)      (1)        (2)          (3)      (4)         (5)        (6)          (6.5)         (post)
 ```
 
 The row of labels under the diagram groups the steps by kind:
@@ -39,6 +39,7 @@ The row of labels under the diagram groups the steps by kind:
 | Label | Meaning |
 |---|---|
 | **orient / pre** | Setup — work out where you are, then capture what you're about to do |
+| **shape** | Optional divergent step — grows and re-frames the idea (variations, 2-3 approaches, a "Not doing" list) before the gate attacks it; skipped for bugs and trivial changes |
 | **gate** | Stops and waits for you — pressure-tests the idea before any code is written |
 | **1–6.5** | The numbered build phases — spec, approve, build, clean up, then open and review the request |
 | **post** | Cleanup after merge — retrospective, archive, branch deletion |
@@ -51,6 +52,7 @@ The [Golden path](#golden-path) table below walks through every step in full —
 |---|---|---|---|---|
 | **Orient** | `/spwf:wfstatus` | — | Start of session: where am I, what's incomplete, what's next — heuristics across git state, OpenSpec changes, and todo backlog | Dashboard + suggested next action |
 | **Capture** | `/spwf:capture [source]` | Tracker dispatch (YouTrack default; Jira and Beads via spwf-beadsify also supported) | Accepts a tracker ticket (e.g. `ACAD-42`, `spwf-a3f2dd`), file, or freeform description; classifies as bug or change automatically. Runs a lightweight git-smell check first (uncommitted changes, already-merged branch, very stale branch — warn-and-confirm); soft notes for being on main or behind base. **Moves a linked ticket to its `start_state` (e.g. Doing) when work begins** — courtesy flip, soft-note on failure. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md`, ticket → in-progress |
+| **Enrich** *(optional)* | `/spwf:enrich todo/{slug}.md` | — | Divergent counterpart to Challenge — grows the idea before it's attacked. **Reframes** the problem as "How might we…", generates **5-8 grounded variations** across seven lenses (inversion, constraint-removal, audience-shift, combination, simplification, 10×, expert), converges on **2-3 distinct approaches** with trade-offs + a recommendation, triages on value/feasibility/differentiation, and surfaces assumptions to validate. Skipped for bugs and trivial/mechanical changes | Ideation file enriched with `## Directions considered`, `## Recommended direction`, `## Assumptions to validate`, `## Not doing` |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Builds an explicit **question map** (provable coverage), interviews one question at a time across a **13-dimension taxonomy** (NFRs, edge cases, compat/migration, observability, alternatives, reversibility, …), runs an **adversarial premortem + red-team** pass, then a **completeness self-audit** — then a scope-sizing check that recommends splitting independent work or proceeding as one change | Resolved ideation file (+ `## Residual risks` if any); or N child todo files + original marked `status: split` |
 | **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec, then **auto-creates `feature/{change-id}`** so the spec commit (and all later work) lands off the base branch (see [Branching](#branching)) | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/`, on `feature/{change-id}` |
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
@@ -301,7 +303,23 @@ pinning tool names): `plugins/spwf/skills/_shared/tracker-dispatch.md`.
 > add-on — see "Optional add-on: Beadsify" earlier in this README. Not required
 > for normal SPWF use.
 
-### 5. `jq` (for `claudemd-curator`, `workspace-health`, and hooks)
+### 5. Project priorities (for `capture`, `enrich`, `challenge`)
+
+The front of the workflow anchors its value/end-game judgements on an optional
+per-project snapshot at **`.spwf/priorities.md`** — the project's mission, primary
+users and the outcomes they want, ranked current priorities, and standing
+non-goals. It's committed and team-shared.
+
+- **Derived, not hand-written (though you can):** the first `enrich`/`capture`/`challenge`
+  that needs it offers to draft it by scanning `docs/`, the README, and
+  roadmap/OKR/vision files, then asks you to confirm before writing.
+- **Refresh** any time with `/spwf:enrich --refresh-priorities`.
+- **Entirely optional** — absent, the skills fall back to generic judgement and
+  never gate on it.
+
+Full reference: `plugins/spwf/skills/_shared/project-priorities.md`.
+
+### 6. `jq` (for `claudemd-curator`, `workspace-health`, and hooks)
 
 Required for transcript mining in the behavioural audit phase.
 
@@ -310,7 +328,7 @@ brew install jq   # macOS
 apt-get install jq  # Debian/Ubuntu
 ```
 
-### 6. Security tools (optional — used by `dep-audit`, `security-scan`, `pr-create`)
+### 7. Security tools (optional — used by `dep-audit`, `security-scan`, `pr-create`)
 
 These are not required to use the workflow but enable the security pre-flight gate in `pr-create` and deeper on-demand analysis:
 
@@ -354,6 +372,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `capture` | `/spwf:capture [source]` | Pre — Capture (orchestrator); auto-classifies bugs vs changes |
 | `issue-to-task` | `/spwf:issue-to-task` | Pre — Capture from issue tracker (atomic; YouTrack default) |
 | `new-task` | `/spwf:new-task` | Pre — Capture from scratch (atomic) |
+| `enrich` | `/spwf:enrich [file]` | Shape — Enrich (divergent: reframe, variations, 2-3 approaches, "Not doing"); optional, skips bugs/trivial |
 | `challenge` | `/spwf:challenge [file]` | Gate — Challenge |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
 | `spec` | `/spwf:spec` | 1 — Spec |
@@ -382,13 +401,14 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | On-demand — PHP safe refactor |
 | `php-code-quality-reviewer` | `/spwf:php-code-quality-reviewer [path]` | On-demand — PHP bad-practice analysis |
 
-### `spwf-agents` — 13 specialist subagents
+### `spwf-agents` — 14 specialist subagents
 
-Thirteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
+Fourteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
 
 | Agent | Phase | Model |
 |---|---|---|
 | `capturer` | Pre — Capture (bugs + changes) | Sonnet |
+| `enricher` | Shape — Enrich (divergent, optional) | Sonnet |
 | `challenger` | Gate — Challenge | Sonnet |
 | `specifier` | Spec | Sonnet |
 | `approver` | Approve plan | Haiku |
@@ -425,7 +445,7 @@ spwf/
 │       └── archive/                       # completed changes (opsx:archive)
 │
 ├── plugins/
-│   ├── spwf/                              # workflow skills plugin (32 skills)
+│   ├── spwf/                              # workflow skills plugin (33 skills)
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json                # name, version, author
 │   │   ├── hooks/                         # auto-registered on plugin install
@@ -443,7 +463,7 @@ spwf/
 │   │   │       └── references/            # reference documents (select skills only)
 │   │   └── README.md
 │   │
-│   └── spwf-agents/                       # specialist agents plugin (13 agents)
+│   └── spwf-agents/                       # specialist agents plugin (14 agents)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── agents/

@@ -44,16 +44,16 @@ Walk these in order. For each: ask (one question at a time) or mark `N/A — {re
 1. **Ambiguous requirements** — any "what we know" item open to multiple readings
 2. **Open questions** — the explicitly listed ones, one by one
 3. **Scope creep risks** — what the rough scope implies but doesn't state
-4. **Explicit non-goals** — what is deliberately out of scope (state it, don't leave it implied)
+4. **Explicit non-goals** — what is deliberately out of scope (state it, don't leave it implied). If `.spwf/priorities.md` exists (see `_shared/project-priorities.md`), cross-check its `## Explicit non-goals` — a plan drifting into a standing non-goal is a red flag worth one question
 5. **Hidden dependencies** — other systems, people, data, or decisions this rides on
-6. **Alternatives considered** — which approaches were rejected and why (guards against tunnel vision)
+6. **Alternatives considered** — which approaches were rejected and why (guards against tunnel vision). If the file has a `## Directions considered` / `## Not doing` section (from `/spwf:enrich`), *verify* the rejection rationale still holds rather than asking cold; otherwise ask what alternatives were weighed
 7. **Non-functional requirements** — performance, security, accessibility, scale, data volume, concurrency, cost
 8. **Edge & boundary cases** — empty / null / zero, maximum, duplicate, concurrent, partial failure
 9. **Backwards-compat & migration** — existing data, users, and API consumers; rollout and rollback path
 10. **Failure modes** — what breaks at each step, and what happens when it does
 11. **Observability & testability** — how we'll know it works, debug it, and verify it
 12. **Reversibility / blast radius** — how hard to undo; the worst realistic outcome
-13. **Success definition** — is "done" unambiguous and measurable?
+13. **Success definition** — is "done" unambiguous and measurable? Does it ladder up to a `## Current priorities` / user outcome in `.spwf/priorities.md` when one exists, or is it success in a vacuum?
 
 ## Step 3: Interview — one question at a time
 

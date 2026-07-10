@@ -252,6 +252,12 @@ Lightweight check — catch obviously incomplete inputs before Challenge. Four c
 | **Scope boundary** | It is roughly clear what is in scope (even if vague) |
 | **Motivation** | There is a reason this matters (business value, user pain, technical debt) |
 
+If `.spwf/priorities.md` exists, read it (per [`../_shared/project-priorities.md`](../_shared/project-priorities.md))
+and sanity-check **Motivation** against it: does this serve a stated priority, or
+land on the `## Explicit non-goals` list? Don't gate on it — a genuinely new
+priority is fine — but if the input looks off-mission, surface that as the one
+qualifying question rather than waving it through.
+
 For each check that fails, ask **one targeted question** before continuing — never more than one per message.
 
 **Limit:** After two clarifying questions, proceed regardless. Record remaining gaps as open questions — Challenge will surface them.
