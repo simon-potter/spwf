@@ -19,13 +19,13 @@
 Ordered first: the skill reads this file, so its schema must exist before the
 skill references it.
 
-- [ ] 1.1 `plugins/spwf/skills/_shared/learner-profile.md` exists and documents
+- [x] 1.1 `plugins/spwf/skills/_shared/learner-profile.md` exists and documents
       the `.spwf/learner.md` schema (Level, Known, Open, Recurring blind spots),
       mirroring `_shared/project-priorities.md` in shape and tone
-- [ ] 1.2 The convention doc states that level governs explanation depth and
+- [x] 1.2 The convention doc states that level governs explanation depth and
       vocabulary only, and never reduces question rigour at any level; and
       records the scheduled review (reassess after ~5 real runs, cut if unused)
-- [ ] 1.3 `.gitignore` contains `.spwf/learner.md` with a comment explaining why
+- [x] 1.3 `.gitignore` contains `.spwf/learner.md` with a comment explaining why
       it differs from the committed `.spwf/priorities.md`
 
 ## Phase 2 — The understand skill
