@@ -30,11 +30,11 @@ skill references it.
 
 ## Phase 2 — The understand skill
 
-Five tasks, each a coherent section of one SKILL.md. Detail is carried as
+Eight tasks, each a coherent section of one SKILL.md. Detail is carried as
 sub-bullets rather than separate checkboxes — the file is written in one
 editing session, so eighteen tick-boxes over it would be ceremony, not progress.
 
-- [ ] 2.1 **Frontmatter and attribution.** `plugins/spwf/skills/understand/SKILL.md`
+- [x] 2.1 **Frontmatter and attribution.** `plugins/spwf/skills/understand/SKILL.md`
       exists with `name: understand`, a description, and
       `disable-model-invocation: true`
       - `allowed-tools` is `[Read, Glob, Grep, Bash, Write, Edit]` — asserts
@@ -43,19 +43,19 @@ editing session, so eighteen tick-boxes over it would be ceremony, not progress.
         rohitg00/ai-engineering-from-scratch per house style (`challenge`,
         `simplify`)
 
-- [ ] 2.2 **Change resolution.** Resolves an empty argument, a change-id, a todo
+- [x] 2.2 **Change resolution.** Resolves an empty argument, a change-id, a todo
       path, or a branch / commit range to a change
       - Falls back to `openspec/changes/archive/{change-id}/`
       - Halts naming both searched locations when neither matches, rather than
         interviewing on an unrelated change
 
-- [ ] 2.3 **Input reading and triage.** Reads `git diff --stat` and `git log` for
+- [x] 2.3 **Input reading and triage.** Reads `git diff --stat` and `git log` for
       the change's range, plus selective reads of significant changed files —
       never the full diff
       - Selects 3–5 structural changes to interview on, stating which and why
       - Declines to interview on a trivial change, stating so plainly
 
-- [ ] 2.4 **The interview procedure.** Asks one question per message as plain
+- [x] 2.4 **The interview procedure.** Asks one question per message as plain
       conversational text, waiting for an answer before the next
       - Documents question shapes as derivation examples with an explicit "not a
         question bank" statement
@@ -69,25 +69,25 @@ editing session, so eighteen tick-boxes over it would be ceremony, not progress.
       - Closes every interview with the navigation question ("if this misbehaves
         in six months, where do you look first?")
 
-- [ ] 2.5 **Secret redaction.** Masks credential-shaped values (API keys, tokens,
+- [x] 2.5 **Secret redaction.** Masks credential-shaped values (API keys, tokens,
       passwords, cookies, connection strings, private keys) before they reach a
       question, the orientation note, or `.spwf/learner.md`
       - Surfaces a discovered hard-coded credential as a finding naming the file
         but not the value, not as an interview question
       - Load-bearing: the orientation note is saved to a committed, pushed path
 
-- [ ] 2.6 **Output artefact.** Produces the orientation note (shape of change,
+- [x] 2.6 **Output artefact.** Produces the orientation note (shape of change,
       where to look when things go wrong, still fuzzy, concepts touched) with no
       merge verdict
       - Produces a partial note when the interview is abandoned partway rather
         than discarding the session
       - Offers to save to `openspec/changes/{change-id}/understanding.md`
 
-- [ ] 2.7 **Ledger creation.** Creates `.spwf/learner.md` on first run with one
+- [x] 2.7 **Ledger creation.** Creates `.spwf/learner.md` on first run with one
       calibration question, never re-asked on later runs; ensures the `.gitignore`
       entry from 1.3 is present
 
-- [ ] 2.8 **Ledger update.** Moves demonstrated concepts to `Known` with change-id
+- [x] 2.8 **Ledger update.** Moves demonstrated concepts to `Known` with change-id
       and date after each session, and records unresolved gaps under `Open` with
       what would close them
 
