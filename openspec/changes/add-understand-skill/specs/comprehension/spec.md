@@ -137,6 +137,34 @@ readiness recommendation.
   discussed
 - **AND** SHALL NOT discard the partial session
 
+### Requirement: Quoted source is redacted before it reaches a committed artefact
+
+The skill SHALL mask any credential-shaped value before writing it to the
+orientation note, printing it in a question, or recording it in
+`.spwf/learner.md`. Credential-shaped values include API keys, tokens,
+passwords, cookies, connection strings, and private keys.
+
+This matters because the skill reads source files to derive questions, and the
+orientation note may be saved to `openspec/changes/{change-id}/understanding.md`
+— a committed, pushed path.
+
+#### Scenario: Changed file contains a hard-coded credential
+
+- **WHEN** the skill quotes from a file containing a credential-shaped value
+- **THEN** it SHALL mask the value before including it anywhere in its output
+  (e.g. `api_key="sk-…REDACTED…"`)
+- **AND** SHALL quote only enough surrounding context to locate what is being
+  discussed
+
+#### Scenario: Credential discovered while reading
+
+- **WHEN** the skill encounters a hard-coded credential while reading changed
+  files
+- **THEN** it SHALL surface that as a finding in the orientation note's "Still
+  fuzzy" section, naming the file but not the value
+- **AND** SHALL NOT treat it as an interview question about the developer's
+  understanding
+
 ### Requirement: A learner profile persists level and gaps
 
 The skill SHALL read and maintain `.spwf/learner.md` in the target project,
