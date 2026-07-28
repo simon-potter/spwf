@@ -1,6 +1,6 @@
 ---
 name: close
-description: Final-phase orchestrator — wraps the full retrospective then permanently closes the change. Invokes /spwf:retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, recap teaching summary, optional changelog), then — after explicit confirmation — marks the todo file complete and moves it to todo/_done/, archives the OpenSpec change, transitions the linked issue tracker ticket to its done state (YouTrack default; Jira and others supported), and deletes the local feature branch with safety checks (default-on, conscious skip).
+description: Final-phase orchestrator — wraps the full retrospective then permanently closes the change. Invokes /spwf:retrospective (learn-from-mistakes, spec audit, doc-lint, workflow-lint, recap teaching summary, understand comprehension interview, optional changelog), then — after explicit confirmation — marks the todo file complete and moves it to todo/_done/, archives the OpenSpec change, transitions the linked issue tracker ticket to its done state (YouTrack default; Jira and others supported), and deletes the local feature branch with safety checks (default-on, conscious skip).
 disable-model-invocation: true
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, mcp__youtrack__*, mcp__atlassian__jira_get_issue, mcp__atlassian__jira_update_issue]
 ---
@@ -110,13 +110,14 @@ branch, so Step 2 will mine what remains on `${BASE}` (note this in the report).
 
 Invoke `spwf:retrospective` with the change id.
 
-All six parts run as normal:
+All seven parts run as normal:
 1. learn-from-mistakes      (rules for the project — atomic)
 2. change spec audit         (align OpenSpec artefacts with what was built)
 3. doc-lint                  (broad project docs drift check)
 4. workflow-lint             (full golden path coherence sweep)
 5. recap                     (teaching summary for the user; default on, one-key skip)
-6. changelog                 (optional — only if preparing a release)
+6. understand                (comprehension interview; default on, one-key skip)
+7. changelog                 (optional — only if preparing a release)
 
 Wait for retrospective to complete before proceeding.
 

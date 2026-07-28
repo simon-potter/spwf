@@ -97,17 +97,17 @@ Ordered so part numbers stay internally consistent at every step: `changelog`
 vacates Part 6 *before* the new Part 6 is inserted, so the file never holds two
 Part 6s.
 
-- [ ] 3.1 `retrospective/SKILL.md` renumbers `changelog` from Part 6 to Part 7
+- [x] 3.1 `retrospective/SKILL.md` renumbers `changelog` from Part 6 to Part 7
       throughout — header block, part list, frontmatter description
       ("Six-part" → "Seven-part"), and Report template. Part 6 is left vacant
-- [ ] 3.2 `changelog/SKILL.md` description corrected from "as Part 5" to Part 7
+- [x] 3.2 `changelog/SKILL.md` description corrected from "as Part 5" to Part 7
       (pre-existing bug: stale since `recap` took Part 5)
-- [ ] 3.3 `retrospective/SKILL.md` gains Part 6 invoking `understand` with the
+- [x] 3.3 `retrospective/SKILL.md` gains Part 6 invoking `understand` with the
       change-id passed explicitly, using a `[Y/n]` default-yes prompt that names
       something specific about the change
-- [ ] 3.4 Declining Part 6 continues to Part 7, notes "Part 6 skipped" in the
+- [x] 3.4 Declining Part 6 continues to Part 7, notes "Part 6 skipped" in the
       report, and surfaces that `/spwf:understand {change-id}` works later
-- [ ] 3.5 `close/SKILL.md` reflects seven parts — Step 2's "All six parts run as
+- [x] 3.5 `close/SKILL.md` reflects seven parts — Step 2's "All six parts run as
       normal" plus its list, and the frontmatter description
 
 ## Phase 4 — Dogfood
