@@ -1,6 +1,6 @@
 ---
 name: changelog
-description: Generates a human-readable changelog section from conventional commits. Determines the commit range automatically (since last tag, or between two tags), classifies commits into Breaking Changes / Added / Fixed / Security / Performance / Changed, and writes or proposes a new section in CHANGELOG.md following the Keep a Changelog format. Use before cutting a release, or call from the retrospective orchestrator as Part 5. Skips non-user-facing types (docs, test, chore, build, ci, refactor) by default.
+description: Generates a human-readable changelog section from conventional commits. Determines the commit range automatically (since last tag, or between two tags), classifies commits into Breaking Changes / Added / Fixed / Security / Performance / Changed, and writes or proposes a new section in CHANGELOG.md following the Keep a Changelog format. Use before cutting a release, or call from the retrospective orchestrator as Part 7. Skips non-user-facing types (docs, test, chore, build, ci, refactor) by default.
 disable-model-invocation: true
 allowed-tools: [Read, Bash, Glob, Grep, Edit, Write]
 ---

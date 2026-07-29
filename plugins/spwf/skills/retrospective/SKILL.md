@@ -1,6 +1,6 @@
 ---
 name: retrospective
-description: Post-ship orchestrator — Six-part retrospective after completing a change. (1) Extract learnings from commits via learn-from-mistakes. (2) Audit the current change's OpenSpec artefacts against what was actually built. (3) Broad doc-lint pass. (4) workflow-lint sweep. (5) Recap — teaching summary for the human (default on, one-key skip). (6) Changelog — release notes (default off, opt-in for releases).
+description: Post-ship orchestrator — Seven-part retrospective after completing a change. (1) Extract learnings from commits via learn-from-mistakes. (2) Audit the current change's OpenSpec artefacts against what was actually built. (3) Broad doc-lint pass. (4) workflow-lint sweep. (5) Recap — teaching summary for the human (default on, one-key skip). (6) Understand — comprehension interview so you know where to look when it breaks later (default on, one-key skip). (7) Changelog — release notes (default off, opt-in for releases).
 disable-model-invocation: true
 allowed-tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---
@@ -15,7 +15,8 @@ Part 2 → change spec audit       (align OpenSpec artefacts with what was built
 Part 3 → doc-lint                (broad project docs drift check)
 Part 4 → workflow-lint           (full golden path coherence sweep)
 Part 5 → recap                   (teaching summary for the user; default on, one-key skip)
-Part 6 → changelog               (release notes; default off, opt-in for releases)
+Part 6 → understand              (comprehension interview; default on, one-key skip)
+Part 7 → changelog               (release notes; default off, opt-in for releases)
 ```
 
 ---
@@ -120,7 +121,53 @@ for the project (added to `docs/`); this captures takeaways for the user
 
 ---
 
-## Part 6 — Changelog (release only)
+## Part 6 — Understand (comprehension interview)
+
+Default on, one-key skip. Where Part 5 *explains* the change, this asks **you**
+about it — so that when the change misbehaves months from now, you have an
+instinct for where to look.
+
+**Name something specific about this change in the prompt.** A generic offer
+gets reflexively declined; one that says what is actually at stake does not.
+Draw the specifics from the structural picture (areas new to this change,
+new dependencies, changed interfaces):
+
+```
+Part 6 — Understand what you just shipped
+
+This change touched 3 areas you haven't worked in before (the export queue,
+the retry wrapper, the new S3 client). Ten minutes now means knowing where
+to look when one of them misbehaves later.
+
+Run it? [Y/n]   (or later: /spwf:understand {change-id})
+```
+
+Pressing enter accepts. If the user says "n" / "no", skip and note
+"Part 6 skipped (understand declined)" in the retrospective report — then
+**continue to Part 7**, and surface that `/spwf:understand {change-id}` still
+works later. Declining is not a failure state.
+
+If yes, invoke `spwf:understand` with the change-id passed explicitly and a
+marker indicating Part-6 invocation (so the skill renders at `####` heading
+depth nested under `### Part 6 — Understand`). The skill reads the change's
+structure, triages 3–5 changes worth interviewing on, asks one question at a
+time at orientation depth, and produces an orientation note. It then offers to
+save to `openspec/changes/{change-id}/understanding.md` and updates
+`.spwf/learner.md`.
+
+**This is distinct from Part 5.** `recap` covers *what* changed and *why*;
+`understand` covers *consequence* and *navigation*. The skill is required not to
+re-ask what `recap` just explained — asking about material read ninety seconds
+ago tests short-term memory, not understanding.
+
+**Standalone-later is the stronger mode**, and the prompt should not pretend
+otherwise: spaced retrieval beats immediate retrieval. This hook exists so the
+option is visible while the change is on the user's mind, not because close is
+the pedagogically optimal moment.
+
+---
+
+## Part 7 — Changelog (release only)
 
 **Only run this part if the user is preparing a release.** Ask explicitly before proceeding:
 
@@ -135,7 +182,7 @@ If yes, invoke `spwf:changelog`. The skill will:
 - Draft a changelog section in Keep a Changelog format
 - Present for approval before writing to `CHANGELOG.md`
 
-If no, skip silently — the retrospective report notes "Part 6 skipped (no release)".
+If no, skip silently — the retrospective report notes "Part 7 skipped (no release)".
 
 ---
 
@@ -159,7 +206,10 @@ If no, skip silently — the retrospective report notes "Part 6 skipped (no rele
 ### Part 5 — Recap
 {skipped (declined) | full recap inline as #### sub-sections; "✓ Saved to {path}" or "— Not saved" footer}
 
-### Part 6 — Changelog
+### Part 6 — Understand
+{skipped (declined) | full orientation note inline as #### sub-sections; "✓ Saved to {path}" or "— Not saved" footer; "✓ Ledger updated" line}
+
+### Part 7 — Changelog
 {skipped (no release) | ✓ CHANGELOG.md updated — v{version}, {N} entries}
 
 ### Recommended actions

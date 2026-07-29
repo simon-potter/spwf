@@ -7,6 +7,12 @@
 # Per-user Claude Code settings — not shared
 .claude/settings.local.json
 
+# Learner profile written by /spwf:understand — personal, not team-shared.
+# Unlike .spwf/priorities.md (committed, a shared statement of intent), this
+# records what one person does not yet understand. See
+# plugins/spwf/skills/_shared/learner-profile.md
+.spwf/learner.md
+
 # Beads / Dolt files (added by bd init). Note: .beads/ itself is NOT
 # gitignored. Bd manages a partial gitignore via .beads/.gitignore —
 # config.yaml, metadata.json, README.md, interactions.jsonl travel
