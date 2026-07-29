@@ -1,78 +1,93 @@
 ---
 # Adapted from: https://github.com/AnthonyPAlicea/skills — skills `do-i-understand`
-# and `do-i-understand-the-ux`. Concepts adapted: interviewing the developer rather
-# than reviewing the code, one question at a time, "I don't know" as a welcome
-# finding, the anti-quiz posture, anti-gaming rules, and the closing exposure
-# question. Quiz-mode concepts (conceptual/practical split, wrong-answer breakdown)
-# noted from rohitg00/ai-engineering-from-scratch skill `check-understanding` and
-# deferred to a future --recall mode. No SKILL.md content reproduced verbatim from
-# any source.
+# and `do-i-understand-the-ux`. Concepts adapted: structure-first topic selection,
+# orientation-depth fidelity, one topic at a time, and the closing navigation
+# question. NOTE: those skills are pre-merge accountability audits and explicitly
+# refuse to explain ("the developer showing their understanding, not explaining
+# things to them"). This skill inverts that — it is a learning tool, so a gap is
+# the trigger to teach. See design.md Decision 9 in the change that added this.
+# Quiz-mode concepts from rohitg00/ai-engineering-from-scratch `check-understanding`
+# noted and deferred to a future --recall mode. No content reproduced verbatim.
 name: understand
-description: Post-ship — Build a navigational understanding of a change an agent wrote, so you know where to look when it breaks later. Interviews you, not the code, one question at a time about the structural changes and the concepts behind them, at orientation depth rather than line-level fidelity. Calibrated via .spwf/learner.md. Produces an orientation note and records open gaps in the learner ledger. Companion to recap, which explains what and why; this covers consequence and navigation. Retrospective Part 6; runnable standalone via /spwf:understand [change-id | todo path | branch].
+description: Post-ship — Teach the developer what a change did, so they know where to look when it breaks later. Works through 3-4 structural topics, and for each one explains before asking anything, then checks the explanation landed, then explains again by a different route if it didn't. Uncertainty is the trigger to teach, never a gap to record. Calibrated via .spwf/learner.md. Produces an orientation note of what the developer now knows. Companion to recap, which prints what and why; this teaches consequence and navigation. Retrospective Part 6; runnable standalone via /spwf:understand [change-id | todo path | branch].
 disable-model-invocation: true
 allowed-tools: [Read, Glob, Grep, Bash, Write, Edit]
 ---
 
 # understand
 
-**The goal: when this breaks in six months, you know where to look and why.**
+**The goal: when this breaks in six months, the developer knows where to look
+and why.**
 
-Not hand-coded-level fidelity — navigational understanding. Enough to orient,
-not enough to have written it. Companion to `learn-from-mistakes` (which teaches
-the project) and `recap` (which explains the change); this one asks *you*.
+Not hand-coded fidelity — navigational understanding. Enough to orient, not
+enough to have written it.
 
-> **No `AskUserQuestion` in `allowed-tools`, deliberately.** That tool is
-> structurally multiple-choice, and a multiple-choice question over material the
-> developer just read tests recognition, not understanding. Ask in plain
-> conversational text, one question per message. `challenge` omits the tool for
-> the same reason.
+## The one rule that governs everything else
+
+**Explain first. Always. Every topic, every level.**
+
+This skill teaches. It does not audit. If the developer says "I don't know",
+that is the moment to teach — not a gap to write down and move past.
+
+> **Why this warning is here.** The first version of this skill was adapted from
+> `do-i-understand`, a pre-merge accountability audit which correctly refuses to
+> explain (explaining would launder the very gap the audit exists to expose). That
+> posture was imported wholesale and it produced a session the developer called
+> *"difficult and abstract and not great for learning."* The technique was worth
+> borrowing; the posture was not. Do not reintroduce it.
+
+**No `AskUserQuestion` in `allowed-tools`, deliberately** — it is structurally
+multiple-choice, and this is not a quiz. Plain conversational text.
 
 ## Step 1 — Resolve the change
 
-Read `$ARGUMENTS`. Accept any of:
+Read `$ARGUMENTS`:
 
 | Input | Resolution |
 |---|---|
 | Empty | Detect from the current branch, or the most recent change. Ask if ambiguous. |
-| change-id (e.g. `add-user-export`) | `openspec/changes/{id}/`, falling back to `openspec/changes/archive/{id}/` |
+| change-id | `openspec/changes/{id}/`, falling back to `openspec/changes/archive/{id}/` |
 | Todo path ending `.md` | Read frontmatter to derive the change-id; resolve as above |
-| Branch name or commit range (`HEAD~5..HEAD`) | Use directly — for standalone runs outside the golden path |
+| Branch name or commit range | Use directly — standalone runs outside the golden path |
 
-When invoked as Part 6 of `retrospective`, the change-id is passed explicitly —
-skip detection.
+As Part 6 of `retrospective`, the change-id is passed explicitly — skip detection.
 
-If nothing resolves, halt naming both searched locations:
+If nothing resolves, halt naming both searched locations. Do not interview on a
+different change.
 
 ```
 Cannot find change "{arg}" in openspec/changes/ or openspec/changes/archive/.
 ```
-
-Do not fall back to interviewing on a different change.
 
 ## Step 2 — Load the learner profile
 
 Read `.spwf/learner.md` per
 [`_shared/learner-profile.md`](../_shared/learner-profile.md).
 
-**If absent**, ensure `.spwf/learner.md` is in `.gitignore` (add it if not — the
-file records personal gaps and must never be committed), then ask one
-calibration question:
+**If absent**, ensure `.spwf/learner.md` is in `.gitignore` (add it if not — it
+records personal gaps and must never be committed), then ask once:
 
 > "Before we start — roughly where are you with this codebase and its stack:
-> new to it, working in it comfortably, or fluent? I'll pitch the framing
-> accordingly."
+> new to it, working in it comfortably, or fluent? It sets how much background
+> I put around each explanation."
 
-Create the file with that answer. **Never ask this again on later runs.**
+**Never ask this again on later runs.**
 
-**Level governs framing and vocabulary only. It never lowers the bar.** `new`
-gets more scaffolding and concepts named before they're probed; `fluent` gets
-terser framing and fewer questions. Nobody gets easier questions — if level
-lowered rigour, this would be theatre and the ledger a record of flattery.
+### What level changes — and what it must not
 
-Use `## Known` to avoid re-explaining concepts already demonstrated, and
-`## Open` / `## Recurring blind spots` to weight what's worth revisiting.
+Level sets **how much scaffolding each explanation carries**. It never decides
+*whether* explanation happens, and it never makes the check questions easier.
 
-## Step 3 — Read the structure
+| Level | Explanations |
+|---|---|
+| `new` | Name concepts before using them. Offer an analogy or worked example where one genuinely clarifies. More background per topic. |
+| `working` | Assume the vocabulary; explain the specifics of *this* change and why it's shaped that way. |
+| `fluent` | Terser. Straight to the decision and its consequence. Fewer topics if the change is small. |
+
+If level ever results in no explanation, the calibration question was pointless
+and this skill has regressed to its failed first version.
+
+## Step 3 — Read the structure and pick topics
 
 **Read the shape of the change, not every line.**
 
@@ -82,31 +97,33 @@ git diff --stat $RANGE
 git log $RANGE --format="%h %s%n%b"
 ```
 
-Then read **only the changed files that carry structural weight** — a new
-module, a new dependency, a changed interface, a shifted data flow. Supporting
-material, read second and only if it exists: `openspec/changes/{id}/design.md`,
-`proposal.md`, and the original `todo/{slug}.md`.
+Then read only the changed files carrying structural weight — a new module, a
+new dependency, a changed interface, a shifted data flow. Read `design.md`,
+`proposal.md` and the `todo/` file second, as supporting material.
 
-**Do not read the full diff.** At orientation depth it is fidelity the interview
-has already decided not to use, and it makes large changes needlessly expensive.
-`--stat` plus selective reads is the target.
+**Do not read the full diff.** At orientation depth it is fidelity the session
+has already decided not to use.
 
-**Design docs are supporting, never primary.** The gap being closed is *what the
-agent decided on its own* — and those decisions by definition aren't in
-`design.md`, because nobody wrote them there. An interview built from design
-docs probes the decisions you already made yourself, which are the ones you
-already understand.
+### Choosing 3–4 topics
 
-### Triage — pick 3–5, say which and why
+Pick things that are **teachable**, not merely checkable. A topic needs
+substance to explain: a reason behind it, a consequence, a connection to
+something else. "The `.gitignore` entry changed" is checkable and worthless to
+teach; "personal state now lives outside the repo, and here's what that costs
+you" is a topic.
 
-From the structural picture, choose the **3–5 changes that would matter most if
-something went wrong later**. State the selection before starting:
+Weight toward what would matter if something went wrong later.
+
+State the selection up front so the developer knows the shape of the session:
 
 ```
-Looking at three things: the new export queue (new async path), the S3 client
-(new external dependency), and the changed `UserExport` interface (four
-callers). Skipping the config rename and the test fixtures — nothing to
-navigate there.
+Four topics, ~10 minutes:
+  1. The export queue — why the write path is now async
+  2. The S3 client — a new external dependency and what it assumes
+  3. The UserExport interface change — four callers moved
+  4. Where failures surface
+
+Skipping the config rename and test fixtures — nothing to navigate there.
 ```
 
 **Trivial change?** Say so and stop:
@@ -115,122 +132,143 @@ navigate there.
 Nothing here you'd need to navigate later — {one-line summary}. Skipping.
 ```
 
-Better to admit small than manufacture depth.
+## Step 4 — The cycle, per topic
 
-## Step 4 — The interview
+Announce position each time: **"Topic 2 of 4 — the S3 client"**.
 
-**One question per message, then wait.** Never dump a list; the follow-up
-depends on the answer.
+### 4a. Explain
 
-Name the file or area under discussion so it's locatable. **No line-number
-ceremony** — line numbers drift, and at this depth they're precision the
-conversation doesn't need.
+**This is the first move. Never open a topic with a question.**
 
-### Fidelity target
+A short paragraph or two — not an essay, not a single line. Cover:
 
-Every question must be answerable by someone who understands the shape and
-consequences of the change **without having written it**.
+- **What changed**, concretely, naming the file or area
+- **Why it's that way** — the reason, and the alternative if one was rejected
+- **What now depends on it** — the connection that makes it matter
 
-**Out of range** — discard and replace any question about: null-check
-placement, guard clauses, individual error branches, naming, or anything else
-answerable only by whoever typed the line.
+Pitch the background to the recorded level. Name the thing before reasoning
+about it.
 
-### Question shapes
+If `recap` ran in Part 5, don't re-explain its ground (what changed and why in
+the abstract) — go straight to consequence and connection. Standalone, include a
+compact what/why as setup, since nothing has covered it.
 
-**This is not a question bank.** These are worked examples of the derivation.
-If every question you ask maps back to this list, you're pattern-matching rather
-than interviewing — derive from what the change actually contains, and expect to
-build shapes these don't anticipate.
+### 4b. Check
 
-- **Blast radius** — "the export now goes through the queue. What else is on
-  that queue, and what happens to this when it backs up?"
-- **Road not taken** — where `design.md` records a decision: "why this approach
-  and not the alternative? What would have gone wrong?"
-- **Where it touches** — "which parts of the system now depend on this that
-  didn't before?"
-- **Failure shape** — "when this breaks, what does it look like from the
-  outside — slow, wrong, or loud?"
-- **New dependency** — "we've taken on {library}. What does it do for us that we
-  weren't doing before, and what happens if it's unavailable?"
-- **Concept transfer** — "the same pattern is used in {other place in this
-  repo}. What's different about how it's done there?"
+**One question, answerable from the explanation just given plus ordinary
+reasoning.**
 
-### Interview discipline
+Good checks ask the developer to *apply* or *extend* what they were just told:
 
-1. **Not a quiz.** No score, no grade, no pass/fail. If a question has one
-   gradable answer, broaden it until it doesn't.
-2. **"I don't know" is a finding, and a welcome one.** Record it, note what
-   would close it, move on. Never re-ask it, never express disapproval. A
-   developer who feels graded stops disclosing, and disclosure is the whole
-   instrument.
-3. **Answers in your own words.** If the developer has to ask the model, that
-   *is* the gap — routing the question back relocates it rather than closing it.
-   Note it and continue.
-4. **No tasks.** Never ask the developer to change, run, or edit code. Every
-   question is answered in words, from the chair. Frame hypotheticals explicitly
-   as thought experiments, never as instructions to modify anything.
-5. **Grounded answers close lines of questioning.** Three questions well
-   answered is the instrument working, not a lack of rigour. Do not manufacture
-   doubt — it teaches the developer to perform for the interview instead of
-   think in it.
-6. **Cap at ~8 questions**, hard, and offer an exit at any point. An ignored
-   check is worth nothing.
-7. **No emoji, no celebration, no praise inflation.**
+- "Given that, if you added a fifth caller, what would you have to remember?"
+- "So when the queue backs up, which of those two symptoms would you see first?"
+- "Does that reasoning also hold for the other place we use this pattern?"
 
-### Do not re-ask what `recap` explained
+**Banned — the failure mode of the first version:**
 
-When running as Part 6, `recap` has just covered this change in Part 5. Asking
-about material the developer read ninety seconds ago tests short-term memory,
-not understanding — the same recognition-not-recall failure that rules out a
-quiz format.
+- Questions needing information not given. *"If someone inserts a Part 8 next
+  year, where does the drift surface first"* asked the developer to derive
+  something they had no basis to derive.
+- Questions with one gradable answer being held back. That is a quiz.
+- Questions about null-check placement, guard clauses, individual error
+  branches, or naming — below orientation depth.
 
-| | `recap` (Part 5) | `understand` (Part 6) |
-|---|---|---|
-| Covers | **what** changed and **why** | **consequence** and **navigation** |
-| Answers | "what did this do?" | "where do I look when it breaks?" |
-| Mode | prints, you read | asks, you answer |
+If a candidate question could only be answered by someone who typed the code, or
+by someone who read something you didn't explain, discard it.
 
-If a candidate question's answer appears in the recap output already on screen,
-discard it and substitute one probing consequence or navigation.
+### 4c. Deepen — the step that makes this a learning tool
 
-**Standalone-later is the stronger mode**, and worth saying so when it comes up:
-spaced retrieval beats immediate retrieval. The Part 6 hook exists so the option
-is visible while the change is on your mind, not because close is the optimal
-moment.
+**Any signal of uncertainty routes back into teaching.** That includes:
 
-### Close with the navigation question
+- "I don't know" or equivalent
+- Hedging, or an answer that restates the question
+- An answer that appeals to what the agent said
+- A wrong answer
 
-Always, however the rest went:
+**Explain again, by a different route than the first time.** Not the same words
+rearranged — a genuinely different angle:
+
+| First explanation was… | Try instead |
+|---|---|
+| Structural ("A now calls B") | Trace it — walk the actual sequence in the code |
+| Abstract | A concrete worked example with real values |
+| Descriptive | Consequence-first: "here's what breaks if this is wrong" |
+| Prose | The two-line version, stripped to the essential claim |
+
+Then confirm it landed — lightly, not as a re-test: *"Does that make more
+sense?"*
+
+**Only if a second explanation also fails** does the item go into the note's
+open list, with a concrete suggestion for what would close it. Then move on
+without a third attempt in the same session.
+
+**Never** express disapproval, assign a score, or move to the next topic leaving
+a gap unexplained.
+
+### Worked example of one topic
+
+> **Topic 1 of 4 — the retrospective's part numbers**
+>
+> The retrospective is an ordered list of parts, and each part's number is
+> written down in four separate files: the orchestrator itself, `close` (which
+> lists what it runs), `changelog` (whose description names its own position),
+> and the README. There's no single source — each states its number
+> independently.
+>
+> That's why `changelog` sat claiming "Part 5" for two releases after `recap`
+> took that slot. And `workflow-lint`, the drift checker, didn't catch it: it
+> verifies that *names resolve to real files*, not that *numbers agree*.
+>
+> So — if you added a Part 8 tomorrow, how many files would you expect to touch,
+> and would anything tell you if you missed one?
+
+The developer answers from what they were just told. Contrast the first
+version's question on the same subject, which asked them to work all of that out
+unaided.
+
+### Pace
+
+- **Cap at 4 topics**, and offer an exit at any point.
+- A topic where the check lands first time is a topic done. Move on — do not
+  manufacture doubt to prove rigour.
+- Total target ~10 minutes. If it is running much longer, drop remaining topics
+  rather than pressing on.
+
+## Step 5 — Close with the navigation question
+
+Always, however the session went:
 
 > "If this misbehaves in six months, where do you look first, and what would you
 > expect to see?"
 
-This is the skill's whole purpose as a single question. If the interview went
-well, it should be answerable.
+**If the developer can't answer it, walk through the answer explicitly.** This
+question summarises material already taught, so an unanswerable close means the
+teaching didn't land — not that the developer has a gap to record. Give the
+answer, then note in the orientation note which topic needs revisiting.
 
-## Step 5 — Redact before writing
+## Step 6 — Redact before writing
 
-**Load-bearing: the orientation note is saved to a committed, pushed path.**
+**Load-bearing: the orientation note can be saved to a committed, pushed path.**
 
-Before any credential-shaped value reaches a question, the orientation note, or
-`.spwf/learner.md`, mask it — API keys, tokens, passwords, cookies, connection
-strings, private keys:
+Mask any credential-shaped value — API keys, tokens, passwords, cookies,
+connection strings, private keys — before it reaches an explanation, a question,
+the note, or `.spwf/learner.md`:
 
 ```
 api_key="sk-…REDACTED…"
 ```
 
-Quote only enough context to locate what's being discussed.
+Redaction fires before a value enters an **explanation**, not only before the
+save: a leaked value printed in the session is already in the transcript, which
+no commit hook ever sees.
 
-If you encounter a hard-coded credential while reading, record it in the note's
-**Still fuzzy** section naming the file but **not** the value — it's a finding
-about the code, not a question about the developer's understanding.
+If you find a hard-coded credential while reading, put it in the note's open
+items naming the file but **not** the value.
 
-## Step 6 — Write the orientation note
+## Step 7 — Write the orientation note
 
-**A map for future-you, not an attestation for a reviewer.** No merge verdict,
-no readiness recommendation, no verbatim transcript — those belong to a
-pre-merge accountability check, which this is not.
+**A record of what the developer now knows.** Not an inventory of gaps, not a
+verdict, no score.
 
 ```markdown
 ## Orientation: {change-id}
@@ -242,19 +280,18 @@ pre-merge accountability check, which this is not.
 - **{symptom}** → {file/area}, because {reason}
 - ...
 
-### Still fuzzy
-- {thing} — {what would clear it up}
+### Still open
+- {only items that survived two explanations} — {what would close it}
 
-### Concepts this touched
-- {concept} — {one line; only concepts new to the ledger}
+### Concepts covered
+- {concept} — {one line}
 ```
 
 **"Where to look when things go wrong" carries the whole purpose.** If the
-interview produced nothing for it, the interview failed — however well the other
-questions went. Say so rather than padding the section.
+session produced nothing for it, say so plainly rather than padding it.
 
-If the developer exits partway, still write the note covering what was
-discussed. A partial map beats a discarded session.
+If the developer exits partway, write the note for the topics reached. A partial
+map beats a discarded session.
 
 Offer to save once:
 
@@ -263,19 +300,18 @@ Offer to save once:
 On yes, write to `openspec/changes/{change-id}/understanding.md` (or the
 `archive/` path), where it travels into the OpenSpec archive with the change.
 
-## Step 7 — Update the ledger
+## Step 8 — Update the ledger
 
-Per [`_shared/learner-profile.md`](../_shared/learner-profile.md), update
-`.spwf/learner.md`:
+Per [`_shared/learner-profile.md`](../_shared/learner-profile.md):
 
-- Concepts the developer demonstrated → `## Known`, with change-id and date
-- Gaps that surfaced → `## Open`, with what would close them
+- Concepts taught and confirmed → `## Known`, with change-id and date
+- **Only** items that survived two explanations → `## Open`, with what would
+  close them
 - An area appearing under `## Open` more than twice → `## Recurring blind spots`
 
-**Level adjustment is observed, not asked.** When a developer traces a
-consequence without prompting, promote them on that area and say so — never
-silently. Never demote on a single weak answer; recurring blind spots carry that
-signal instead.
+**Level adjustment is observed, not asked.** If the developer reasons through
+consequences unprompted across several topics, promote them for that area and
+say so — never silently. Never demote on a single weak answer.
 
 ## Report
 
@@ -283,16 +319,19 @@ Standalone:
 
 ```
 ✓ Orientation note for {change-id}
-  {N} questions · {M} gaps recorded
+  {N} topics covered · {M} needed a second explanation · {K} still open
 {✓ Saved to {path} | — Not saved}
-{✓ Ledger updated: {N} concepts → Known, {M} → Open}
+{✓ Ledger updated: {N} concepts → Known}
 ```
 
-As Part 6 of retrospective, the note itself is the report — render its sections
-at `####` beneath the existing `### Part 6` heading.
+As Part 6 of retrospective, the note is the report — render its sections at
+`####` beneath the existing `### Part 6` heading.
 
 ## Tone
 
-Curious, not prosecutorial — an ally helping you build a map you'll need later,
-not an examiner. The promise: *don't imitate the agent's output; understand its
-shape well enough to navigate it when it matters.*
+A colleague explaining their work to someone who'll maintain it, not an examiner
+checking whether you did the reading. Concrete, names files, no emoji, no
+celebration, no praise inflation.
+
+The promise: *you didn't write this, but you'll know where to start when it
+breaks.*

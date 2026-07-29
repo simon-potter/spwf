@@ -49,14 +49,14 @@ editing session, so eighteen tick-boxes over it would be ceremony, not progress.
       - Halts naming both searched locations when neither matches, rather than
         interviewing on an unrelated change
 
-- [ ] 2.3 **Input reading and topic selection.** Reads `git diff --stat` and
+- [x] 2.3 **Input reading and topic selection.** Reads `git diff --stat` and
       `git log` for the change's range, plus selective reads of significant
       changed files — never the full diff
       - Selects **3–4 topics** and announces position ("Topic 2 of 4")
       - Declines to run on a trivial change, stating so plainly
       - *Reopened after dogfood: was "3–5 changes to interview on".*
 
-- [ ] 2.4 **The teach → check → deepen cycle.** Replaces the interview
+- [x] 2.4 **The teach → check → deepen cycle.** Replaces the interview
       procedure entirely. *Reopened after dogfood — see design.md Decision 9.*
       - **Explains every topic before asking anything about it.** Explanation is
         mandatory at every level; never opens a topic with a question
@@ -79,7 +79,7 @@ editing session, so eighteen tick-boxes over it would be ceremony, not progress.
         but not the value, not as an interview question
       - Load-bearing: the orientation note is saved to a committed, pushed path
 
-- [ ] 2.6 **Output artefact.** Produces the orientation note as a record of
+- [x] 2.6 **Output artefact.** Produces the orientation note as a record of
       **what the developer now knows** — shape of the change, where to look when
       things go wrong, items still open after two explanations, concepts covered.
       No merge verdict, no score. *Reopened after dogfood: was an inventory of
@@ -87,14 +87,14 @@ editing session, so eighteen tick-boxes over it would be ceremony, not progress.
       - Produces a partial note when the session is abandoned partway
       - Offers to save to `openspec/changes/{change-id}/understanding.md`
 
-- [ ] 2.7 **Ledger creation and level semantics.** Creates `.spwf/learner.md` on
+- [x] 2.7 **Ledger creation and level semantics.** Creates `.spwf/learner.md` on
       first run with one calibration question, never re-asked; ensures the
       `.gitignore` entry from 1.3 is present
       - **Level gates explanation depth, not whether explanation happens.**
         *Reopened after dogfood: level previously adjusted question framing only,
         which made the calibration question inert.*
 
-- [ ] 2.8 **Ledger update.** Moves covered and confirmed concepts to `Known` with
+- [x] 2.8 **Ledger update.** Moves covered and confirmed concepts to `Known` with
       change-id and date; records under `Open` **only** items that survived two
       explanations. Announces level promotions rather than making them silently
 
@@ -136,7 +136,7 @@ published version number.
       `specs/comprehension/spec.md` rewritten (11 requirements, 25 scenarios),
       `design.md` Decision 9 added, `proposal.md` success criteria reordered so
       "the developer reports having learned something" ranks first
-- [ ] 4.4 Rewrite `understand/SKILL.md` around the teach → check → deepen cycle
+- [x] 4.4 Rewrite `understand/SKILL.md` around the teach → check → deepen cycle
       (tasks 2.3, 2.4, 2.6, 2.7, 2.8 reopened)
 - [ ] 4.5 **Run 2** — re-run `/spwf:understand` standalone against a change the
       developer did *not* co-design (suggest archived
