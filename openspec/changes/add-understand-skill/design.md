@@ -16,9 +16,13 @@ goal and produced a materially different skill.
 
 ---
 
-## Decision 1 — Socratic interview, not a quiz
+> **Decisions 1–8 were made before the first dogfood. Decision 9 reverses part of
+> Decision 1 and supersedes the interrogation model it established.** Read
+> Decision 9 first; the rest stands.
 
-**Chosen:** open questions, one at a time, ungraded, plain conversational text.
+## Decision 1 — Open questions, not multiple choice
+
+**Chosen:** open questions in plain conversational text, ungraded.
 
 **Rejected:** multiple-choice quiz with a score (the `check-understanding`
 model).
@@ -159,6 +163,66 @@ passive and savable as a document; there are many changes where the summary is
 all that is wanted, and it stays default-on at close. `understand` reads
 `recap`'s output as context when present but does not hard-depend on it —
 standalone runs against archived changes have no recap in session.
+
+---
+
+## Decision 9 — Teach first; uncertainty triggers teaching, not a recorded gap
+
+**Made after the first dogfood (2026-07-29), which failed.** This supersedes the
+interrogation model Decision 1 established. Recorded in full because the error is
+instructive and easy to repeat.
+
+**What was built:** an interview that asked without explaining, and treated "I
+don't know" as a finding to record and move past.
+
+**What was wrong with it:** the developer's verdict was *"difficult and abstract
+and not great for learning."* Correct. Two traceable errors:
+
+1. **`do-i-understand`'s anti-teaching stance was imported wholesale.** That
+   skill states its job is *"the developer showing their understanding, not
+   explaining things to them"*, and that "I don't know" is a finding to note and
+   move on from. Both are right for **pre-merge accountability**, where
+   explaining would launder the gap the check exists to expose. Both are
+   **backwards for a learning tool**, where a gap is the trigger to teach. The
+   original request asked for a step that *"explains the core concepts of the
+   work I've just done"* — the word was there from the first message, and the
+   design lost it by inheriting a source skill's posture along with its
+   technique.
+2. **Level calibration was theatre.** Level adjusted the framing of questions
+   but never gated how much explanation occurred — because no explanation
+   occurred at any level. The calibration question collected an answer that
+   could not change anything.
+
+A third symptom followed from the first: questions became **puzzles**. "If
+someone inserts a Part 8 next year, where does the drift surface first" asks the
+developer to derive something they have no basis to derive — the gotcha failure
+the source skill itself warns against.
+
+**Chosen instead — the teach → check → deepen cycle**, per topic, 3–4 topics,
+with position announced:
+
+1. **Explain** — what changed, why, what now depends on it. Mandatory at every
+   level; level sets depth, not whether it happens.
+2. **Check** — one question answerable from the explanation just given plus
+   ordinary reasoning. Never requiring ungiven information.
+3. **Deepen** — any uncertainty routes back into teaching, by a *different*
+   route than the first explanation. Only after a second explanation fails does
+   an item get recorded as open.
+
+The orientation note correspondingly becomes a record of **what the developer now
+knows** rather than an inventory of what they didn't.
+
+**What is kept from the pre-dogfood design:** structure-anchoring, orientation
+depth, the fidelity target and its out-of-range list, redaction, the closing
+navigation question, the learner ledger, and the `recap` division of labour. The
+failure was in the interaction model, not the subject matter.
+
+**Note on the `recap` boundary.** With explanation now central, the distinction
+from `recap` narrows and has to carry more weight: `recap` covers *what and why*
+and is read; `understand` covers *consequence and navigation* and is taught with
+checks. Mode as well as subject. If in practice the two still feel redundant,
+that is the signal to merge them — a possibility Decision 8 rejected on the
+pre-dogfood design and which should be revisited after the next dogfood.
 
 ---
 

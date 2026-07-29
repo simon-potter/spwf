@@ -49,25 +49,28 @@ editing session, so eighteen tick-boxes over it would be ceremony, not progress.
       - Halts naming both searched locations when neither matches, rather than
         interviewing on an unrelated change
 
-- [x] 2.3 **Input reading and triage.** Reads `git diff --stat` and `git log` for
-      the change's range, plus selective reads of significant changed files —
-      never the full diff
-      - Selects 3–5 structural changes to interview on, stating which and why
-      - Declines to interview on a trivial change, stating so plainly
+- [ ] 2.3 **Input reading and topic selection.** Reads `git diff --stat` and
+      `git log` for the change's range, plus selective reads of significant
+      changed files — never the full diff
+      - Selects **3–4 topics** and announces position ("Topic 2 of 4")
+      - Declines to run on a trivial change, stating so plainly
+      - *Reopened after dogfood: was "3–5 changes to interview on".*
 
-- [x] 2.4 **The interview procedure.** Asks one question per message as plain
-      conversational text, waiting for an answer before the next
-      - Documents question shapes as derivation examples with an explicit "not a
-        question bank" statement
+- [ ] 2.4 **The teach → check → deepen cycle.** Replaces the interview
+      procedure entirely. *Reopened after dogfood — see design.md Decision 9.*
+      - **Explains every topic before asking anything about it.** Explanation is
+        mandatory at every level; never opens a topic with a question
+      - Check question is answerable from the explanation just given plus
+        ordinary reasoning — never requires ungiven information, never a puzzle
+      - **Any uncertainty routes back into teaching** by a *different* route than
+        the first explanation; never records the gap and moves on
+      - Records an item as open only after a second explanation fails
       - States the fidelity target and its out-of-range list (null-check
         placement, guard clauses, individual error branches, naming)
-      - Carries the rule that it must not re-ask what `recap` explained, with the
-        Part 5 / Part 6 division table
-      - Treats "I don't know" as a recorded finding with no grade, penalty, or
-        re-ask
-      - Caps the session at ~8 questions and offers an exit at any point
-      - Closes every interview with the navigation question ("if this misbehaves
-        in six months, where do you look first?")
+      - Carries the `recap` division of labour: what/why vs consequence/
+        navigation, read vs taught
+      - Closes with the navigation question, walking through the answer
+        explicitly if the developer cannot give it
 
 - [x] 2.5 **Secret redaction.** Masks credential-shaped values (API keys, tokens,
       passwords, cookies, connection strings, private keys) before they reach a
@@ -76,20 +79,24 @@ editing session, so eighteen tick-boxes over it would be ceremony, not progress.
         but not the value, not as an interview question
       - Load-bearing: the orientation note is saved to a committed, pushed path
 
-- [x] 2.6 **Output artefact.** Produces the orientation note (shape of change,
-      where to look when things go wrong, still fuzzy, concepts touched) with no
-      merge verdict
-      - Produces a partial note when the interview is abandoned partway rather
-        than discarding the session
+- [ ] 2.6 **Output artefact.** Produces the orientation note as a record of
+      **what the developer now knows** — shape of the change, where to look when
+      things go wrong, items still open after two explanations, concepts covered.
+      No merge verdict, no score. *Reopened after dogfood: was an inventory of
+      gaps.*
+      - Produces a partial note when the session is abandoned partway
       - Offers to save to `openspec/changes/{change-id}/understanding.md`
 
-- [x] 2.7 **Ledger creation.** Creates `.spwf/learner.md` on first run with one
-      calibration question, never re-asked on later runs; ensures the `.gitignore`
-      entry from 1.3 is present
+- [ ] 2.7 **Ledger creation and level semantics.** Creates `.spwf/learner.md` on
+      first run with one calibration question, never re-asked; ensures the
+      `.gitignore` entry from 1.3 is present
+      - **Level gates explanation depth, not whether explanation happens.**
+        *Reopened after dogfood: level previously adjusted question framing only,
+        which made the calibration question inert.*
 
-- [x] 2.8 **Ledger update.** Moves demonstrated concepts to `Known` with change-id
-      and date after each session, and records unresolved gaps under `Open` with
-      what would close them
+- [ ] 2.8 **Ledger update.** Moves covered and confirmed concepts to `Known` with
+      change-id and date; records under `Open` **only** items that survived two
+      explanations. Announces level promotions rather than making them silently
 
 ## Phase 3 — Retrospective integration
 
@@ -116,14 +123,27 @@ Judgement-based; the only verification of interview *quality*. Cannot be
 automated. Runs before docs and release so a failure here doesn't strand a
 published version number.
 
-- [ ] 4.1 Run `/spwf:understand` standalone against a real change in this repo.
-      Pass condition: the "Where to look when things go wrong" section is
-      substantive, no question was answerable only by whoever typed the code, and
-      no question duplicated `recap`. Record the outcome
-- [ ] 4.2 Run `/spwf:retrospective` end to end and confirm Part 6 fires with a
+- [x] 4.1 **Run 1 — FAILED (2026-07-29).** Ran standalone against
+      `add-understand-skill`. Plugin discovery validated (local marketplace
+      resolved the skill from the working tree). Structural criteria passed: the
+      "Where to look" section was substantive and surfaced a genuinely new fact
+      (`workflow-lint` cannot catch ordinal drift). **But the developer's verdict
+      was "difficult and abstract and not great for learning"** — the session
+      asked without explaining and treated two "I don't know"s as gaps to record
+      rather than moments to teach. Root cause and correction in `design.md`
+      Decision 9
+- [x] 4.3 **Triggered by 4.1.** Revision is spec-level, not derivation-level:
+      `specs/comprehension/spec.md` rewritten (11 requirements, 25 scenarios),
+      `design.md` Decision 9 added, `proposal.md` success criteria reordered so
+      "the developer reports having learned something" ranks first
+- [ ] 4.4 Rewrite `understand/SKILL.md` around the teach → check → deepen cycle
+      (tasks 2.3, 2.4, 2.6, 2.7, 2.8 reopened)
+- [ ] 4.5 **Run 2** — re-run `/spwf:understand` standalone against a change the
+      developer did *not* co-design (suggest archived
+      `2026-06-29-add-branch-enforcement`), so the explanations get a fair test.
+      Pass condition now leads with: did the developer learn something
+- [ ] 4.6 Run `/spwf:retrospective` end to end and confirm Part 6 fires with a
       change-specific prompt, and that declining continues cleanly to Part 7
-- [ ] 4.3 If either dogfood fails, revise the SKILL.md derivation method (not the
-      question list) and re-run before proceeding to Phase 5
 
 ## Phase 5 — Documentation and release
 

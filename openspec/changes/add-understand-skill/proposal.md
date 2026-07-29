@@ -25,10 +25,11 @@ you read into a map you hold.
 ## What Changes
 
 - **NEW** `plugins/spwf/skills/understand/SKILL.md` — post-ship comprehension
-  interview. Structure-anchored (new modules, dependencies, interfaces, data
-  flow), one question at a time, at orientation depth rather than
-  implementation depth. Produces an orientation note and updates a learner
-  ledger.
+  session running a **teach → check → deepen** cycle over 3–4 structural topics
+  (new modules, dependencies, interfaces, data flow) at orientation depth rather
+  than implementation depth. Each topic is explained before anything is asked,
+  and any uncertainty routes back into further explanation rather than being
+  recorded as a gap. Produces an orientation note and updates a learner ledger.
 - **NEW** `plugins/spwf/skills/_shared/learner-profile.md` — convention doc for
   `.spwf/learner.md` (level + Known/Open concept ledger), mirroring the
   `_shared/project-priorities.md` shared-module pattern.
@@ -80,14 +81,19 @@ risks are carried forward explicitly rather than resolved:
 
 ## Success Criteria
 
-1. `/spwf:understand` runs standalone against an active or archived change and
+1. **The developer reports having learned something.** This is the criterion the
+   first dogfood failed, and it outranks the rest — a session that satisfies
+   every structural check while leaving the developer no wiser has not worked.
+2. `/spwf:understand` runs standalone against an active or archived change and
    produces an orientation note whose "Where to look when things go wrong"
    section is substantive.
-2. Retrospective Part 6 offers the interview with a change-specific prompt and
+3. Every topic is explained before it is questioned, and every expression of
+   uncertainty is met with a second explanation rather than a recorded gap.
+4. Retrospective Part 6 offers the session with a change-specific prompt and
    `[Y/n]` default-yes; declining is silent and noted in the report.
-3. `.spwf/learner.md` is created on first run, gitignored, and accumulates
-   Known/Open concepts across runs.
-4. No question in a real run is answerable only by someone who typed the code,
-   and none re-asks what `recap` explained in Part 5.
-5. `openspec validate --strict` and `workflow-lint` both pass; the new skill is
+5. `.spwf/learner.md` is created on first run, gitignored, and accumulates
+   covered concepts across runs.
+6. No check question requires information the developer has not been given, and
+   none re-explains what `recap` covered in Part 5.
+7. `openspec validate --strict` and `workflow-lint` both pass; the new skill is
    not flagged as orphaned.
