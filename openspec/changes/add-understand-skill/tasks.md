@@ -138,7 +138,7 @@ published version number.
       "the developer reports having learned something" ranks first
 - [x] 4.4 Rewrite `understand/SKILL.md` around the teach → check → deepen cycle
       (tasks 2.3, 2.4, 2.6, 2.7, 2.8 reopened)
-- [ ] 4.5 **Run 2** — re-run `/spwf:understand` standalone against a change the
+- [x] 4.5 **Run 2** — re-run `/spwf:understand` standalone against a change the
       developer did *not* co-design (suggest archived
       `2026-06-29-add-branch-enforcement`), so the explanations get a fair test.
       Pass condition now leads with: did the developer learn something
@@ -147,13 +147,13 @@ published version number.
 
 ## Phase 5 — Documentation and release
 
-- [ ] 5.1 `README.md` — `understand` added to the skill table, Close row updated
+- [x] 5.1 `README.md` — `understand` added to the skill table, Close row updated
       for seven parts, `changelog` row corrected from "Part 6" to "Part 7",
       workflow diagram updated
-- [ ] 5.2 `plugins/spwf/README.md` — skill table and Close row updated; the
+- [x] 5.2 `plugins/spwf/README.md` — skill table and Close row updated; the
       "Learning modes" subsection extended, since it currently names `recap` as
       *the* post-hoc complement
-- [ ] 5.3 `plugins/spwf/.claude-plugin/plugin.json` bumped 1.19.0 → 1.20.0
-- [ ] 5.4 `workflow-lint` passes with no P1 findings and does not flag
+- [x] 5.3 `plugins/spwf/.claude-plugin/plugin.json` bumped 1.19.0 → 1.20.0
+- [x] 5.4 `workflow-lint` passes with no P1 findings and does not flag
       `understand` as orphaned
-- [ ] 5.5 `openspec validate add-understand-skill --strict` passes
+- [x] 5.5 `openspec validate add-understand-skill --strict` passes

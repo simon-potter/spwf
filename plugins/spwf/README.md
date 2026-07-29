@@ -42,6 +42,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `address-review` | `/spwf:address-review [report \| ref]` | 6.5 — Turn review feedback (report file or fetched PR/MR comments) into commits or reasoned push-backs; forbids performative agreement (adapted from obra/superpowers `receiving-code-review`) |
 | `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Extract learnings from commits (rules for the project) |
 | `recap` | `/spwf:recap [change-id]` | Post — Teaching summary for the user: concepts touched, decisions made, surprises, growth pointers |
+| `understand` | `/spwf:understand [change-id]` | Post — Teaches what the change means and where to look when it breaks. Explains each topic before asking anything, then checks it landed; any uncertainty is met with a second explanation, never a recorded gap. Calibrated via `.spwf/learner.md` |
 | `tracker-comment` | `/spwf:tracker-comment [issue-id]` | On-demand — Post an audience-aware comment to the linked tracker issue. Classifies as human (rewrites for plain English, ≤150 words, one clear ask) or record (light cleanup, full technical detail allowed). |
 | `changelog` | `/spwf:changelog [ref]` | Post — Release notes from conventional commits |
 
@@ -216,8 +217,12 @@ These are most valuable during **capture**, **challenge**, and early **build**
 when forming understanding. The TDD-disciplined `build` loop runs faster in
 the default style.
 
-The post-hoc complement is `/spwf:recap` — at close, it crystallises concepts
-and decisions from a change you've already shipped.
+The post-hoc complements are `/spwf:recap` and `/spwf:understand`, which run
+back to back at close. `recap` (Part 5) prints a summary — what changed and
+why. `understand` (Part 6) teaches: it explains each topic before asking
+anything, checks the explanation landed, and on any uncertainty explains again
+by a different route rather than recording a gap. `recap` covers what and why;
+`understand` covers consequence and where to look when it breaks.
 
 Set with the `--output-style` flag at launch, or `outputStyle` in
 `settings.json`. See [Claude Code output styles](https://docs.claude.com/en/docs/claude-code/output-styles).
