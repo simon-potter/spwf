@@ -16,40 +16,44 @@
 > a SKILL.md is written in one pass, and eighteen tick-boxes over one file is
 > ceremony rather than progress. Learned from the same change.
 
-## Phase 1 — `spec`'s two edits
+## Phase 1 — `spec` records the change type
 
-Ordered first: `brief` reads the `Type` line, so it must exist before the skill
-that consumes it.
+Ordered first, and alone: `brief` reads the `Type` line, so it must exist before
+the skill that consumes it. `spec`'s *pointer* change is deliberately **not** here
+— see Phase 4.
 
 - [ ] 1.1 `spec/SKILL.md`'s `proposal.md` template gains a
       `**Type**: bug | change` line, positioned with the other header fields, with
       guidance on which value to use
-- [ ] 1.2 `spec/SKILL.md`'s terminal next-step pointer moves from
-      `/spwf:approve-plan` to `/spwf:brief`; its frontmatter description is updated
-      to match
 
 ## Phase 2 — The `brief` skill
 
-- [ ] 2.1 **Frontmatter and resolution.** `plugins/spwf/skills/brief/SKILL.md`
-      exists with `name: brief`, a description, `disable-model-invocation: true`,
-      and `allowed-tools` covering read, glob, grep, bash and the edit needed for
+- [ ] 2.1 **Frontmatter.** `plugins/spwf/skills/brief/SKILL.md` exists with
+      `name: brief`, a description, `disable-model-invocation: true`, and
+      `allowed-tools` covering read, glob, grep, bash and the edit needed for
       first-run `.spwf/learner.md` creation
-      - Resolves an empty argument, a change-id, or a todo path to a change;
-        falls back to `openspec/changes/archive/`; halts naming both locations
+
+- [ ] 2.2 **Change resolution.** Resolves an empty argument, a change-id, or a
+      todo path to a change
+      - Falls back to `openspec/changes/archive/`; halts naming both locations
       - Reports what is missing and stops when `proposal.md` or `tasks.md` is
         absent, rather than briefing from partial artefacts
       - Names `/spwf:approve-plan` as the next step on every exit path
 
-- [ ] 2.2 **Bug detection.** Reads `**Type**` from `proposal.md`; skips changes
+- [ ] 2.3 **Bug detection.** Reads `**Type**` from `proposal.md`; skips changes
       recorded as `bug`, stating that it has; treats an absent line as a change
       and proceeds
 
-- [ ] 2.3 **Level calibration.** Reads `.spwf/learner.md` per
-      `_shared/learner-profile.md`; on first run ensures the `.gitignore` entry
-      then asks the single calibration question and never asks again
+- [ ] 2.4 **Level calibration.** Reads `.spwf/learner.md` per
+      `_shared/learner-profile.md`; on first run **ensures the `.gitignore` entry
+      before writing the file** — a first run in a fresh project must not commit
+      personal comprehension data — then asks the single calibration question and
+      never asks again
       - Level sets background depth per section, never which sections appear
+      - Copy `understand`'s ordering rather than reinventing it; it already gets
+        this right
 
-- [ ] 2.4 **The five sections, expand then summarise.** Emits what will be built /
+- [ ] 2.5 **The five sections, expand then summarise.** Emits what will be built /
       why this way / choices you didn't make / what this touches / summary, in
       that order, with the summary last
       - Section 1 describes substance in plain language and does not reproduce
@@ -57,7 +61,7 @@ that consumes it.
       - Length cap reduces depth in sections 1, 2 and 4 — never section 3
       - Trivial change: says so plainly and stops without padding
 
-- [ ] 2.5 **Section 3 derivation.** Derives candidates from the ideation file
+- [ ] 2.6 **Section 3 derivation.** Derives candidates from the ideation file
       against `proposal.md` + `tasks.md` + `design.md`, with `design.md` as
       supporting detail only
       - **Consequence filter**: reports a candidate only if choosing differently
@@ -69,8 +73,11 @@ that consumes it.
       - Empty filtered delta: says so and omits the section, never inventing
         decisions
       - Works with no `design.md` present
+      - ⚠ **The filter is prose a model can ignore.** A structural assertion can
+        only verify the words are present, not that the filter is applied. Task
+        3.2 is the only real check — treat it as load-bearing, not confirmatory
 
-- [ ] 2.6 **Non-blocking guarantee and the prompt.** Prints, offers one skippable
+- [ ] 2.7 **Non-blocking guarantee and the prompt.** Prints, offers one skippable
       prompt, returns; never halts or gates `approve-plan`
       - On a reported mismatch, classifies it and names the remedy
         (`approve-plan` / re-run `spec` / `challenge`) and performs none of them
@@ -81,6 +88,11 @@ that consumes it.
 
 Judgement-based; the only check on whether the brief teaches. Cannot be
 automated.
+
+> **Precondition:** `brief` must be loadable before any of this runs — the local
+> marketplace resolves skills from the working tree, so a `/reload-plugins` is
+> needed after Phase 2. This blocked the dogfood on the previous change; it is
+> stated here so it doesn't again.
 
 - [ ] 3.1 Run `/spwf:brief add-brief-skill` — the change briefs itself. Confirms
       resolution, the five sections, and that `spec`'s Type line is read.
@@ -95,15 +107,23 @@ automated.
 - [ ] 3.4 If any dogfood fails, revise the section-3 derivation or the section
       content (not the prompt wording) and re-run before Phase 4
 
-## Phase 4 — Documentation and release
+## Phase 4 — Announce the step, document, release
 
-- [ ] 4.1 `README.md` — golden path table gains a `brief` row between Spec and
+`spec`'s pointer change lands here, not in Phase 1. Repointing it before `brief`
+exists would leave a window where `spec` tells you to run a skill that isn't
+there — the pointer is an *announcement* of the new step, and belongs with the
+other announcements.
+
+- [ ] 4.1 `spec/SKILL.md`'s terminal next-step pointer moves from
+      `/spwf:approve-plan` to `/spwf:brief`; its frontmatter description is
+      updated to match
+- [ ] 4.2 `README.md` — golden path table gains a `brief` row between Spec and
       Approve plan; the workflow diagram gains the step; the skill table gains a
       row
-- [ ] 4.2 `plugins/spwf/README.md` — skill table gains a row; the Spec row is
+- [ ] 4.3 `plugins/spwf/README.md` — skill table gains a row; the Spec row is
       updated to point at `brief`; the "Learning modes" section is extended, since
       it currently describes only the two post-hoc skills
-- [ ] 4.3 `plugins/spwf/.claude-plugin/plugin.json` bumped 1.20.0 → 1.21.0
-- [ ] 4.4 `workflow-lint` passes with no P1 findings; `brief` is not flagged as
+- [ ] 4.4 `plugins/spwf/.claude-plugin/plugin.json` bumped 1.20.0 → 1.21.0
+- [ ] 4.5 `workflow-lint` passes with no P1 findings; `brief` is not flagged as
       orphaned; the `spec` → `brief` → `approve-plan` successor chain resolves
-- [ ] 4.5 `openspec validate add-brief-skill --strict` passes
+- [ ] 4.6 `openspec validate add-brief-skill --strict` passes
