@@ -28,23 +28,23 @@ the skill that consumes it. `spec`'s *pointer* change is deliberately **not** he
 
 ## Phase 2 — The `brief` skill
 
-- [ ] 2.1 **Frontmatter.** `plugins/spwf/skills/brief/SKILL.md` exists with
+- [x] 2.1 **Frontmatter.** `plugins/spwf/skills/brief/SKILL.md` exists with
       `name: brief`, a description, `disable-model-invocation: true`, and
       `allowed-tools` covering read, glob, grep, bash and the edit needed for
       first-run `.spwf/learner.md` creation
 
-- [ ] 2.2 **Change resolution.** Resolves an empty argument, a change-id, or a
+- [x] 2.2 **Change resolution.** Resolves an empty argument, a change-id, or a
       todo path to a change
       - Falls back to `openspec/changes/archive/`; halts naming both locations
       - Reports what is missing and stops when `proposal.md` or `tasks.md` is
         absent, rather than briefing from partial artefacts
       - Names `/spwf:approve-plan` as the next step on every exit path
 
-- [ ] 2.3 **Bug detection.** Reads `**Type**` from `proposal.md`; skips changes
+- [x] 2.3 **Bug detection.** Reads `**Type**` from `proposal.md`; skips changes
       recorded as `bug`, stating that it has; treats an absent line as a change
       and proceeds
 
-- [ ] 2.4 **Level calibration.** Reads `.spwf/learner.md` per
+- [x] 2.4 **Level calibration.** Reads `.spwf/learner.md` per
       `_shared/learner-profile.md`; on first run **ensures the `.gitignore` entry
       before writing the file** — a first run in a fresh project must not commit
       personal comprehension data — then asks the single calibration question and
@@ -53,7 +53,7 @@ the skill that consumes it. `spec`'s *pointer* change is deliberately **not** he
       - Copy `understand`'s ordering rather than reinventing it; it already gets
         this right
 
-- [ ] 2.5 **The five sections, expand then summarise.** Emits what will be built /
+- [x] 2.5 **The five sections, expand then summarise.** Emits what will be built /
       why this way / choices you didn't make / what this touches / summary, in
       that order, with the summary last
       - Section 1 describes substance in plain language and does not reproduce
@@ -61,7 +61,7 @@ the skill that consumes it. `spec`'s *pointer* change is deliberately **not** he
       - Length cap reduces depth in sections 1, 2 and 4 — never section 3
       - Trivial change: says so plainly and stops without padding
 
-- [ ] 2.6 **Section 3 derivation.** Derives candidates from the ideation file
+- [x] 2.6 **Section 3 derivation.** Derives candidates from the ideation file
       against `proposal.md` + `tasks.md` + `design.md`, with `design.md` as
       supporting detail only
       - **Consequence filter**: reports a candidate only if choosing differently
@@ -77,7 +77,7 @@ the skill that consumes it. `spec`'s *pointer* change is deliberately **not** he
         only verify the words are present, not that the filter is applied. Task
         3.2 is the only real check — treat it as load-bearing, not confirmatory
 
-- [ ] 2.7 **Non-blocking guarantee and the prompt.** Prints, offers one skippable
+- [x] 2.7 **Non-blocking guarantee and the prompt.** Prints, offers one skippable
       prompt, returns; never halts or gates `approve-plan`
       - On a reported mismatch, classifies it and names the remedy
         (`approve-plan` / re-run `spec` / `challenge`) and performs none of them
