@@ -22,7 +22,7 @@ Ordered first, and alone: `brief` reads the `Type` line, so it must exist before
 the skill that consumes it. `spec`'s *pointer* change is deliberately **not** here
 — see Phase 4.
 
-- [ ] 1.1 `spec/SKILL.md`'s `proposal.md` template gains a
+- [x] 1.1 `spec/SKILL.md`'s `proposal.md` template gains a
       `**Type**: bug | change` line, positioned with the other header fields, with
       guidance on which value to use
 

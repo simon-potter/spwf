@@ -59,6 +59,7 @@ Generate these files:
 
 **Change ID**: `{change-id}`
 **Status**: Draft
+**Type**: {bug | change}
 **Created**: {date}
 **Source**: [todo/{slug}.md](../../../todo/{slug}.md)
 **Tracker**: {ticket}   ← include ONLY if the ideation file had a `ticket:` field; omit this line entirely otherwise
@@ -83,6 +84,18 @@ Generate these files:
 ## Success Criteria
 {What "done" looks like — derived from Rough scope}
 ```
+
+**Setting `Type`.** Derive it from the ideation file, not from a guess:
+
+| Ideation file | `Type` |
+|---|---|
+| `todo/BUG-{slug}.md` (bug path — `capture` classified it as a bug) | `bug` |
+| `todo/{slug}.md` (change path — feature, refactor, docs, chore) | `change` |
+
+Downstream skills read this line to decide whether they apply — `brief` skips
+bugs, for instance. Always emit it: an absent `Type` forces every reader to
+guess, and the whole point of recording it here is that the filename convention
+is not a reliable signal on its own.
 
 ### design.md
 

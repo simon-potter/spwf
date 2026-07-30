@@ -2,6 +2,7 @@
 
 **Change ID**: `add-brief-skill`
 **Status**: Draft
+**Type**: change
 **Created**: 2026-07-30
 **Source**: [todo/teach-early-brief.md](../../../todo/teach-early-brief.md)
 
