@@ -230,12 +230,16 @@ the orientation note may be saved to
 - **THEN** it SHALL surface that in the note's open items, naming the file but
   not the value
 
-### Requirement: The learner profile records covered concepts and open items
+### Requirement: The learner profile records demonstrated concepts and open items
 
-The skill SHALL maintain `.spwf/learner.md`, recording concepts covered under
-`## Known`, items still open after two explanations under `## Open`, and areas
-appearing under `## Open` more than twice under `## Recurring blind spots`. The
-file SHALL be gitignored.
+The skill SHALL maintain `.spwf/learner.md`, recording concepts demonstrated
+under `## Known`, items still open after two explanations under `## Open`, and
+areas appearing under `## Open` more than twice under `## Recurring blind spots`.
+The file SHALL be gitignored.
+
+`## Known` means demonstrated, not merely explained. A skill that explains
+without checking records under `## Covered` instead and SHALL NOT write
+`## Known` — see the `learner-profile` convention's write-permission table.
 
 #### Scenario: Session completes
 
