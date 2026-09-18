@@ -6,9 +6,25 @@ status: open
 
 # Review follow-ups — feature/add-brief-skill
 
-Deferred from the review of PR #7. Neither belongs in that PR.
+Deferred from the review of PR #7. Neither belonged in that PR.
 
-## 1. Vocabulary collision in `add-understand-skill`'s spec — fix BEFORE it archives
+**Item 1 is resolved.** Item 2 is still open, which is why this file is.
+
+## 1. ~~Vocabulary collision in `add-understand-skill`'s spec~~ — RESOLVED
+
+> **Done, and in time.** Fixed in `7554921` (spec wording) and carried into
+> `understand/SKILL.md` Step 8, which now names `## Covered` explicitly instead of
+> complying only transitively through the shared convention.
+>
+> It landed *before* `add-understand-skill` archived, which was the whole point —
+> `openspec/specs/comprehension/spec.md:236` now reads "recording concepts
+> demonstrated under `## Known`", and `:450` (from `add-brief-skill`) reads
+> "SHALL NOT write `## Known`". Both halves of the contract agree in one canonical
+> file. Had this slipped, the first wording would have been permanent.
+>
+> Original description follows, kept for the record.
+
+### Original: vocabulary collision — fix BEFORE it archives
 
 `openspec/changes/add-understand-skill/specs/comprehension/spec.md:233-236` reads:
 
