@@ -142,7 +142,7 @@ published version number.
       developer did *not* co-design (suggest archived
       `2026-06-29-add-branch-enforcement`), so the explanations get a fair test.
       Pass condition now leads with: did the developer learn something
-- [ ] 4.6 Run `/spwf:retrospective` end to end and confirm Part 6 fires with a
+- [x] 4.6 Run `/spwf:retrospective` end to end and confirm Part 6 fires with a
       change-specific prompt, and that declining continues cleanly to Part 7
 
 ## Phase 5 — Documentation and release

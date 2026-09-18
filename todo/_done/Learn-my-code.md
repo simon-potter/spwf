@@ -1,7 +1,7 @@
 ---
 source: scratch
 created: 2026-07-28
-status: ideation
+status: complete
 ---
 
 # Learn-my-code — a comprehension check for work an agent did
