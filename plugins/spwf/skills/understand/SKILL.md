@@ -309,6 +309,12 @@ Per [`_shared/learner-profile.md`](../_shared/learner-profile.md):
   close them
 - An area appearing under `## Open` more than twice → `## Recurring blind spots`
 
+**`## Covered` is not `## Known`.** Concepts `brief` covered before the build are
+recorded there, explained but never checked. Treat them as unproven: explain and
+check them here like any other, then promote what the developer demonstrates to
+`## Known`. Skipping a topic because it appears under `## Covered` is the one
+misreading this section exists to prevent.
+
 **Level adjustment is observed, not asked.** If the developer reasons through
 consequences unprompted across several topics, promote them for that area and
 say so — never silently. Never demote on a single weak answer.
