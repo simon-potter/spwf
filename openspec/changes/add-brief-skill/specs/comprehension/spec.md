@@ -1,8 +1,7 @@
 # Spec: comprehension
 
-> Adds to the `comprehension` capability declared by `add-understand-skill`.
-> That change is released (1.20.0) but not yet archived, so the two must be
-> archived in order.
+> Adds to the `comprehension` capability declared by `add-understand-skill`,
+> which was archived first so this capability existed to add to.
 
 ## ADDED Requirements
 
@@ -77,6 +76,10 @@ A candidate SHALL be reported only if choosing differently would change the shap
 of the result — an approach, a dependency, a boundary, or an ordering that
 constrains later work.
 
+The ideation file SHALL be located by the filename in `proposal.md`'s `Source`
+line, trying `todo/` and then `todo/_done/`, because `close` moves the file
+without rewriting that link.
+
 #### Scenario: Mechanical elaboration is filtered out
 
 - **WHEN** the delta contains naming choices, file paths, or mechanical task
@@ -102,6 +105,13 @@ constrains later work.
 - **WHEN** the change has no `design.md`
 - **THEN** the skill SHALL still produce section 3 from the ideation file against
   `proposal.md` and `tasks.md`
+
+#### Scenario: The ideation file cannot be found
+
+- **WHEN** neither `todo/{slug}.md` nor `todo/_done/{slug}.md` resolves, as on an
+  archived change whose `Source` link was never rewritten
+- **THEN** the skill SHALL say so and omit section 3
+- **AND** SHALL NOT derive the delta from `design.md` alone
 
 ### Requirement: brief never blocks
 

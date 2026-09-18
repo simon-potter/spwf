@@ -1,7 +1,7 @@
 ---
 source: scratch
 created: 2026-07-29
-status: ideation
+status: complete
 ---
 
 # brief — teach before the build, not only after
