@@ -162,3 +162,29 @@ SHALL NOT change which sections appear.
 - **THEN** `new` SHALL receive more background and concepts named before use, and
   `fluent` SHALL receive terser sections
 - **AND** all five sections SHALL appear at every level
+
+### Requirement: An explain-only skill records what it covered, and nothing more
+
+A skill that explains without checking comprehension SHALL record the concepts it
+covered under `## Covered` in `.spwf/learner.md`, with the change-id and date. It
+SHALL NOT write `## Known`, SHALL NOT write `## Open`, and SHALL NOT adjust the
+recorded level. Those require evidence that the developer understood something,
+which an explain-only skill does not have.
+
+`## Covered` SHALL NOT suppress later explanation of the same concept. A reader
+may use it to vary how a topic is framed on a second pass; it is not a signal to
+skip one.
+
+#### Scenario: brief finishes a session
+
+- **WHEN** `/spwf:brief` has produced a brief
+- **THEN** the concepts it covered SHALL be recorded under `## Covered` with the
+  change-id and date
+- **AND** `## Known`, `## Open` and the recorded level SHALL be unchanged
+
+#### Scenario: A later skill reads the profile
+
+- **WHEN** a skill that explains and checks runs on a change whose concepts
+  appear under `## Covered`
+- **THEN** it SHALL still explain and check those concepts rather than treating
+  them as already demonstrated
