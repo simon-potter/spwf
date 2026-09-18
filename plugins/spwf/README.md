@@ -1,6 +1,6 @@
 # spwf
 
-35 engineering workflow skills covering the full cycle: capture, enrich, challenge, spec, plan, build, test, simplify (with self-review), ship, peer review, address review, learn, branch-rescue, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
+37 engineering workflow skills covering the full cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify (with self-review), ship, peer review, address review, close, learn, branch-rescue, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
 
 ## Two-tier architecture
 
@@ -30,7 +30,8 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `enrich` | `/spwf:enrich [file]` | Shape — Divergent counterpart to `challenge`, run before it. Reframes the problem as "How might we…" → 5-8 grounded variations across seven lenses (inversion, constraint-removal, audience-shift, combination, simplification, 10×, expert) → converge on 2-3 distinct approaches with trade-offs + a recommendation → triage on value/feasibility/differentiation → surface assumptions. Writes `## Directions considered` / `## Recommended direction` / `## Assumptions to validate` / `## Not doing` back into the ideation file. Optional — skips bugs and trivial/mechanical changes. Adapts addyosmani/agent-skills `idea-refine` + obra/superpowers `brainstorming` |
 | `challenge` | `/spwf:challenge [file]` | Gate — Question map (provable coverage) → one-at-a-time interview across a 13-dimension taxonomy → adversarial premortem + red-team → completeness self-audit → scope-sizing check (split vs one change). Records `## Residual risks` when any are carried into spec |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
-| `spec` | `/spwf:spec` | 1 — Convert ideation file into full OpenSpec change proposal; auto-creates `feature/{change-id}` before committing (Layer 1, see [Branching](#branching)); carries the ideation `ticket:` into the proposal `**Tracker**:` line |
+| `spec` | `/spwf:spec` | 1 — Convert ideation file into full OpenSpec change proposal; auto-creates `feature/{change-id}` before committing (Layer 1, see [Branching](#branching)); carries the ideation `ticket:` into the proposal `**Tracker**:` line; records `**Type**: bug \| change` in the proposal and hands off to `brief` |
+| `brief` | `/spwf:brief [change-id]` | 1.5 — Explains the plan before it is built, when "that's not what I meant" still costs only a conversation. Five sections, expanding then summarising: what will be built → why this way → the choices you didn't make (todo → plan delta, filtered to decisions that change the shape of the result) → what it touches → summary. Non-blocking by design: prints, offers one skippable prompt, names the remedy without acting on it. Calibrated via `.spwf/learner.md`; skipped for bugs (`**Type**: bug` in the proposal) |
 | `approve-plan` | `/spwf:approve-plan` | 2 — Quality-check task list; human sign-off gate |
 | `write-tests` | `/spwf:write-tests` | 3 — Red phase: write failing tests before implementation |
 | `run-tests` | `/spwf:run-tests` | 3 — Run full test suite; stop on first failure |
@@ -217,12 +218,16 @@ These are most valuable during **capture**, **challenge**, and early **build**
 when forming understanding. The TDD-disciplined `build` loop runs faster in
 the default style.
 
-The post-hoc complements are `/spwf:recap` and `/spwf:understand`, which run
-back to back at close. `recap` (Part 5) prints a summary — what changed and
-why. `understand` (Part 6) teaches: it explains each topic before asking
-anything, checks the explanation landed, and on any uncertainty explains again
-by a different route rather than recording a gap. `recap` covers what and why;
-`understand` covers consequence and where to look when it breaks.
+Three skills explain, at different points in the cycle. `/spwf:brief` runs
+**before** the build, between `spec` and `approve-plan`: it explains what is
+about to be built and why, while a mismatch still costs a conversation rather
+than a change. `/spwf:recap` and `/spwf:understand` run back to back at close.
+`recap` (Part 5) prints a summary — what changed and why. `understand` (Part 6)
+teaches: it explains each topic before asking anything, checks the explanation
+landed, and on any uncertainty explains again by a different route rather than
+recording a gap. `recap` covers what and why; `understand` covers consequence
+and where to look when it breaks. `brief` and `understand` share the
+`.spwf/learner.md` profile, so the level is asked once per project.
 
 Set with the `--output-style` flag at launch, or `outputStyle` in
 `settings.json`. See [Claude Code output styles](https://docs.claude.com/en/docs/claude-code/output-styles).

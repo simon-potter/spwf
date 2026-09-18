@@ -14,7 +14,7 @@ Audit the coherence of the full golden path. Catch drift before it accumulates.
 | Check | Description | Priority |
 |---|---|---|
 | **Step↔skill coverage** | Every golden path step has a corresponding skill in the spwf plugin | P1 |
-| **Agent coverage** | Every golden path step has a corresponding agent in the spwf-agents plugin | P1 |
+| **Agent coverage** | Every golden path step has a corresponding agent in the spwf-agents plugin, unless exempt (see below) | P1 |
 | **Cross-reference validity** | All skill/agent name references in SKILL.md bodies, agent bodies, and READMEs resolve to existing files | P1 |
 | **Stale names** | No deprecated names (grill-me invocations, plan-signoff, task-to-spec, ship, pr-reviewer, test-creator, test-runner, incremental-implementation, openspec:apply) in active skill/agent bodies | P1 |
 | **Successor handoff** | Every phase orchestrator skill names its successor phase in its terminal output (e.g. `pr-create` points at `close`) so an agent following the flow does not stop early | P2 |
@@ -23,6 +23,33 @@ Audit the coherence of the full golden path. Catch drift before it accumulates.
 | **Diagram↔table consistency** | Workflow diagram in root README matches the golden path table | P2 |
 | **disable-model-invocation** | All spwf skills set `disable-model-invocation: true` | P2 |
 | **Frontmatter completeness** | All SKILL.md and agent files have required frontmatter fields (name, description) | P3 |
+
+### Exemption from Agent coverage — non-blocking teaching steps
+
+A step is exempt when **all** of the following hold:
+
+1. It is non-blocking — it prints, may offer a skippable prompt, and returns
+   without gating the next step.
+2. Its output is prose addressed to the developer, not a decision, artefact or
+   dispatch of work.
+3. It neither edits code nor determines what happens next.
+
+Currently exempt: **`brief`**.
+
+**Why this is a real exemption and not a backlog excuse.** A subagent exists to
+keep expensive context out of the main session. A teaching step's entire product
+*is* the text the developer reads in the main session — routing it through a
+subagent means the explanation either lands in a context nobody sees, or comes
+back compressed to a summary, which is the one thing a brief must not be. The
+agent would subtract capability rather than isolate cost.
+
+Contrast `enrich`, also optional and also skippable, which **is** agented: it
+reads widely, generates and discards variations, and returns a decision written
+back into the artefact. That is work worth isolating. `brief` reads four files
+already in context and prints.
+
+Do not report an exempt step as a P1. Report a step that *claims* exemption while
+failing any of the three conditions — particularly one that has started blocking.
 
 ---
 

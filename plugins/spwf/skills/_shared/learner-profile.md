@@ -1,11 +1,12 @@
 # Learner profile — shared convention
 
-The back of the workflow (`recap`, `understand`) exists so the human keeps a
-working grasp of code an agent wrote. Explanation pitched at the wrong level
-fails in both directions — patronising when it over-explains, useless when it
-assumes too much. This doc defines a small, personal, per-project record of what
-the developer already understands, so `understand` can aim its questions and its
-framing at the person actually in the chair.
+The explaining skills exist so the human keeps a working grasp of code an agent
+wrote — `brief` before the build, `recap` and `understand` after it. Explanation
+pitched at the wrong level fails in both directions — patronising when it
+over-explains, useless when it assumes too much. This doc defines a small,
+personal, per-project record of what the developer already understands, so those
+skills can aim their framing, and `understand` its questions, at the person
+actually in the chair.
 
 **This is a generic capability, applied per install.** It ships with `spwf` and
 runs against whatever project the plugin is installed in. Nothing about any one
@@ -37,6 +38,10 @@ Schema — keep it short, one screen:
 Concepts demonstrated in a session, with the change that proved it.
 - {concept} — {change-id}, {YYYY-MM-DD}
 
+## Covered
+Concepts explained but not yet demonstrated. Never suppresses explanation.
+- {concept} — {change-id}, {YYYY-MM-DD}
+
 ## Open
 Gaps surfaced and not yet closed.
 - {concept} — {change-id}, {YYYY-MM-DD}. To close: {what would}
@@ -45,7 +50,7 @@ Gaps surfaced and not yet closed.
 Areas that have appeared under Open more than twice.
 - {area}
 
-_updated {YYYY-MM-DD} by /spwf:understand_
+_updated {YYYY-MM-DD} by /spwf:{skill}_
 ```
 
 ## What level governs — and what it must never govern
@@ -70,7 +75,8 @@ A skill that anchors on the learner profile does this at the start of a session:
 
 1. **If `.spwf/learner.md` exists:** read it. Use `## Level` to pitch framing and
    vocabulary. Use `## Known` to avoid re-explaining concepts already
-   demonstrated. Use `## Open` and `## Recurring blind spots` to weight which
+   demonstrated. Use `## Covered` to vary the *framing* of a second pass — never
+   to skip it. Use `## Open` and `## Recurring blind spots` to weight which
    areas are worth revisiting. Treat it as context, not gospel — the developer
    can override any of it in the moment.
 2. **If it's absent:** ask a single calibration question, create the file, and
@@ -85,12 +91,28 @@ consequence without prompting, promote them on that area — and say so, so the
 change is never silent. Never demote on a single weak answer; use
 `## Recurring blind spots` for that signal instead.
 
+## Which section a skill may write
+
+**`## Known` and `## Open` require evidence. A skill that explains without
+checking may write neither.**
+
+| Skill kind | May write | Why |
+|---|---|---|
+| Explains *and* checks (`understand`) | `Known`, `Covered`, `Open`, blind spots | It has answers to judge |
+| Explains only (`brief`, `recap`) | `Covered` | It has no evidence of anything |
+
+This is not bookkeeping pedantry. `## Known` suppresses re-explanation under
+step 1, so a skill that writes an unverified concept there silently disables the
+skill that would have checked it — and on the same change, since `brief` and
+`understand` run hours apart on the same work. `## Covered` exists so an
+explain-only skill can leave a trace without acquiring that power.
+
 ## Scheduled review
 
 > **Reassess this convention after ~5 real runs.** The profile is additive to
-> the goal it serves rather than required by it — `understand` works without it,
-> calibrating within a session from how the developer answers. It is also the
-> component here most likely to rot: written every run, read rarely, drifting
+> the goal it serves rather than required by it — `understand` and `brief` both
+> work without it, calibrating within a session from how the developer answers.
+> It is also the component here most likely to rot: written every run, read rarely, drifting
 > from reality as the developer's actual grasp moves on.
 >
 > Keep it only if *"which areas do I keep not understanding"* turns out to be

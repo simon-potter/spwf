@@ -1,7 +1,7 @@
 ---
 # Adapted from: ~/.claude/skills/ideation-to-openspec/ — original by Simon Potter
 name: spec
-description: Phase 1 — Spec. Convert a challenged ideation file into a complete OpenSpec change proposal with fidelity validation. Use when you have a file in todo/ that has been through challenge and is ready to be formalised. Checks that openspec/ is initialised before starting.
+description: Phase 1 — Spec. Convert a challenged ideation file into a complete OpenSpec change proposal with fidelity validation. Use when you have a file in todo/ that has been through challenge and is ready to be formalised. Checks that openspec/ is initialised before starting. Hands off to `/spwf:brief`, which explains the plan before `/spwf:approve-plan` gates it.
 disable-model-invocation: true
 allowed-tools: [Read, Write, Bash]
 ---
@@ -59,6 +59,7 @@ Generate these files:
 
 **Change ID**: `{change-id}`
 **Status**: Draft
+**Type**: {bug | change}
 **Created**: {date}
 **Source**: [todo/{slug}.md](../../../todo/{slug}.md)
 **Tracker**: {ticket}   ← include ONLY if the ideation file had a `ticket:` field; omit this line entirely otherwise
@@ -83,6 +84,18 @@ Generate these files:
 ## Success Criteria
 {What "done" looks like — derived from Rough scope}
 ```
+
+**Setting `Type`.** Derive it from the ideation file, not from a guess:
+
+| Ideation file | `Type` |
+|---|---|
+| `todo/BUG-{slug}.md` (bug path — `capture` classified it as a bug) | `bug` |
+| `todo/{slug}.md` (change path — feature, refactor, docs, chore) | `change` |
+
+Downstream skills read this line to decide whether they apply — `brief` skips
+bugs, for instance. Always emit it: an absent `Type` forces every reader to
+guess, and the whole point of recording it here is that the filename convention
+is not a reliable signal on its own.
 
 ### design.md
 
@@ -144,7 +157,8 @@ openspec validate {change-id} --strict
 Fix any validation errors, then report:
 - Files created
 - Any items from the ideation file needing a decision
-- Suggested next step: `/spwf:approve-plan`
+- Suggested next step: `/spwf:brief` — explains the plan before it is built;
+  it points on to `/spwf:approve-plan`, which remains the go/no-go gate
 
 ## Step 5.5: Ensure feature branch
 
