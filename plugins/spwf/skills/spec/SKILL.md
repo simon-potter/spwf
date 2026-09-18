@@ -1,7 +1,7 @@
 ---
 # Adapted from: ~/.claude/skills/ideation-to-openspec/ — original by Simon Potter
 name: spec
-description: Phase 1 — Spec. Convert a challenged ideation file into a complete OpenSpec change proposal with fidelity validation. Use when you have a file in todo/ that has been through challenge and is ready to be formalised. Checks that openspec/ is initialised before starting.
+description: Phase 1 — Spec. Convert a challenged ideation file into a complete OpenSpec change proposal with fidelity validation. Use when you have a file in todo/ that has been through challenge and is ready to be formalised. Checks that openspec/ is initialised before starting. Hands off to `/spwf:brief`, which explains the plan before `/spwf:approve-plan` gates it.
 disable-model-invocation: true
 allowed-tools: [Read, Write, Bash]
 ---
@@ -157,7 +157,8 @@ openspec validate {change-id} --strict
 Fix any validation errors, then report:
 - Files created
 - Any items from the ideation file needing a decision
-- Suggested next step: `/spwf:approve-plan`
+- Suggested next step: `/spwf:brief` — explains the plan before it is built;
+  it points on to `/spwf:approve-plan`, which remains the go/no-go gate
 
 ## Step 5.5: Ensure feature branch
 

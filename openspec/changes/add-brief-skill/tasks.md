@@ -94,17 +94,17 @@ automated.
 > needed after Phase 2. This blocked the dogfood on the previous change; it is
 > stated here so it doesn't again.
 
-- [ ] 3.1 Run `/spwf:brief add-brief-skill` — the change briefs itself. Confirms
+- [x] 3.1 Run `/spwf:brief add-brief-skill` — the change briefs itself. Confirms
       resolution, the five sections, and that `spec`'s Type line is read.
       Weak on teaching value, since the developer co-designed this change
-- [ ] 3.2 Run `/spwf:brief` against a change the developer did **not** co-design.
+- [x] 3.2 Run `/spwf:brief` against a change the developer did **not** co-design.
       Pass condition, in priority order: (a) the developer could explain the plan
       to someone else afterwards; (b) section 3 contains consequential decisions
       rather than banal elaboration; (c) no `enrich` decision was re-surfaced as
       unasked-for
-- [ ] 3.3 Confirm the non-blocking path: report a mismatch at the prompt and
+- [x] 3.3 Confirm the non-blocking path: report a mismatch at the prompt and
       verify the remedy is named and nothing is re-run
-- [ ] 3.4 If any dogfood fails, revise the section-3 derivation or the section
+- [x] 3.4 If any dogfood fails, revise the section-3 derivation or the section
       content (not the prompt wording) and re-run before Phase 4
 
 ## Phase 4 — Announce the step, document, release
@@ -114,16 +114,16 @@ exists would leave a window where `spec` tells you to run a skill that isn't
 there — the pointer is an *announcement* of the new step, and belongs with the
 other announcements.
 
-- [ ] 4.1 `spec/SKILL.md`'s terminal next-step pointer moves from
+- [x] 4.1 `spec/SKILL.md`'s terminal next-step pointer moves from
       `/spwf:approve-plan` to `/spwf:brief`; its frontmatter description is
       updated to match
-- [ ] 4.2 `README.md` — golden path table gains a `brief` row between Spec and
+- [x] 4.2 `README.md` — golden path table gains a `brief` row between Spec and
       Approve plan; the workflow diagram gains the step; the skill table gains a
       row
-- [ ] 4.3 `plugins/spwf/README.md` — skill table gains a row; the Spec row is
+- [x] 4.3 `plugins/spwf/README.md` — skill table gains a row; the Spec row is
       updated to point at `brief`; the "Learning modes" section is extended, since
       it currently describes only the two post-hoc skills
-- [ ] 4.4 `plugins/spwf/.claude-plugin/plugin.json` bumped 1.20.0 → 1.21.0
-- [ ] 4.5 `workflow-lint` passes with no P1 findings; `brief` is not flagged as
+- [x] 4.4 `plugins/spwf/.claude-plugin/plugin.json` bumped 1.20.0 → 1.21.0
+- [x] 4.5 `workflow-lint` passes with no P1 findings; `brief` is not flagged as
       orphaned; the `spec` → `brief` → `approve-plan` successor chain resolves
-- [ ] 4.6 `openspec validate add-brief-skill --strict` passes
+- [x] 4.6 `openspec validate add-brief-skill --strict` passes

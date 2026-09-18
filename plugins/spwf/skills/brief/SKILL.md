@@ -65,9 +65,12 @@ Read the `**Type**:` line from `proposal.md`.
 
 | Value | Action |
 |---|---|
-| `change` | Proceed. |
 | `bug` | Skip, stating why (below). |
-| Absent | **Treat as a change and proceed.** |
+| Anything else — `change`, absent, or an unsubstituted `{bug \| change}` | **Proceed.** |
+
+Match `bug` exactly and treat everything else as a change. Only `bug` should
+suppress a brief, so only `bug` is worth matching; a `spec` run that left the
+template placeholder in place should not silence this skill.
 
 On a bug:
 
@@ -118,11 +121,40 @@ All five sections appear at every level.
 ## Step 4 — Read the plan
 
 ```
-1. todo/{slug}.md                          — what was asked for (the left side of §3's delta)
+1. the ideation file                       — what was asked for (the left side of §3's delta)
 2. openspec/changes/{id}/proposal.md       — Why, What Changes, Impact
 3. openspec/changes/{id}/tasks.md          — the shape and size of the work
 4. openspec/changes/{id}/design.md         — if it exists; supporting only
+5. openspec/changes/{id}/evidence.md       — if it exists; supporting only
 ```
+
+**Resolving the ideation file — try both locations.** `proposal.md`'s `Source`
+link is written at spec time and is **not** rewritten when `close` moves the file,
+so on any archived change it points at a path that no longer exists:
+
+| Try | Path |
+|---|---|
+| 1 | `todo/{slug}.md` |
+| 2 | `todo/_done/{slug}.md` — where `close` moved it |
+
+Take the slug from the `Source` line's filename and ignore its directory.
+
+If neither resolves, **say so and drop section 3**, then brief from the remaining
+sections:
+
+```
+No ideation file found for {change-id} (tried todo/ and todo/_done/) —
+skipping "Choices you didn't make", which is derived from it.
+```
+
+Never fake the delta from `design.md` alone. Section 3's whole claim is that it
+compares the plan against what was asked for; without the left-hand side there is
+no comparison, and the two sources disagree about exactly the decisions that
+matter — `design.md` records what someone chose to write down.
+
+`evidence.md` does not exist yet — it arrives with `adaptive-research-lean-execution`.
+Read it when present and ignore it otherwise, so this skill needs no edit on the
+day it appears.
 
 ## Step 5 — Write the brief
 
@@ -254,12 +286,17 @@ this file quietly dies.
 ## Step 7 — Update the ledger
 
 Per [`_shared/learner-profile.md`](../_shared/learner-profile.md), record the
-concepts the brief covered under `## Known` with the change-id and date.
+concepts the brief covered under `## Covered` with the change-id and date.
 
 `brief` explains rather than checks, so it has no evidence the developer
-understood anything — **it must not record anything under `## Open`**, and must
-not adjust level. Those need a check to justify them, which is `understand`'s
-job at close.
+understood anything. Per that file's **write-permission table**, an explain-only
+skill may write `## Covered` and nothing else — **not `## Known`, not `## Open`,
+and never the level.**
+
+`## Known` is the one that matters here. It suppresses re-explanation for every
+later reader, so recording a merely-mentioned concept there would switch off
+`understand` at close — on this same change — for exactly the topics nobody has
+checked yet. `## Covered` leaves the trace without the side effect.
 
 ## Report
 

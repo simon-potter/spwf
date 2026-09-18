@@ -30,8 +30,8 @@ A handful of words appear throughout. In this project they mean:
 Each step has one job and hands off to the next. The steps marked below stop and wait for a human decision; the rest run start-to-finish.
 
 ```
-[status] → [Capture] → [Enrich] → Challenge → Spec → Approve plan → Build → Simplify → PR Create → PR Review → Address Review → Close
- (orient)    (pre)      (shape)    (gate)      (1)        (2)          (3)      (4)         (5)        (6)          (6.5)         (post)
+[status] → [Capture] → [Enrich] → Challenge → Spec → [Brief] → Approve plan → Build → Simplify → PR Create → PR Review → Address Review → Close
+  (orient)   (pre)     (shape)     (gate)     (1)     (1.5)        (2)         (3)      (4)         (5)         (6)          (6.5)       (post)
 ```
 
 The row of labels under the diagram groups the steps by kind:
@@ -41,7 +41,7 @@ The row of labels under the diagram groups the steps by kind:
 | **orient / pre** | Setup — work out where you are, then capture what you're about to do |
 | **shape** | Optional divergent step — grows and re-frames the idea (variations, 2-3 approaches, a "Not doing" list) before the gate attacks it; skipped for bugs and trivial changes |
 | **gate** | Stops and waits for you — pressure-tests the idea before any code is written |
-| **1–6.5** | The numbered build phases — spec, approve, build, clean up, then open and review the request |
+| **1–6.5** | The numbered build phases — spec, brief, approve, build, clean up, then open and review the request. `[Brief]` is optional: it explains the plan before the build, and never blocks |
 | **post** | Cleanup after merge — retrospective, archive, branch deletion |
 
 The [Golden path](#golden-path) table below walks through every step in full — what it does, why, and what it produces.
@@ -54,7 +54,8 @@ The [Golden path](#golden-path) table below walks through every step in full —
 | **Capture** | `/spwf:capture [source]` | Tracker dispatch (YouTrack default; Jira and Beads via spwf-beadsify also supported) | Accepts a tracker ticket (e.g. `ACAD-42`, `spwf-a3f2dd`), file, or freeform description; classifies as bug or change automatically. Runs a lightweight git-smell check first (uncommitted changes, already-merged branch, very stale branch — warn-and-confirm); soft notes for being on main or behind base. **Moves a linked ticket to its `start_state` (e.g. Doing) when work begins** — courtesy flip, soft-note on failure. Bug path: systematic root-cause investigation → hypothesis. Change path: lightweight qualification, one question at a time. | `todo/{slug}.md` or `todo/BUG-{slug}.md`, ticket → in-progress |
 | **Enrich** *(optional)* | `/spwf:enrich todo/{slug}.md` | — | Divergent counterpart to Challenge — grows the idea before it's attacked. **Reframes** the problem as "How might we…", generates **5-8 grounded variations** across seven lenses (inversion, constraint-removal, audience-shift, combination, simplification, 10×, expert), converges on **2-3 distinct approaches** with trade-offs + a recommendation, triages on value/feasibility/differentiation, and surfaces assumptions to validate. Skipped for bugs and trivial/mechanical changes | Ideation file enriched with `## Directions considered`, `## Recommended direction`, `## Assumptions to validate`, `## Not doing` |
 | **Challenge** | `/spwf:challenge todo/{slug}.md` | — | Builds an explicit **question map** (provable coverage), interviews one question at a time across a **13-dimension taxonomy** (NFRs, edge cases, compat/migration, observability, alternatives, reversibility, …), runs an **adversarial premortem + red-team** pass, then a **completeness self-audit** — then a scope-sizing check that recommends splitting independent work or proceeding as one change | Resolved ideation file (+ `## Residual risks` if any); or N child todo files + original marked `status: split` |
-| **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec, then **auto-creates `feature/{change-id}`** so the spec commit (and all later work) lands off the base branch (see [Branching](#branching)) | `openspec/changes/{id}/proposal.md`, `design.md`, `tasks.md`, `specs/`, on `feature/{change-id}` |
+| **Spec** | `/spwf:spec todo/{slug}.md` | `openspec` CLI | Formalises the challenged idea into a structured spec, then **auto-creates `feature/{change-id}`** so the spec commit (and all later work) lands off the base branch (see [Branching](#branching)) | `openspec/changes/{id}/proposal.md` (incl. `**Type**: bug \| change`), `design.md`, `tasks.md`, `specs/`, on `feature/{change-id}` |
+| **Brief** *(optional)* | `/spwf:brief [change-id]` | — | Teaches the plan **before** it is built, so a mismatch costs a conversation rather than a change. Five sections, expanding then summarising — what will be built, why this way, **the choices you didn't make** (derived from the todo → plan delta, filtered to decisions that change the shape of the result), what it touches, and a short summary. **Never blocks**: prints, offers one skippable prompt, names the remedy without acting on it. Calibrated via `.spwf/learner.md`. Skipped for bugs | Printed brief + `## Known` entries in `.spwf/learner.md` |
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
 | **Build** | `/spwf:build` | `write-tests` → `opsx:apply` → `run-tests` → `debug-recovery` → `opsx:verify` | Red-Green-Verify per task, loops until all done; spec sign-off after all tasks complete | All tasks complete, tests green, spec aligned |
 | **Simplify** (TDD Refactor + Self-Review) | `/spwf:simplify` | `reviewer` agent (local-diff mode) | Two passes: (1) Pass 1 reviews changed files through three lenses — mechanical cleanup, **DRY/reuse** (rule of three; reuse existing helpers), and **deslop** (AI over-engineering: defensive bloat, `as any`, YAGNI) — with an "explicit > compact" restraint guardrail, tests as a safety net; (2) dispatches the `reviewer` subagent against the pinned commit range (intent = openspec proposal + tasks), now also weighing reuse/DRY/over-engineering, Critical/Important/Minor tiering. Pass 2 short-circuits for trivial diffs. Adapted from obra/superpowers `requesting-code-review` + brianlovin/agent-config `simplify`/`deslop` | Cleaner diff + flag list + `{branch}-self-review.md` + verdict |
@@ -363,7 +364,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 
 ## What's included
 
-### `spwf` — 32 workflow skills
+### `spwf` — 37 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
@@ -376,6 +377,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `challenge` | `/spwf:challenge [file]` | Gate — Challenge |
 | `grill-me` | `/spwf:grill-me [file]` | Gate — Challenge (deprecated: use `challenge`) |
 | `spec` | `/spwf:spec` | 1 — Spec |
+| `brief` | `/spwf:brief [change-id]` | 1.5 — Brief (teaches the plan pre-build: what/why/choices-you-didn't-make/blast radius/summary; non-blocking, skips bugs) |
 | `approve-plan` | `/spwf:approve-plan` | 2 — Approve plan |
 | `write-tests` | `/spwf:write-tests` | 3 — Build (atomic) |
 | `debug-recovery` | `/spwf:debug-recovery` | 3 — Build (atomic) |
@@ -385,6 +387,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `pr-create` | `/spwf:pr-create` | 5 — PR Create |
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — PR Review |
 | `address-review` | `/spwf:address-review [report \| ref]` | 6.5 — Address Review (apply feedback from report or PR comments) |
+| `close` | `/spwf:close [todo/{slug}.md]` | 7 — Close (orchestrator): retrospective on the feature branch → land closure on base → tracker done → archive → branch cleanup |
 | `learn-from-mistakes` | `/spwf:learn-from-mistakes` | Post — Retrospective Part 1 (rules for the project; atomic) |
 | `recap` | `/spwf:recap [change-id]` | Post — Retrospective Part 5 (teaching summary for the user; atomic) |
 | `understand` | `/spwf:understand [change-id]` | Post — Retrospective Part 6 (teaches consequence + navigation via explain → check → deepen; atomic) |
@@ -399,6 +402,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `migrate-todo` | `/spwf:migrate-todo [path]` | Cross-cutting — bring legacy todo files into the convention; move completed work to `todo/_done/` |
 | `security-scan` | `/spwf:security-scan [path]` | On-demand — OWASP Top 10 + deep SQL injection review |
 | `dep-audit` | `/spwf:dep-audit` | On-demand / pre-PR — dependency CVE audit, Docker-aware |
+| `branch-rescue` | `/spwf:branch-rescue` | On-demand — move commits stranded on the base branch onto a feature branch (Layer 3) |
 | `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | On-demand — PHP safe refactor |
 | `php-code-quality-reviewer` | `/spwf:php-code-quality-reviewer [path]` | On-demand — PHP bad-practice analysis |
 
