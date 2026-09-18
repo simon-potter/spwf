@@ -165,11 +165,14 @@ SHALL NOT change which sections appear.
 
 ### Requirement: An explain-only skill records what it covered, and nothing more
 
-A skill that explains without checking comprehension SHALL record the concepts it
-covered under `## Covered` in `.spwf/learner.md`, with the change-id and date. It
-SHALL NOT write `## Known`, SHALL NOT write `## Open`, and SHALL NOT adjust the
-recorded level. Those require evidence that the developer understood something,
-which an explain-only skill does not have.
+A skill that explains without checking comprehension SHALL NOT write `## Known`,
+SHALL NOT write `## Open`, and SHALL NOT adjust the recorded level in
+`.spwf/learner.md`. Those require evidence that the developer understood
+something, which an explain-only skill does not have. This holds whether or not
+the skill records anything at all.
+
+Where such a skill does record to the profile, it SHALL record the concepts it
+covered under `## Covered`, with the change-id and date.
 
 `## Covered` SHALL NOT suppress later explanation of the same concept. A reader
 may use it to vary how a topic is framed on a second pass; it is not a signal to
