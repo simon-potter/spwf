@@ -291,12 +291,8 @@ concepts the brief covered under `## Covered` with the change-id and date.
 `brief` explains rather than checks, so it has no evidence the developer
 understood anything. Per that file's **write-permission table**, an explain-only
 skill may write `## Covered` and nothing else — **not `## Known`, not `## Open`,
-and never the level.**
-
-`## Known` is the one that matters here. It suppresses re-explanation for every
-later reader, so recording a merely-mentioned concept there would switch off
-`understand` at close — on this same change — for exactly the topics nobody has
-checked yet. `## Covered` leaves the trace without the side effect.
+and never the level.** Writing `## Known` here would switch off `understand` at
+close, on this same change; that file says why.
 
 ## Report
 
