@@ -3,7 +3,7 @@
 How skills and agents spend the two resources that actually run out: the main
 session's context, and the reader's attention.
 
-Two rules, both measurable, both easy to violate with good intentions.
+Three rules, all measurable, all easy to violate with good intentions.
 
 ---
 
@@ -90,11 +90,57 @@ brief passes it.
 
 ---
 
+## Rule 3 — A subagent's report is a claim, not a result
+
+Verify the strongest claim a subagent makes before acting on it. **Especially when
+the report is clean.**
+
+A dispatched agent reads a slice of the repo, reasons about it once, and returns
+prose. That prose is indistinguishable in shape from a verified finding, and the
+dispatcher has no view of what the agent actually looked at. Confidence in the
+report is not evidence about the codebase.
+
+### The measurements
+
+Three dispatches, same day, same repo:
+
+| Dispatch | Cost | Outcome |
+|---|---|---|
+| `reviewer` on a 3.8k-line change | 67,669 tok · 165s | Found a genuine Critical — a README documenting the exact rule the commit existed to overturn |
+| `research-scout`, evidence question | 67,140 tok · 134s | 39 lines of evidence; all four cited `path:line` locations verified exact |
+| `reviewer` on a 1.4k-line change | 63,632 tok · 255s | **0 Critical, 0 Important, 0 Minor — and wrong.** It explicitly asserted "depth guidance aligns across modules"; the spec required `depth: adaptive`, a value the schema does not define |
+
+The third was found by checking that exact sentence. Nothing else in the report
+suggested a problem, and the report had already been believed once.
+
+### Why clean reports deserve more scrutiny, not less
+
+A large change written by one agent in one sitting contains mistakes. That is the
+base rate, and it is why the review was dispatched. **A report finding nothing has
+therefore either beaten that base rate or failed to look** — and the second is
+cheaper to produce than the first.
+
+A report with findings carries its own evidence: you can check the finding. A
+report with none carries nothing checkable except its assertions, so those are
+what you check.
+
+### What this is not
+
+Not a reason to skip dispatching. Two of the three returned real value, and the
+one that missed a defect still cost less than reading 1,400 lines. It is a reason
+to treat the return as the **start** of verification rather than the end of it.
+
+Pick the one or two claims the report leans on hardest — the ones that would be
+most expensive if false — and check those against the repo directly. Not the whole
+report; the load-bearing part.
+
+---
+
 ## Scheduled review
 
 > **Reassess once a scout has run on several real changes.** Rule 1's bar is
-> stated from a single measurement. One data point is enough to justify writing
-> the rule down and not enough to calibrate it.
+> stated from a single measurement, and Rule 3's from three. Enough to justify
+> writing them down; not enough to calibrate them.
 >
 > What to watch: how often a dispatch returns something that targeted reads would
 > not have found. If the answer is rarely, the bar should rise — or the scout
