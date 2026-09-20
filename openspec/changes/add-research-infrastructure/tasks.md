@@ -89,21 +89,21 @@ Ordered first: every other module and the scout reference its vocabulary.
 Split from a single task: this is a whole new skill, and the precedent from
 `add-brief-skill` is seven tasks for one `SKILL.md`, not one.
 
-- [ ] 5.1 `plugins/spwf/skills/config-check/SKILL.md` exists with frontmatter,
+- [x] 5.1 `plugins/spwf/skills/config-check/SKILL.md` exists with frontmatter,
       `disable-model-invocation: true`, and resolves what it inspects from the
       project rather than assuming a fixed layout
-- [ ] 5.2 Per-domain checks: tracker, research backend, code intelligence, model
+- [x] 5.2 Per-domain checks: tracker, research backend, code intelligence, model
       assignments, forge. Each reports its own state independently — one
       unconfigured domain never suppresses the others
-- [ ] 5.3 **Reports presence, never values.** Configuration inspection touches
+- [x] 5.3 **Reports presence, never values.** Configuration inspection touches
       `.spwf/*.yaml` and MCP setup, where API keys live. Asserts a key is set
       without printing it
-- [ ] 5.4 Distinguishes **absent** from **misconfigured**, gives an actionable next
+- [x] 5.4 Distinguishes **absent** from **misconfigured**, gives an actionable next
       step for each, and never halts the workflow
-- [ ] 5.5 Makes **no** ChunkHound recommendation — that heuristic ships with change
+- [x] 5.5 Makes **no** ChunkHound recommendation — that heuristic ships with change
       5. Asserted by grep, since the temptation to add it early is the whole reason
       it is called out
-- [ ] 5.6 `plugins/spwf/references/chunkhound-setup.md` exists as reference only —
+- [x] 5.6 `plugins/spwf/references/chunkhound-setup.md` exists as reference only —
       loaded by `config-check` or on explicit request, never pulled into normal
       workflow context
 
