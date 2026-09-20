@@ -1,12 +1,44 @@
+---
+source: scratch
+created: 2026-09-18
+status: split
+---
+
 # SPWF Upgrade Specification
 
 ## Change ID
 
-`adaptive-research-lean-execution`
+`adaptive-research-lean-execution` — an architectural initiative, not a single
+OpenSpec change. See § Split into.
 
 ## Status
 
-Proposed
+**Split** (2026-09-20, after `/spwf:challenge`). This file is no longer
+implemented directly; it remains the **parent architectural design** that all
+children reference.
+
+## Split into
+
+Five sequential changes. **The order is load-bearing** — this is not five
+parallel siblings.
+
+| # | Change | Ideation file | Delivers |
+|---|---|---|---|
+| 1 | `research-infrastructure` | [`todo/research-infrastructure.md`](research-infrastructure.md) | `research-dispatch` (native), `evidence-schema`, `model-policy`, `lean-agent-discipline`, `research-scout`, `config-check` |
+| 2 | `pre-build-intelligence` | _not yet written_ | `challenge`, `spec`, `approve-plan` — evidence, acceptance, non-goals, change surface, complexity permissions, coverage gate |
+| 3 | `lean-build` | _not yet written_ | `build`, `write-tests`, `debug-recovery` — implementation ladder, precedent lookup, stop conditions, scope-drift guard |
+| 4 | `research-aware-review` | _not yet written_ | `simplify`, `reviewer`, `pr-review`, `address-review` |
+| 5 | `chunkhound-provider` | _not yet written_ | ChunkHound behind the seam + `config-check`'s recommendation heuristic. Ships after change 2 |
+
+**Later children are deliberately unwritten.** Under the Phase N+1 rule
+([`docs/phase-release-contract.md`](../docs/phase-release-contract.md)), a phase
+may not be spec'd until its predecessor's trigger has been evaluated. Writing
+change 4's ideation file today would mean guessing what four phases of real use
+will teach — the same mistake rejected for ChunkHound (§67 decision 9) and for the
+`enrich` upgrade (§67 Not doing).
+
+Each child is written when its predecessor's trigger has been evaluated. The
+missing files are the gate, not an oversight.
 
 ## Purpose
 
@@ -2827,3 +2859,135 @@ But strengthen it with a second principle:
 > **The workflow should make unnecessary work—unnecessary words, searches, code, abstractions and context—harder to create in the first place.**
 
 That is the governing intent for this change.
+
+---
+
+# 67. Challenge decisions
+
+`/spwf:challenge` pass, 2026-09-20. Eleven questions resolved. The rollout and
+measurement half lives in [`docs/phase-release-contract.md`](../docs/phase-release-contract.md),
+because it spans all five changes and no single one owns it.
+
+**1. ChunkHound is discovery efficiency, never correctness.** `rg + LSP + Read +
+git` must remain capable of a fully correct result. ChunkHound is never
+authoritative and never proves completeness. What it improves is *the cost of
+reaching the right places*: concept search without knowing repo vocabulary,
+cross-layer orientation as one research problem, non-obvious related
+implementations, semantic history research, and — the biggest practical benefit —
+keeping exploratory reads out of the primary context.
+
+**2. The governing invariant is a deletion test.** *If we deleted the ChunkHound
+provider tomorrow, would the architecture still make sense and still be an
+upgrade?* The answer must be yes. This replaces G1's wording, because it is
+checkable against the design rather than against runtime behaviour.
+
+**3. §4 shrinks.** Four shared modules plus one reference:
+
+```text
+_shared/
+  research-dispatch.md      generic ops: orient, find, history, coverage, verify
+  evidence-schema.md
+  lean-agent-discipline.md
+  model-policy.md
+
+references/
+  chunkhound-setup.md       loaded by config-check or on request only —
+                            never enters normal workflow context
+```
+
+Native implements the operations first. ChunkHound optionally accelerates
+`orient` / `find` / `history`.
+
+**4. `config-check` is broad project capability health** — tracker, research
+backend, LSP, model assignments, forge. ChunkHound is one recommendation it may
+make, not its purpose.
+
+**5. Rollback is phase revert, not a runtime flag.** An `evidence: false` switch
+was rejected: it would make nine skills permanently carry both an old and a new
+algorithm, so the upgrade itself becomes lasting complexity. Optional switches
+stay for genuinely optional things (`tracker: none`, `provider: native |
+chunkhound`, `enforce: false`), not for the core workflow.
+
+**6. Compatibility is handled by "evidence is optional input".** Evidence present
+→ incorporate it; absent → continue from existing artefacts. Required regardless
+for old changes and for low-yield research, and categorically different from
+maintaining a second implementation path.
+
+**7. Implementation is five separate OpenSpec changes**, not one. This document
+remains the single architectural design; each phase is spec'd, released, and used
+on real work before the next is spec'd. See § Split into.
+
+**8. Phase release contract — eight conditions plus enforcement.** Conditions 1-6
+as originally drafted; condition 7 requires a falsifiable keep/revert trigger
+stated in advance; condition 8 requires a phase to modify only files it introduces
+or that no earlier live phase depends on — shared modules are **append-only** once
+shipped, or conditions 4 and 5 fail in practice while appearing satisfied.
+Enforcement: **Phase N+1 may not be spec'd until Phase N's trigger has been
+evaluated and written down.** Outcomes are keep / revert / **amend**.
+
+**9. ChunkHound is change 5, after Phase 2.** Not part of Phase 1 infrastructure:
+the deletion test stays cheap only if the provider is its own boundary; Phase 1
+must be validatable without an embedding API key; and the native baseline must
+exist first or improvement cannot be attributed. `config-check`'s ChunkHound
+recommendation heuristic (§16) travels with this change, not Phase 1.
+
+**10. Research depth: surface by default, escalate per question, trace the
+escalation.** §7's adaptive classifier is replaced. Classifying "substantial" up
+front is impossible pre-build — there is no diff to measure, which is why
+`simplify` can use a numeric threshold and `enrich` and `brief` cannot.
+Over-research fails invisibly and accumulates as ceremony; under-research fails
+visibly. Optimise against the failure you can see.
+
+**11. Escalation is structural, not introspective.** A `CODE-ANSWERABLE` question
+(§35) still unresolved after surface research **is** the trigger. The model never
+has to notice it is stuck — the question map either has an unticked item or it
+does not. This answers the red-team objection that models are unreliable at
+knowing what they do not know.
+
+**12. Success measurement keeps only what committed artefacts yield.** Seven of
+§64's ten metrics require session telemetry SPWF cannot capture (context usage,
+subagent tokens, files read, narrative volume, cost, latency) — stop claiming
+them. Kept: depth escalations, diff size before/after `simplify`, scope-drift
+events, review findings and rework. Read against what the change contained: on
+`add-brief-skill`, `simplify` removed 0.1% of the diff, which looks like failure
+until you notice 74% of it was a planning document.
+
+**13. Phase 1 must produce a durable artefact.** The scout's compact result is
+written **into the ideation file**, not merely returned in-session — extending
+§23's return contract. Without it Phase 1 leaves nothing behind and its trigger
+is a judgement call, which is exactly what condition 7 exists to eliminate.
+
+**14. Evidence staleness is per-entry, and lives in `evidence-schema.md`.** A
+consumer compares `Research base` against the current tree; entries under
+`### Important components` and `### Consumers / blast radius` whose files have
+changed are marked stale and re-verified against source before being acted on.
+Unchanged entries stand. All-or-nothing invalidation would push people to skip
+evidence gathering entirely. Placed in the schema so every later consumer inherits
+it rather than each reinventing it.
+
+## Not doing
+
+**Original §59 Phase 5 — `capture` bug path and `enrich` research upgrades.** The
+document already gated these on "only after the core flow is proven", which
+concedes they depend on evidence that does not exist yet. Planning them now means
+guessing what `capture` and `enrich` will need; after phases 1-4 have run on real
+work that will be known rather than guessed.
+
+*Revisit condition:* after phases 1-4 have shipped and been used on real work,
+reassess whether bug investigation and divergent ideation benefit from the
+research primitive.
+
+# 68. Residual risks
+
+Carried into spec rather than solved. Full detail and the premortem in
+[`docs/phase-release-contract.md`](../docs/phase-release-contract.md).
+
+| Risk | Confidence | Note |
+|---|---|---|
+| **Trigger numbers are guesses** | High | "After 5 real changes" was chosen for plausibility, not evidence. A phase whose benefit appears at change 15 gets reverted at 5, and the revert looks justified |
+| **This repo is a weak measurement sample** | High | SPWF is mostly Markdown, solo, self-designed. Metrics premised on code volume may never produce a clean signal here, however well they would work on the large Python/Nuxt codebases this targets. Also a ready-made excuse for ignoring any trigger |
+| **Nobody runs the trigger check** | Medium | `brief` shipped with a good trigger that has never been checked. Mitigated by the Phase N+1 gate, which is the only mitigation that does not rely on remembering |
+| **A scout may not beat reading the files** | Medium | The one subagent dispatch during this challenge took 165s, 67,669 tokens and 22 tool calls to return a single finding. A scout must beat three direct reads or it is overhead with extra steps |
+| **The ChunkHound seam stays empty** | Medium | By the time four phases ship, the native protocol is entrenched and the provider never gets adopted |
+| **`config-check` becomes a nag** | Low-Medium | §16-19 define four recommendation heuristics before anyone has run it once |
+| **Model aliases drift** | Low | §24 replaces pinned models with aliases; Haiku scouts could silently degrade |
