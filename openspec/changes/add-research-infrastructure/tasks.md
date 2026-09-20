@@ -63,14 +63,14 @@ Ordered first: every other module and the scout reference its vocabulary.
 
 ## Phase 3 — Agent discipline and model policy
 
-- [ ] 3.1 `_shared/lean-agent-discipline.md` states the dispatch bar — a subagent
+- [x] 3.1 `_shared/lean-agent-discipline.md` states the dispatch bar — a subagent
       is justified when work is broad, repetitive, or would otherwise read many
       files into the main session, and not when a few targeted reads would answer
       the question — and cites its evidence (165s / 67,669 tokens / 22 tool calls
       for one finding) so a later author cannot mistake it for taste
-- [ ] 3.2 Return contracts: subagents return findings and source locations, not a
+- [x] 3.2 Return contracts: subagents return findings and source locations, not a
       narrative of how the search was performed
-- [ ] 3.3 `_shared/model-policy.md` assigns cheap models to deterministic evidence
+- [x] 3.3 `_shared/model-policy.md` assigns cheap models to deterministic evidence
       gathering and Sonnet-class to synthesis, implementation and consequential
       review; states that model selection is independent of provider selection
 
