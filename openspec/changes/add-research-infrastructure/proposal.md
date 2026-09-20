@@ -41,7 +41,7 @@ and judged without altering a single workflow step.
 - **NEW** `plugins/spwf/skills/_shared/model-policy.md` — cheap models for
   deterministic evidence gathering, Sonnet-class for synthesis and consequential
   review.
-- **NEW** `plugins/spwf/references/chunkhound-setup.md` — reference only, loaded by
+- **NEW** `plugins/spwf/skills/config-check/references/chunkhound-setup.md` — reference only, loaded by
   `config-check` or on explicit request; never enters normal workflow context.
 - **NEW** `plugins/spwf-agents/agents/research-scout.md` — returns compact evidence
   and **writes its result into the ideation file**.
@@ -94,7 +94,7 @@ something that does not exist.
 
 ## Success Criteria
 
-1. The four shared modules and `references/chunkhound-setup.md` exist, and no
+1. The four shared modules and `config-check/references/chunkhound-setup.md` exist, and no
    golden-path skill references them yet.
 2. `research-dispatch` defines all five operations against the native backend, and
    `.spwf/research.yaml` is optional with working defaults — **proven by exercising

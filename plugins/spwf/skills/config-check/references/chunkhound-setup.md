@@ -1,6 +1,6 @@
 # ChunkHound setup — reference
 
-> **Reference only.** Loaded by `config-check` or on explicit request. This file
+> **Reference only.** Lives under `config-check`, which names it in its deferred-recommendations section. Loaded on explicit request. This file
 > must never be pulled into normal workflow context — no skill reads it as part of
 > capture, challenge, spec, build, review or close.
 >
@@ -14,7 +14,7 @@
 
 ChunkHound is a semantic code-search tool. Within SPWF it would serve the
 **discovery** operations — `orient`, `find` with `mode: concept`, and `history` —
-defined in [`../skills/_shared/research-dispatch.md`](../skills/_shared/research-dispatch.md).
+defined in [`../../_shared/research-dispatch.md`](../../_shared/research-dispatch.md).
 
 **It never serves the proof operations.** `coverage` and `verify` remain native
 (LSP, `rg`, direct Read) by design. Semantic retrieval is not evidence of

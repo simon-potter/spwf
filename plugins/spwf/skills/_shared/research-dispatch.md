@@ -212,8 +212,10 @@ inherits native for the proof operations. To add one:
 
 1. Add a row to the dispatch table below.
 2. Put its setup, installation and authentication in its own file under
-   `plugins/spwf/references/`, loaded only by `config-check` or on explicit
-   request. It must never enter normal workflow context.
+   `plugins/spwf/skills/config-check/references/`, loaded only on explicit
+   request. It must never enter normal workflow context. Reference files are
+   **scoped to the skill that owns them** — that is the repo's convention, and a
+   plugin-root `references/` directory has no precedent.
 3. Change no skill. If adding a provider requires editing a skill, the seam has
    failed.
 

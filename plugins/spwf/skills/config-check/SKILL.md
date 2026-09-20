@@ -129,6 +129,11 @@ initiative, alongside the provider it would recommend.
 Recommending something the workflow cannot yet install is how a health report
 becomes a nag.
 
+If a developer asks how a provider *would* be configured, the setup story lives in
+[`references/chunkhound-setup.md`](references/chunkhound-setup.md) — load it on
+request only. Naming where documentation lives is not recommending the thing it
+documents.
+
 ## Tone
 
 A status report, not a sales pitch. Every ⚠ earns its place by naming something

@@ -103,7 +103,8 @@ Split from a single task: this is a whole new skill, and the precedent from
 - [x] 5.5 Makes **no** ChunkHound recommendation — that heuristic ships with change
       5. Asserted by grep, since the temptation to add it early is the whole reason
       it is called out
-- [x] 5.6 `plugins/spwf/references/chunkhound-setup.md` exists as reference only —
+- [x] 5.6 `plugins/spwf/skills/config-check/references/chunkhound-setup.md` exists as
+      reference only, scoped to its owning skill per repo precedent —
       loaded by `config-check` or on explicit request, never pulled into normal
       workflow context
 
