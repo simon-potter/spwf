@@ -5,26 +5,26 @@
     "email": "simon@academypl.us"
   },
   "metadata": {
-    "description": "SPWorkflow — engineering workflow toolkit: capture, challenge, spec, plan, build, review, simplify, ship, learn",
+    "description": "SPWorkflow \u2014 engineering workflow toolkit: capture, challenge, spec, plan, build, review, simplify, ship, learn",
     "pluginRoot": "./plugins"
   },
   "plugins": [
     {
       "name": "spwf",
       "source": "./plugins/spwf",
-      "description": "32 workflow skills covering the full engineering cycle",
-      "version": "1.0.0"
+      "description": "38 workflow skills covering the full engineering cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify, ship, peer review, address review, close, learn, and quality maintenance",
+      "version": "1.22.0"
     },
     {
       "name": "spwf-agents",
       "source": "./plugins/spwf-agents",
-      "description": "13 specialist subagents covering every phase of the SPWorkflow engineering cycle",
-      "version": "1.0.0"
+      "description": "15 specialist subagents covering every phase of the SPWorkflow engineering cycle",
+      "version": "1.5.0"
     },
     {
       "name": "spwf-beadsify",
       "source": "./plugins/spwf-beadsify",
-      "description": "Optional add-on — Beads (bd) as a tracker-dispatch backend. Requires the Beads CLI. SPWF works without this plugin.",
+      "description": "Optional add-on \u2014 Beads (bd) as a tracker-dispatch backend. Requires the Beads CLI. SPWF works without this plugin.",
       "version": "0.1.0"
     }
   ]
