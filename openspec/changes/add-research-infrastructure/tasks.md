@@ -22,18 +22,18 @@
 
 Ordered first: every other module and the scout reference its vocabulary.
 
-- [ ] 1.1 `_shared/research-dispatch.md` exists and defines the five operations
+- [x] 1.1 `_shared/research-dispatch.md` exists and defines the five operations
       (`orient`, `find`, `history`, `coverage`, `verify`), each with its inputs,
       its normalised return shape, and which backend serves it
-- [ ] 1.2 The native backend (LSP → `rg` → Read → git) is specified as sufficient
+- [x] 1.2 The native backend (LSP → `rg` → Read → git) is specified as sufficient
       for a fully correct result on its own, with no other provider present
-- [ ] 1.3 Discovery and proof are separated: completeness claims (all callers,
+- [x] 1.3 Discovery and proof are separated: completeness claims (all callers,
       every reference, no other consumers) route to LSP / `rg` / direct inspection,
       and semantic retrieval is stated as never constituting proof
-- [ ] 1.4 `.spwf/research.yaml` schema documented — `provider`, `depth`,
+- [x] 1.4 `.spwf/research.yaml` schema documented — `provider`, `depth`,
       `fallback`, all optional; an absent file behaves as `provider: auto`,
       `depth: adaptive`, `fallback: native` and never interrupts the workflow
-- [ ] 1.5 No ChunkHound-specific instruction appears anywhere in the module. The
+- [x] 1.5 No ChunkHound-specific instruction appears anywhere in the module. The
       deletion test holds: remove the (not yet existing) provider and the document
       still stands
 
