@@ -62,7 +62,7 @@ parent's `## Not doing`.
 - **No golden-path behaviour change.** Nothing in the workflow consumes the new
   modules yet; they are infrastructure for changes 2-4.
 - **No breaking changes.** `.spwf/research.yaml` is optional with working defaults
-  (`provider: auto`, `depth: adaptive`, `fallback: native`). Absent config behaves
+  (`provider: auto`, `depth: surface`, `fallback: native`). Absent config behaves
   as native.
 - **New capability**: `codebase-research`.
 - **Blast radius on revert**: deleting the new files and reverting the model-pin

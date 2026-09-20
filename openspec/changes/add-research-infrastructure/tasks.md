@@ -32,7 +32,7 @@ Ordered first: every other module and the scout reference its vocabulary.
       and semantic retrieval is stated as never constituting proof
 - [x] 1.4 `.spwf/research.yaml` schema documented — `provider`, `depth`,
       `fallback`, all optional; an absent file behaves as `provider: auto`,
-      `depth: adaptive`, `fallback: native` and never interrupts the workflow
+      `depth: surface`, `fallback: native` and never interrupts the workflow
 - [x] 1.5 No ChunkHound-specific instruction appears anywhere in the module. The
       deletion test holds: remove the (not yet existing) provider and the document
       still stands
@@ -133,7 +133,7 @@ Judgement-based; the only check on whether the scout is worth dispatching.
       estimate the cost of answering by targeted reads. If the scout is not
       cheaper, record it — that is the trigger firing early, not a failed dogfood
 - [x] 7.4 **Exercise the absent-config path.** With no `.spwf/research.yaml`,
-      confirm dispatch behaves as `provider: auto` / `depth: adaptive` /
+      confirm dispatch behaves as `provider: auto` / `depth: surface` /
       `fallback: native` and never interrupts. The headline property of this change
       is "works with no configuration"; documenting the defaults is not proving them
 - [x] 7.5 Confirm no golden-path skill references the new modules

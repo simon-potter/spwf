@@ -26,7 +26,7 @@ result without any other provider.
 #### Scenario: No configuration exists
 
 - **WHEN** `.spwf/research.yaml` is absent
-- **THEN** the dispatcher SHALL behave as `provider: auto`, `depth: adaptive`,
+- **THEN** the dispatcher SHALL behave as `provider: auto`, `depth: surface`,
   `fallback: native`
 - **AND** SHALL NOT interrupt the workflow to request configuration
 
