@@ -39,22 +39,22 @@ Ordered first: every other module and the scout reference its vocabulary.
 
 ## Phase 2 — The evidence schema
 
-- [ ] 2.1 `_shared/evidence-schema.md` defines the canonical structure — existing
+- [x] 2.1 `_shared/evidence-schema.md` defines the canonical structure — existing
       behaviour, invariants / contracts, important components, consumers / blast
       radius, existing tests, patterns to reuse, uncertainty, research trace
-- [ ] 2.2 Every evidence file records `Research base` (SHA), provider and depth;
+- [x] 2.2 Every evidence file records `Research base` (SHA), provider and depth;
       consequential claims carry source locations
-- [ ] 2.3 The research trace is bounded — enough to judge evidence quality, never
+- [x] 2.3 The research trace is bounded — enough to judge evidence quality, never
       a retrieval dump. States what "compact" means concretely rather than
       asserting it
-- [ ] 2.4 **The per-entry staleness rule.** A consumer compares cited files against
+- [x] 2.4 **The per-entry staleness rule.** A consumer compares cited files against
       `Research base`; entries under `### Important components` and
       `### Consumers / blast radius` whose files changed are marked stale and
       re-verified against source. Unchanged entries stand. States explicitly that
       evidence is never invalidated wholesale for one moved file, and why —
       wholesale invalidation teaches people to skip evidence gathering rather than
       maintain it
-- [ ] 2.5 **Redaction.** Credential-shaped values (API keys, tokens, passwords,
+- [x] 2.5 **Redaction.** Credential-shaped values (API keys, tokens, passwords,
       cookies, connection strings, private keys) are masked before reaching
       persisted evidence or any committed artefact; a discovered hard-coded
       credential is surfaced as a finding naming the file, never the value.
