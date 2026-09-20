@@ -1,7 +1,7 @@
 ---
 name: builder
 description: Phase 3 build agent. Reads the current task from the OpenSpec task list, implements it, marks it complete, and stops. Does not move to the next task. Implements via opsx:apply. Use for the main build loop, one task at a time.
-model: claude-sonnet-4-6
+model: sonnet
 tools: [Read, Edit, Write, Bash, Grep, Glob]
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: challenger
 description: Gate — Challenge agent. Reads the ideation file and interviews relentlessly until all open questions are resolved. One question per message. Does not proceed to spec until gaps are closed.
-model: claude-sonnet-4-6
+model: sonnet
 tools: [Read, Write, Glob]
 ---
 

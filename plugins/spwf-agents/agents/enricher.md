@@ -1,7 +1,7 @@
 ---
 name: enricher
 description: Divergent gate — Enrich agent. Reads the ideation file and grows it before challenge attacks it: reframes the problem as "How Might We", generates grounded variations across lenses, converges on 2-3 distinct approaches with trade-offs and a recommendation, and writes directions / recommended direction / assumptions-to-validate / not-doing back into the file. Skips bugs and trivial/mechanical changes. Divergent counterpart to challenger (which is convergent/adversarial). Delegates to spwf:enrich.
-model: claude-sonnet-4-6
+model: sonnet
 tools: [Read, Write, Glob, Grep, Bash]
 ---
 

@@ -114,3 +114,43 @@ Inherited from the parent §68, narrowed to this change:
 | `config-check` becomes a nag | Low-Medium | Recommendation heuristics defined before anyone has run it once |
 | Model aliases drift | Low | Aliases could later point at models that behave differently, degrading scouts silently |
 | Trigger number is a guess | High | "3 real changes" was chosen for plausibility, not evidence |
+
+## Codebase evidence
+
+Research base: 7b729b5f5d3e3355c8b7b4825b43c4b0b08c8d0c
+Provider: native
+Depth: surface
+
+### Existing behaviour
+
+- `brief` (Step 4): already reads `evidence.md` if present, marked "supporting only"; no change needed when evidence arrives (plugins/spwf/skills/brief/SKILL.md:128, 155-157)
+- Golden-path skills reading openspec/changes/{id}/ artifacts: brief, approve-plan, write-tests, simplify Pass 2, recap, understand, retrospective Part 2
+- Task artifacts flow: ideation (todo/) → spec (proposes) → brief/approve-plan (review) → build (implement) → close/retrospective (validate)
+
+### Important components
+
+- `plugins/spwf/skills/brief/SKILL.md:128` — evidence.md insertion already designed into Step 4 read sequence
+- `plugins/spwf/skills/approve-plan/SKILL.md:35-36` — Step 2 reads proposal.md + tasks.md (candidate point for evidence of feasibility/risk)
+- `plugins/spwf/skills/write-tests/SKILL.md:16-18` — Step 1 reads tasks.md + specs (candidate: evidence of existing tests, patterns, components)
+- `plugins/spwf/skills/simplify/SKILL.md:180-182` — Pass 2 references proposal/tasks/design for reviewer subagent baseline
+
+### Consumers / blast radius
+
+- `approve-plan` assesses plan quality across five dimensions (atomicity, testability, clarity) + three adversarial lenses; evidence would strengthen feasibility + architect + security lenses (skills/approve-plan/SKILL.md:47-99)
+- `write-tests` determines test coverage and edge cases; evidence supplies existing tests, prior patterns, important components to reuse (skills/write-tests/SKILL.md:32-51)
+- `address-review` evaluates fixes against design decisions in openspec/changes/*/design.md; evidence directly cited (skills/address-review/SKILL.md:29, 136)
+- `pr-review` makes code-quality claims from diff only; evidence could anchor those to codebase precedent and load-bearing boundaries (skills/pr-review/SKILL.md:72-99)
+
+### Uncertainty
+
+- Changes 2-4 will define when each skill actually reads evidence; this evidence maps potential points only
+- Brief's "supporting only" stance means evidence doesn't block downstream (confirmed by comment at 155-157), but whether other skills treat it the same way depends on changes 2-4
+- Skills like challenge/enrich/capture are explicitly out-of-scope per change 1's rough scope (todo/research-infrastructure.md:93, 95)
+- No golden-path skill currently makes code claims and then verifies them against codebase within the same skill (evidence will address this pattern in changes 2+)
+
+### Research trace
+
+- Orient: which golden-path skills read openspec/changes/ artifacts and where; which make code claims without codebase grounding; any conflicts
+- Searches: grep for "openspec/changes\|evidence.md\|proposal.md\|design.md\|tasks.md" across all 16 golden-path SKILL.md files
+- Deterministic checks: read Step/Phase definitions in brief, approve-plan, write-tests, simplify, recap, understand, retrospective, close
+- Verified source: plugins/spwf/skills/{brief,approve-plan,write-tests,simplify,recap,understand,retrospective,close}/SKILL.md; todo/research-infrastructure.md; openspec/changes/add-research-infrastructure/tasks.md

@@ -1,7 +1,7 @@
 ---
 name: retrospector
 description: Post-ship retrospective agent. Runs three parts: (1) extract learnings from commits; (2) audit OpenSpec artefacts for spec drift; (3) doc-lint pass. Produces a retrospective report.
-model: claude-sonnet-4-6
+model: sonnet
 tools: [Read, Write, Glob, Grep, Bash]
 ---
 

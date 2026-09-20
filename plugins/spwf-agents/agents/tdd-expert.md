@@ -1,7 +1,7 @@
 ---
 name: tdd-expert
 description: TDD advisory agent. Advises on what failing tests to write for a given task, reviews test quality (behaviour vs implementation detail), guides through Red-Green-Refactor when stuck, and identifies when to use test doubles. Use when unsure what tests to write, when tests are hard to make green, or when you want a review of test quality before proceeding to implementation. Advisory counterpart to tester (which executes the TDD steps).
-model: claude-sonnet-4-6
+model: sonnet
 tools: [Read, Write, Bash]
 ---
 

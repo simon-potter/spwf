@@ -1,6 +1,6 @@
 # spwf
 
-37 engineering workflow skills covering the full cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify (with self-review), ship, peer review, address review, close, learn, branch-rescue, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
+38 engineering workflow skills covering the full cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify (with self-review), ship, peer review, address review, close, learn, branch-rescue, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
 
 ## Two-tier architecture
 
@@ -84,6 +84,7 @@ Cross-cutting maintenance tools — run between sessions, on a cadence, or when 
 | `workflow-lint` | `/spwf:workflow-lint` | Golden path coherence audit: step↔skill coverage, agent coverage, cross-reference validity. |
 | `agent-optimise` | `/spwf:agent-optimise` | Lightweight agent/skill audit. Use when agentlint is unavailable or as a quick spot-check. |
 | `doc-lint` | `/spwf:doc-lint` | Documentation drift check: stale READMEs, broken links, misaligned specs. |
+| `config-check` | `/spwf:config-check` | Project capability health across tracker, research backend, code intelligence, model assignments and forge. Distinguishes absent from misconfigured; reports that a credential is set, never its value; advisory only and never halts. |
 | `migrate-todo` | `/spwf:migrate-todo [path]` | Audit `todo/` for legacy files. Compliant frontmatter is skipped; partial/legacy files get normalised; `status: complete` files move to `todo/_done/`. Mirrors doc-lint flags (`--fix` interactive, `--auto-fix` batch). |
 | `security-scan` | `/spwf:security-scan [path]` | Deep security review: OWASP Top 10 + SQL injection across PHP, Python, JS, Go. |
 | `dep-audit` | `/spwf:dep-audit` | Multi-ecosystem dependency CVE audit (npm, Composer, pip, cargo, govulncheck, bundle). Docker Compose-aware. |
@@ -197,6 +198,18 @@ done_state: Done           # state name for close transition
 
 Set `tracker: none` to opt out of tracker integration entirely. Auth tokens, URLs, and
 multi-instance routing live in user-level Claude Code MCP settings — never in the repo.
+
+### Shared conventions
+
+`skills/_shared/` holds the conventions skills reference rather than restate:
+
+| Module | Owns |
+|---|---|
+| `research-dispatch.md` | Codebase research as five logical operations (`orient`, `find`, `history`, `coverage`, `verify`) over a native backend of LSP, `rg`, Read and git. Provider-agnostic; native is sufficient alone |
+| `evidence-schema.md` | What persisted research looks like, its compactness bounds, per-entry staleness against `Research base`, and redaction before anything reaches a committed artefact |
+| `lean-agent-discipline.md` | When dispatching a subagent is cheaper than reading the files, and what a subagent returns |
+| `model-policy.md` | Which model class runs which work, and why agents declare aliases rather than pinned generations |
+| `tracker-dispatch.md` · `forge-dispatch.md` · `branch-management.md` · `learner-profile.md` · `project-priorities.md` | Tracker, forge, branching, learner profile, priorities |
 
 Full reference: `skills/_shared/tracker-dispatch.md` (covers YouTrack setup, the
 multi-instance `mcp_server:` override, the discovery session for pinning tool names,
