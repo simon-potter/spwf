@@ -1,7 +1,7 @@
 ---
 source: scratch
 created: 2026-09-20
-status: ideation
+status: complete
 ---
 
 # research-infrastructure — the seam, the schema, and the scout
