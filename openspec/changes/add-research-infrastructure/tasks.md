@@ -76,12 +76,12 @@ Ordered first: every other module and the scout reference its vocabulary.
 
 ## Phase 4 — The research scout
 
-- [ ] 4.1 `plugins/spwf-agents/agents/research-scout.md` exists with a return
+- [x] 4.1 `plugins/spwf-agents/agents/research-scout.md` exists with a return
       contract conforming to 3.2
-- [ ] 4.2 **The scout writes its compact result into the ideation file**, not only
+- [x] 4.2 **The scout writes its compact result into the ideation file**, not only
       into the session. This is the durable artefact the keep/revert trigger is
       evaluated against
-- [ ] 4.3 Scout output passes through the redaction rule from 2.5 before it is
+- [x] 4.3 Scout output passes through the redaction rule from 2.5 before it is
       written — the ideation file is committed
 
 ## Phase 5 — config-check
