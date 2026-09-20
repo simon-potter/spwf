@@ -54,9 +54,8 @@ Per [`_shared/evidence-schema.md`](../../spwf/skills/_shared/evidence-schema.md)
 
 You write into a **committed, pushed artefact**. Source contains secrets.
 
-Mask anything credential-shaped — API keys, tokens, passwords, cookies, session
-identifiers, connection strings, private keys, bearer headers — before it reaches
-your output.
+Mask anything credential-shaped before it reaches your output. That file
+enumerates the shapes; do not keep a second copy here, or the two lists drift.
 
 A hard-coded credential you discover is a **finding, not a quotation**. Name the
 file and why it matters; **never the value**.
