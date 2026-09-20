@@ -63,6 +63,9 @@ Depth: surface | broad | deep
 - verified source: <what was read directly>
 ```
 
+**Omit a section rather than padding it.** A section with nothing real in it is
+noise, and a reader who learns to skip empty headings learns to skip headings.
+
 **Every consequential claim carries its `path:line`.** A claim without a source
 location cannot be verified later and cannot be checked for staleness, which makes
 it worse than no claim at all.

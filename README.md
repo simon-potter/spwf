@@ -364,7 +364,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 
 ## What's included
 
-### `spwf` — 37 workflow skills
+### `spwf` — 38 workflow skills
 
 | Skill | Invoke | Phase / Responsibility |
 |---|---|---|
@@ -397,6 +397,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `workspace-health` | `/spwf:workspace-health` | Cross-cutting — periodic health check |
 | `claudemd-curator` | `/spwf:claudemd-curator` | Cross-cutting — instruction file audit and sync |
 | `workflow-lint` | `/spwf:workflow-lint` | Cross-cutting — golden path coherence audit |
+| `config-check` | `/spwf:config-check` | Cross-cutting — project capability health (tracker, research backend, code intelligence, model assignments, forge); reports presence never values; advisory, never halts |
 | `agent-optimise` | `/spwf:agent-optimise` | Cross-cutting — agent/skill audit |
 | `doc-lint` | `/spwf:doc-lint` | Cross-cutting — documentation drift check |
 | `migrate-todo` | `/spwf:migrate-todo [path]` | Cross-cutting — bring legacy todo files into the convention; move completed work to `todo/_done/` |
@@ -406,9 +407,9 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | On-demand — PHP safe refactor |
 | `php-code-quality-reviewer` | `/spwf:php-code-quality-reviewer [path]` | On-demand — PHP bad-practice analysis |
 
-### `spwf-agents` — 14 specialist subagents
+### `spwf-agents` — 15 specialist subagents
 
-Fourteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
+Fifteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
 
 | Agent | Phase | Model |
 |---|---|---|
@@ -424,6 +425,7 @@ Fourteen agents covering every workflow phase. Each is scoped to a single respon
 | `pr-creator` | PR Create | Haiku |
 | `reviewer` | PR Review | Haiku |
 | `retrospector` | Post — Retrospective | Sonnet |
+| `research-scout` | Cross-cutting — codebase research; returns compact evidence to the ideation file | Haiku |
 | `php-code-simplifier` | On-demand — PHP safe refactor | Sonnet |
 | `php-code-quality-reviewer` | On-demand — PHP bad-practice analysis | Sonnet |
 

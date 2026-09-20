@@ -124,35 +124,37 @@ Judgement-based; the only check on whether the scout is worth dispatching.
 > **Precondition:** `/reload-plugins` after Phase 6, or nothing new is loadable.
 > This blocked the dogfood on both previous changes.
 
-- [ ] 7.1 Run `/spwf:config-check` against this repo. Confirm it reports real
+- [x] 7.1 Run `/spwf:config-check` against this repo. Confirm it reports real
       capability state (Beads tracker, GitHub forge, no research backend),
       recommends nothing that does not exist, and prints no configuration values
-- [ ] 7.2 Dispatch `research-scout` on a genuine question about this codebase.
+- [x] 7.2 Dispatch `research-scout` on a genuine question about this codebase.
       Confirm the compact result lands in an ideation file with source locations
-- [ ] 7.3 **Compare against the direct-read baseline.** For the same question,
+- [x] 7.3 **Compare against the direct-read baseline.** For the same question,
       estimate the cost of answering by targeted reads. If the scout is not
       cheaper, record it — that is the trigger firing early, not a failed dogfood
-- [ ] 7.4 **Exercise the absent-config path.** With no `.spwf/research.yaml`,
+- [x] 7.4 **Exercise the absent-config path.** With no `.spwf/research.yaml`,
       confirm dispatch behaves as `provider: auto` / `depth: adaptive` /
       `fallback: native` and never interrupts. The headline property of this change
       is "works with no configuration"; documenting the defaults is not proving them
-- [ ] 7.5 Confirm no golden-path skill references the new modules
+- [x] 7.5 Confirm no golden-path skill references the new modules
       (`grep -rl "research-dispatch\|evidence-schema\|lean-agent-discipline\|model-policy" plugins/spwf/skills/` returns only `_shared/`)
-- [ ] 7.6 **Revert rehearsal.** Verify the commit range reverts cleanly and prior
+- [x] 7.6 **Revert rehearsal.** Verify the commit range reverts cleanly and prior
       behaviour is restored with no migration. Condition 4 is claimed by every
       phase and tested by none unless it is done here
 
 ## Phase 8 — Document and release
 
-- [ ] 8.1 `README.md` — `config-check` row in the skill table; noted as
+- [x] 8.1 `README.md` — `config-check` row in the skill table; noted as
       cross-cutting, not a golden-path step
-- [ ] 8.2 `plugins/spwf/README.md` — `config-check` row; the four shared modules
+- [x] 8.2 `plugins/spwf/README.md` — `config-check` row; the four shared modules
       documented in the conventions section
-- [ ] 8.3 `plugins/spwf-agents/README.md` — `research-scout` row
-- [ ] 8.4 `plugins/spwf/.claude-plugin/plugin.json` minor bump (new skill);
+- [x] 8.3 ~~`plugins/spwf-agents/README.md`~~ — **retargeted.** That file does not
+      exist; agents are documented in the root `README.md` agent table. Added the
+      `research-scout` row there and corrected the count 14 → 15
+- [x] 8.4 `plugins/spwf/.claude-plugin/plugin.json` minor bump (new skill);
       `plugins/spwf-agents/.claude-plugin/plugin.json` minor bump (new agent)
-- [ ] 8.5 `workflow-lint` passes with no P1 findings. `config-check` is
+- [x] 8.5 `workflow-lint` passes with no P1 findings. `config-check` is
       cross-cutting and `research-scout` is a cross-cutting agent — neither is a
       golden-path step, so step↔skill and agent-coverage checks do not apply to
       them; confirm neither is flagged as orphaned
-- [ ] 8.6 `openspec validate add-research-infrastructure --strict` passes
+- [x] 8.6 `openspec validate add-research-infrastructure --strict` passes
