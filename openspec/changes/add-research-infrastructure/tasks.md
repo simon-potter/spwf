@@ -112,9 +112,9 @@ Split from a single task: this is a whole new skill, and the precedent from
 Its own phase: mechanical editing of existing files, unlike the authoring work
 above, and it touches 14 agents.
 
-- [ ] 6.1 Every file in `plugins/spwf-agents/agents/` references a model alias
+- [x] 6.1 Every file in `plugins/spwf-agents/agents/` references a model alias
       rather than a pinned generation ID
-- [ ] 6.2 Verified by command — no pinned generation ID remains
+- [x] 6.2 Verified by command — no pinned generation ID remains
       (`grep -rE 'claude-[a-z]+-[0-9]' plugins/spwf-agents/agents/` returns nothing)
 
 ## Phase 7 — Dogfood

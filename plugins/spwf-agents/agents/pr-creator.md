@@ -1,7 +1,7 @@
 ---
 name: pr-creator
 description: PR / MR Create agent. Runs a pre-flight checklist and creates the pull request (GitHub) or merge request (GitLab) if all checks pass. Forge auto-detected from git remote (GitLab default; GitHub supported). Does not deploy. CI/CD owns deployment. Use when ready to create the request.
-model: claude-haiku-4-5-20251001
+model: haiku
 tools: [Read, Bash]
 ---
 

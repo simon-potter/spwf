@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Review agent. Two modes — (1) forge mode: reads a pull request (GitHub) or merge request (GitLab) diff via the active forge's CLI; (2) local-diff mode: reads `git diff {BASE_SHA}..{HEAD_SHA}` on the current branch before any PR exists. Produces a structured review report in both modes. Forge auto-detected from git remote (GitLab default; GitHub supported). Does not edit code. Writes one report file. Use forge mode when a request is open and ready for review before merge; use local-diff mode for the pre-PR self-review dispatched by /spwf:simplify (Pass 2).
-model: claude-haiku-4-5-20251001
+model: haiku
 tools: [Read, Bash, Write]
 ---
 
