@@ -97,17 +97,20 @@ something that does not exist.
 1. The four shared modules and `references/chunkhound-setup.md` exist, and no
    golden-path skill references them yet.
 2. `research-dispatch` defines all five operations against the native backend, and
-   `.spwf/research.yaml` is optional with working defaults.
+   `.spwf/research.yaml` is optional with working defaults — **proven by exercising
+   the absent-config path, not by documenting the defaults**.
 3. `evidence-schema.md` states the per-entry staleness rule.
-4. `research-scout` has a return contract that writes a compact result into the
+4. Credential-shaped values are redacted before reaching persisted evidence, an
+   ideation file, or any other committed artefact.
+5. `research-scout` has a return contract that writes a compact result into the
    ideation file.
-5. `lean-agent-discipline.md` states the bar that a subagent must beat reading the
+6. `lean-agent-discipline.md` states the bar that a subagent must beat reading the
    files directly.
-6. `config-check` reports capability health and makes no ChunkHound
+7. `config-check` reports capability health and makes no ChunkHound
    recommendation.
-7. Reverting this change's commit range restores current behaviour with no
+8. Reverting this change's commit range restores current behaviour with no
    migration or cleanup.
-8. `openspec validate --strict` and `workflow-lint` both pass.
+9. `openspec validate --strict` and `workflow-lint` both pass.
 
 ## Keep / revert trigger
 

@@ -74,6 +74,26 @@ Evidence SHALL NOT be invalidated wholesale because one cited file moved.
 - **WHEN** no cited file has changed since `Research base`
 - **THEN** the evidence SHALL be used without re-verification, regardless of age
 
+### Requirement: Credential-shaped values are redacted before reaching a committed artefact
+
+Research output SHALL have credential-shaped values masked before they reach
+persisted evidence, an ideation file, or any other committed artefact. Credential
+shapes include API keys, tokens, passwords, cookies, connection strings and
+private keys.
+
+A discovered hard-coded credential SHALL be surfaced as a finding naming the file
+and never the value.
+
+This mirrors the `comprehension` capability's existing requirement for
+`understand`. Evidence carries the same risk by the same route: research quotes
+source into a file that is committed and pushed.
+
+#### Scenario: Research encounters a credential
+
+- **WHEN** research output contains a credential-shaped value
+- **THEN** the value SHALL be masked before it is written to any artefact
+- **AND** the finding SHALL name the file without reproducing the value
+
 ### Requirement: A research subagent returns compact evidence to a durable artefact
 
 `research-scout` SHALL return compressed evidence rather than a description of how
