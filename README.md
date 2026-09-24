@@ -59,7 +59,7 @@ The [Golden path](#golden-path) table below walks through every step in full —
 | **Approve plan** | `/spwf:approve-plan` | — | Quality check (blocking) + adversarial review via Skeptic/Architect/Minimalist lenses (advisory); explicit human go/no-go before building | Approved task list or flagged issues to resolve |
 | **Build** | `/spwf:build` | `write-tests` → `opsx:apply` → `run-tests` → `debug-recovery` → `opsx:verify` | Red-Green-Verify per task, loops until all done; spec sign-off after all tasks complete | All tasks complete, tests green, spec aligned |
 | **Simplify** (TDD Refactor + Self-Review) | `/spwf:simplify` | `reviewer` agent (local-diff mode) | Two passes: (1) Pass 1 reviews changed files through three lenses — mechanical cleanup, **DRY/reuse** (rule of three; reuse existing helpers), and **deslop** (AI over-engineering: defensive bloat, `as any`, YAGNI) — with an "explicit > compact" restraint guardrail, tests as a safety net; (2) dispatches the `reviewer` subagent against the pinned commit range (intent = openspec proposal + tasks), now also weighing reuse/DRY/over-engineering, Critical/Important/Minor tiering. Pass 2 short-circuits for trivial diffs. Adapted from obra/superpowers `requesting-code-review` + brianlovin/agent-config `simplify`/`deslop` | Cleaner diff + flag list + `{branch}-self-review.md` + verdict |
-| **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) · `branch-rescue` (if on base) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; if run from the base branch with commits, offers automated [branch-rescue](#branching); ends by pointing at `/spwf:close` for the post-merge retrospective; CI/CD owns the rest | PR / MR URL + next-step pointer to `/spwf:close` |
+| **PR / MR Create** | `/spwf:pr-create` | `dep-audit` · forge CLI (`glab` default; `gh` supported) · branch rescue (if on base) | Pre-flight checks (gitleaks, semgrep, dep-audit across all ecosystems + Docker) then request creation via the forge auto-detected from `git remote`; if run from the base branch with commits, offers an automated [branch rescue](#branching); ends by pointing at `/spwf:close` for the post-merge retrospective; CI/CD owns the rest | PR / MR URL + next-step pointer to `/spwf:close` |
 | **PR / MR Review** | `/spwf:pr-review <ref>` | forge CLI (`glab mr view/diff` default; `gh pr view/diff` supported) | Structured review before merge; catches regressions and drift | Review report with verdict |
 | **Address Review** | `/spwf:address-review [report.md \| <ref>]` | forge CLI for `list_comments` | Turns the review report — or human comments fetched from the open PR/MR — into committed fixes (or reasoned push-backs). Per item: READ → VERIFY → EVALUATE → implement-or-push-back. Forbids performative agreement. Adapted from obra/superpowers `receiving-code-review` | Updated report + commits + one structured reply per thread |
 | **Close** | `/spwf:close [todo/{slug}.md]` | `retrospective` → tracker dispatch → `opsx:archive` → branch cleanup | Final phase — runs the full retrospective **on the feature branch** (so learn-from-mistakes / recap / understand mine the change's granular history, which a squash-merge leaves only there), then **lands closure on `{base}`**: the `status: complete` flip, `todo/_done/` move, retrospective edits, and OpenSpec archive are committed and cherry-picked + pushed to `{base}` (never stranded on the merged feature branch that's about to be deleted), the linked tracker ticket is transitioned (YouTrack / Jira / Beads), and the local feature branch is deleted with safety checks (`[Y/n]` default-delete, conscious skip) | `todo/_done/{slug}.md`, tracker done, archived change pushed to `{base}`, optional `recap.md`, local branch deleted |
@@ -74,8 +74,9 @@ so a single missed step never lets commits pile up on the base branch:
 2. **Build (Layer 2)** verifies the branch before committing per task; if you're
    on the base with an active change it halts and offers to switch (catches
    legacy specs, imports, or a manual checkout).
-3. **PR Create (Layer 3)** offers an automated [`/spwf:branch-rescue`](plugins/spwf/skills/branch-rescue/SKILL.md)
-   if work already leaked onto the base — moving commits to a feature branch and
+3. **PR Create (Layer 3)** offers an automated rescue — the same
+   `_shared/branch-management.md` §4 procedure [`/spwf:branch-rescue`](plugins/spwf/skills/branch-rescue/SKILL.md)
+   follows, run inline because `branch-rescue` is user-only — if work already leaked onto the base — moving commits to a feature branch and
    resetting local base, surfacing the force-push command for you to run
    manually (never auto-pushed). `branch-rescue` also runs standalone.
 
@@ -393,7 +394,7 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `understand` | `/spwf:understand [change-id]` | Post — Retrospective Part 6 (teaches consequence + navigation via explain → check → deepen; atomic) |
 | `tracker-comment` | `/spwf:tracker-comment [issue-id]` | On-demand — Audience-aware comment to a tracker issue (human-targeted: plain English, ≤150 words, one clear ask; record-targeted: light cleanup, full detail allowed) |
 | `changelog` | `/spwf:changelog [ref]` | Post — Retrospective Part 7 (release notes from conventional commits; atomic) |
-| `retrospective` | `/spwf:retrospective` | Post — Retrospective (orchestrator) |
+| `retrospective` | `/spwf:retrospective [change-id \| branch \| range]` | Post — Retrospective (orchestrator; commit-range mode when there is no OpenSpec change) |
 | `workspace-health` | `/spwf:workspace-health` | Cross-cutting — periodic health check |
 | `claudemd-curator` | `/spwf:claudemd-curator` | Cross-cutting — instruction file audit and sync |
 | `workflow-lint` | `/spwf:workflow-lint` | Cross-cutting — golden path coherence audit |
@@ -413,7 +414,7 @@ Fifteen agents covering every workflow phase. Each is scoped to a single respons
 
 | Agent | Phase | Model |
 |---|---|---|
-| `capturer` | Pre — Capture (bugs + changes) | Sonnet |
+| `capturer` | Pre — Capture hand-off (returns `Run: /spwf:capture {source}`; capture itself is user-only) | Haiku |
 | `enricher` | Shape — Enrich (divergent, optional) | Sonnet |
 | `challenger` | Gate — Challenge | Sonnet |
 | `specifier` | Spec | Sonnet |
@@ -466,7 +467,7 @@ spwf/
 │   │   │   └── tracker-comment-nudge.sh   # PreToolUse: warn if tracker write looks heavy-technical
 │   │   ├── skills/
 │   │   │   └── {skill-name}/
-│   │   │       ├── SKILL.md               # skill definition (disable-model-invocation: true)
+│   │   │       ├── SKILL.md               # skill definition (disable-model-invocation on user-only entry points)
 │   │   │       ├── scripts/               # helper shell scripts (select skills only)
 │   │   │       └── references/            # reference documents (select skills only)
 │   │   └── README.md

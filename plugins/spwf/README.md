@@ -1,6 +1,6 @@
 # spwf
 
-38 engineering workflow skills covering the full cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify (with self-review), ship, peer review, address review, close, learn, branch-rescue, and quality maintenance. All skills set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions.
+38 engineering workflow skills covering the full cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify (with self-review), ship, peer review, address review, close, learn, branch-rescue, and quality maintenance. Entry points with side effects (capture, spec, approve-plan, build, simplify, pr-create, pr-review, address-review, close, branch-rescue, pause and the other user-only utilities) set `disable-model-invocation: true` — explicit user-triggered checkpoints, not autonomous suggestions. Skills that another skill or agent runs as a step (retrospective and its parts, write-tests, run-tests, debug-recovery, enrich, the PHP skills) leave the flag off, because Claude Code blocks the Skill tool for flagged skills; their descriptions name the caller and say not to start them unprompted.
 
 ## Two-tier architecture
 
@@ -37,7 +37,7 @@ Skills are organised in two named tiers within the single `skills/` directory:
 | `run-tests` | `/spwf:run-tests` | 3 — Run full test suite; stop on first failure |
 | `debug-recovery` | `/spwf:debug-recovery` | 3 — Diagnose failing test or broken build; minimal fix |
 | `simplify` | `/spwf:simplify` | 4 — Two-pass cleanup: (1) three lenses — mechanical removal, DRY/reuse (rule of three; reuse existing helpers), deslop (AI over-engineering: defensive bloat, `as any`, YAGNI), with an "explicit > compact" restraint; (2) `reviewer` subagent in local-diff mode against pinned commit range (intent = openspec proposal + tasks), also weighing reuse/DRY/over-engineering (adapted from obra/superpowers `requesting-code-review` + brianlovin/agent-config `simplify`/`deslop`) |
-| `pr-create` | `/spwf:pr-create` | 5 — Pre-flight checks then PR creation; if on base with commits, offers automated `branch-rescue` (Layer 3); ends by pointing at `/spwf:close` for the post-merge retrospective |
+| `pr-create` | `/spwf:pr-create` | 5 — Pre-flight checks then PR creation; if on base with commits, offers an automated rescue (Layer 3 — same `_shared/branch-management.md` §4 procedure as `branch-rescue`, run inline); ends by pointing at `/spwf:close` for the post-merge retrospective |
 | `branch-rescue` | `/spwf:branch-rescue` | Recovery — moves commits that leaked onto the base branch onto `feature/{change-id}` and resets local base (local-only; surfaces the force-push command, never auto-pushes). Standalone or invoked by `pr-create`. See [Branching](#branching) |
 | `pr-review` | `/spwf:pr-review <PR>` | 6 — Fetch and review a PR; structured report |
 | `address-review` | `/spwf:address-review [report \| ref]` | 6.5 — Turn review feedback (report file or fetched PR/MR comments) into commits or reasoned push-backs; forbids performative agreement (adapted from obra/superpowers `receiving-code-review`) |

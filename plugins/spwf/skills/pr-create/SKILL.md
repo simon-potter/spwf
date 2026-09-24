@@ -38,9 +38,9 @@ git status --short
 
 If branch is the base (`main` / `master`, or `.spwf/branch.yaml: base`), do not
 halt with a bare error. Detect whether this is the rescuable failure state and,
-if so, offer to fix it automatically. Delegates the operation to
+if so, offer to fix it automatically. Performs the operation in
 [`_shared/branch-management.md` §4](../_shared/branch-management.md#4-rescue-operation)
-via the `branch-rescue` skill.
+directly — the same section `branch-rescue` follows.
 
 Detect:
 - active change: `CHANGE_ID=$(openspec list --json 2>/dev/null | jq -r '.[0].name')`
@@ -65,8 +65,11 @@ pushed; publish manually when ready:
 Proceed with rescue? [Y/n]
 ```
 
-- On **Y / enter**: delegate to `/spwf:branch-rescue` for the three local-only
-  operations, then continue into **Step 1b** (security pre-flight) on the
+- On **Y / enter**: perform the three local-only operations yourself, exactly as
+  [`_shared/branch-management.md` §4 "Rescue operation"](../_shared/branch-management.md#4-rescue-operation)
+  specifies. Do **not** invoke `spwf:branch-rescue` through the Skill tool: it is
+  user-only (`disable-model-invocation: true`), so the call is blocked. Both skills
+  follow the same shared section, so the result is identical. Then continue into **Step 1b** (security pre-flight) on the
   newly-created `feature/{change-id}` branch.
 - On **n**: halt with the legacy message so manual handling is not surprised by
   silent skipping:

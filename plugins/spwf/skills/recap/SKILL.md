@@ -1,7 +1,6 @@
 ---
 name: recap
-description: Post-ship — Generate a teaching summary of the just-shipped change for the human. Distils what was changed, which domain concepts were touched, the decisions made and why, the surprises that surfaced, and pointers for further learning. Distinct from learn-from-mistakes, which captures rules for the project; this captures takeaways for the user. Default Part 5 of the retrospective; runnable standalone via /spwf:recap [change-id or todo path].
-disable-model-invocation: true
+description: Post-ship — Generate a teaching summary of the just-shipped change for the human. Distils what was changed, which domain concepts were touched, the decisions made and why, the surprises that surfaced, and pointers for further learning. Distinct from learn-from-mistakes, which captures rules for the project; this captures takeaways for the user. Default Part 5 of the retrospective; runnable standalone via /spwf:recap [change-id or todo path]. Called as a step by /spwf:retrospective (Part 5), which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Glob, Grep, Bash, Write]
 ---
 

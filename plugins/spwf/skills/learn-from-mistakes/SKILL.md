@@ -1,8 +1,7 @@
 ---
 # Renamed from: ~/.claude/skills/commits-to-knowledge/ — original by Simon Potter. Functionally identical; user-facing name changed.
 name: learn-from-mistakes
-description: Post-ship — Extract learnings from recent commit history and transfer them to project documentation. Based on the "strike while it's hot" principle — knowledge in commit messages should be preserved before context fades. Use after shipping or completing a significant branch.
-disable-model-invocation: true
+description: Post-ship — Extract learnings from recent commit history and transfer them to project documentation. Based on the "strike while it's hot" principle — knowledge in commit messages should be preserved before context fades. Use after shipping or completing a significant branch. Called as a step by /spwf:retrospective (Part 1), which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---
 

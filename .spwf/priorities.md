@@ -30,7 +30,9 @@ time. Delivered as Claude Code plugins (`spwf` + `spwf-agents`, optional
 
 ## Explicit non-goals
 - **Autonomous agent behaviour** — skills are explicit, user-triggered checkpoints
-  (`disable-model-invocation: true`), not background suggestions.
+  (`disable-model-invocation: true` on entry points), not background suggestions.
+  Steps that other skills or agents invoke leave the flag off — Claude Code
+  blocks the Skill tool for flagged skills — and say not to start unprompted.
 - **Owning CI/CD or deployment** — the workflow stops at PR/MR creation and review;
   CI/CD owns the rest.
 - **Locking to one tracker or forge** — tracker (YouTrack / Jira / Beads) and forge

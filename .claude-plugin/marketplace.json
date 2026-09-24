@@ -13,13 +13,13 @@
       "name": "spwf",
       "source": "./plugins/spwf",
       "description": "38 workflow skills covering the full engineering cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify, ship, peer review, address review, close, learn, and quality maintenance",
-      "version": "1.22.0"
+      "version": "1.23.0"
     },
     {
       "name": "spwf-agents",
       "source": "./plugins/spwf-agents",
       "description": "16 specialist subagents covering every phase of the SPWorkflow engineering cycle",
-      "version": "1.6.0"
+      "version": "1.7.0"
     },
     {
       "name": "spwf-beadsify",

@@ -52,12 +52,17 @@ The `spwf-agents` plugin SHALL provide specialist subagents paired to the workfl
 
 ### Requirement: Phase skills do not auto-invoke
 
-Every skill in `plugins/spwf/skills/` whose role is a workflow phase SHALL set `disable-model-invocation: true` in its SKILL.md frontmatter. Phase skills SHALL NOT activate unless the user explicitly invokes them by name.
+Every skill in `plugins/spwf/skills/` that is a user-only entry point — one that commits, pushes, branches, moves commits or changes the tracker — SHALL set `disable-model-invocation: true` in its SKILL.md frontmatter, and SHALL NOT activate unless the user explicitly invokes it by name. A skill that another skill or agent invokes as a step SHALL NOT set the flag, because Claude Code blocks the Skill tool for flagged skills; its description SHALL name its caller and say not to start it unprompted.
 
 #### Scenario: Skill does not auto-trigger
 
 - **WHEN** Claude Code is processing a response without an explicit skill invocation
-- **THEN** no `/spwf:<phase>` skill SHALL activate
+- **THEN** no user-only `/spwf:<entry-point>` skill SHALL activate
+
+#### Scenario: An orchestrator invokes a step skill
+
+- **WHEN** `/spwf:retrospective` reaches Part 1 and invokes `spwf:learn-from-mistakes` through the Skill tool
+- **THEN** the call SHALL succeed, because the step skill does not set `disable-model-invocation`
 
 ---
 

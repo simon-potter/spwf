@@ -1,8 +1,7 @@
 ---
 # Source: https://github.com/addyosmani/agent-skills — MIT licence
 name: run-tests
-description: Phase 3 atomic — Run the full test suite and report pass/fail clearly. Stops on the first failure with file, line, and error details. Does not attempt to fix failures — that is debug-recovery's job. Use this skill directly or let /spwf:build invoke it.
-disable-model-invocation: true
+description: Phase 3 atomic — Run the full test suite and report pass/fail clearly. Stops on the first failure with file, line, and error details. Does not attempt to fix failures — that is debug-recovery's job. Use this skill directly or let /spwf:build invoke it. Called as a step by /spwf:build (Verify phase), which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Bash]
 ---
 

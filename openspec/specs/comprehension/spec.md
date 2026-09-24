@@ -15,8 +15,9 @@ at every level, for every topic.
 
 The skill SHALL accept an empty argument (detect from the current branch or most
 recent change), a change-id, a todo path, or a branch name / commit range,
-resolving each the way `close` and `recap` do. It SHALL declare
-`disable-model-invocation: true` and SHALL NOT include `AskUserQuestion` in
+resolving each the way `close` and `recap` do. It SHALL NOT declare
+`disable-model-invocation: true`, because `retrospective` invokes it as Part 6,
+and SHALL NOT include `AskUserQuestion` in
 `allowed-tools`, because that tool is structurally multiple-choice.
 
 #### Scenario: A topic is opened

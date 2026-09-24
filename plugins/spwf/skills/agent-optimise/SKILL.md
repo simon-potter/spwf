@@ -72,7 +72,8 @@ For each agent .md file in `.claude/agents/` or `~/.claude/agents/`:
 For each SKILL.md in `.claude/skills/` or `~/.claude/skills/`:
 
 **disable-model-invocation:**
-- Is it set? If not, skill may trigger autonomously — flag P2 for workflow skills.
+- Is it set on a user-only entry point (commits, pushes, branches, changes a tracker)? If not, the skill may trigger autonomously — flag P2.
+- Is it set on a skill that another skill or agent invokes as a step? Claude Code blocks the Skill tool for flagged skills, so the calling flow stops partway through — flag P1.
 
 **allowed-tools:**
 - Is it set? Unscoped skills can use any tool — flag P2.

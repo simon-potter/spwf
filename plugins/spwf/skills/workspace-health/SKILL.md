@@ -101,7 +101,7 @@ cat .claude/settings.json ~/.claude/settings.json 2>/dev/null
 In fallback mode, apply the same quality tests as `agent-optimise`:
 - CLAUDE.md > 200 lines → P2; > 400 lines → P1
 - Agent missing `description` or `model` → P2
-- Skill missing `disable-model-invocation` → P2; missing `allowed-tools` → P2
+- User-only entry-point skill missing `disable-model-invocation` → P2; flag set on a skill another skill or agent invokes → P1 (the call is blocked); missing `allowed-tools` → P2
 - Conflicting settings between project and personal → P1
 
 ## Phase 2 — Behavioural audit

@@ -1,7 +1,6 @@
 ---
 name: php-code-simplifier
-description: Simplify and refactor PHP code for clarity, type safety, and maintainability while preserving exact behaviour. Use after implementing a feature or fixing a bug in PHP codebases (Laravel, Symfony, WordPress, or plain PHP). Focuses on recently modified files unless a path is provided. Never changes what code does — only how it does it. Complement to the core simplify skill, which is language-agnostic; this skill knows PHP idioms, framework conventions, and version-specific capabilities.
-disable-model-invocation: true
+description: Simplify and refactor PHP code for clarity, type safety, and maintainability while preserving exact behaviour. Use after implementing a feature or fixing a bug in PHP codebases (Laravel, Symfony, WordPress, or plain PHP). Focuses on recently modified files unless a path is provided. Never changes what code does — only how it does it. Complement to the core simplify skill, which is language-agnostic; this skill knows PHP idioms, framework conventions, and version-specific capabilities. Called as a step by the php-code-simplifier agent, which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Edit, Bash, Glob, Grep]
 ---
 

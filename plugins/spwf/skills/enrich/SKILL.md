@@ -5,8 +5,7 @@
 # early-decompose moves of obra/superpowers/brainstorming — made SPWF-native: file-first,
 # one-question-at-a-time, codebase-grounded, writes back into the same todo file for challenge to attack.
 name: enrich
-description: Divergent gate — grow and re-shape an idea before challenge attacks it. Accepts a todo file path as $ARGUMENTS (defaults to the most recent file in todo/ if omitted). Reframes the problem as "How Might We", generates grounded variations across seven lenses, converges on 2-3 distinct approaches with trade-offs and a recommendation, then writes directions / recommended direction / assumptions-to-validate / not-doing back into the ideation file. Skippable for bugs and trivial/mechanical changes.
-disable-model-invocation: true
+description: Divergent gate — grow and re-shape an idea before challenge attacks it. Accepts a todo file path as $ARGUMENTS (defaults to the most recent file in todo/ if omitted). Reframes the problem as "How Might We", generates grounded variations across seven lenses, converges on 2-3 distinct approaches with trade-offs and a recommendation, then writes directions / recommended direction / assumptions-to-validate / not-doing back into the ideation file. Skippable for bugs and trivial/mechanical changes. Called as a step by the enricher agent, which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Write, Grep, Glob, Bash]
 ---
 

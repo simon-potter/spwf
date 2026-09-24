@@ -1,7 +1,6 @@
 ---
 name: write-tests
-description: Phase 3 atomic — Red phase of TDD. Read the next unchecked task, write failing tests that define the expected behaviour, then run them to confirm they fail. Tests must fail before implementation begins — a test that passes before the code exists is wrong. Use before build, or let /spwf:build invoke it.
-disable-model-invocation: true
+description: Phase 3 atomic — Red phase of TDD. Read the next unchecked task, write failing tests that define the expected behaviour, then run them to confirm they fail. Tests must fail before implementation begins — a test that passes before the code exists is wrong. Use before build, or let /spwf:build invoke it. Called as a step by /spwf:build (Red phase), which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Write, Bash, Grep, Glob]
 ---
 
