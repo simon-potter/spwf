@@ -1,7 +1,6 @@
 ---
 name: tracker-backend
-description: Internal Beads tracker-dispatch backend for spwf-beadsify. Implements the dispatch operations (create_issue, get_issue, add_comment, set_state) by invoking the bd CLI. Routed to by plugins/spwf/skills/_shared/tracker-dispatch.md when .spwf/tracker.yaml sets tracker: beads. Never user-invoked — disable-model-invocation prevents accidental activation; users always call /spwf:capture, /spwf:tracker-comment, /spwf:close which dispatch through tracker-dispatch.md.
-disable-model-invocation: true
+description: Internal Beads tracker-dispatch backend for spwf-beadsify. Implements the dispatch operations (create_issue, get_issue, add_comment, set_state) by invoking the bd CLI. Routed to by plugins/spwf/skills/_shared/tracker-dispatch.md when .spwf/tracker.yaml sets tracker: beads. Called as a step by /spwf:capture, /spwf:tracker-comment and /spwf:close through the Skill tool, which is why Claude may invoke it. Do not start it unprompted: never run it except as a tracker-dispatch operation.
 allowed-tools: [Read, Bash]
 ---
 
@@ -9,7 +8,7 @@ allowed-tools: [Read, Bash]
 
 Internal dispatch module. Implements the tracker-dispatch contract using the [Beads](https://github.com/gastownhall/beads) (`bd`) CLI as the in-repo tracker for this project.
 
-> This skill is **never invoked directly by the user**. `disable-model-invocation: true` is set so the model cannot auto-activate it. Routing happens via `plugins/spwf/skills/_shared/tracker-dispatch.md` when `.spwf/tracker.yaml` contains `tracker: beads`.
+> This skill is **never invoked directly by the user**. spwf skills invoke it through the Skill tool, by name, when `.spwf/tracker.yaml` contains `tracker: beads` (routing rules in `_shared/tracker-dispatch.md` of the `spwf` plugin). It deliberately does **not** set `disable-model-invocation`: that flag blocks Skill tool calls, which would make the backend unreachable.
 
 ## Operations declared
 

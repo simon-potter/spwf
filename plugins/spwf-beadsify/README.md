@@ -103,7 +103,10 @@ If you see Beads activity in step 3 or 4, dispatch routing is broken — file an
 
 ## Status
 
-`spwf-beadsify` is shipped as v0.1.0 — Beads as a tracker-dispatch backend
-(`/spwf:capture`, `/spwf:tracker-comment`, `/spwf:close`). The build-loop integration
+`spwf-beadsify` is shipped as v0.1.1 — Beads as a tracker-dispatch backend
+(`/spwf:capture`, `/spwf:tracker-comment`, `/spwf:close`). 0.1.1 fixes routing in
+installed projects: spwf now invokes the backend as the `spwf-beadsify:tracker-backend`
+skill by name. 0.1.0 read it by a source-repo file path that does not exist under a
+plugin install, so `tracker: beads` only worked inside the SPWF repo itself. The build-loop integration
 (`/spwf:build` consulting `bd next`/`bd done` during task execution) ships in a
 follow-up change `add-beadsify-build-loop`.

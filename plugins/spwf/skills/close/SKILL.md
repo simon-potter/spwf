@@ -255,7 +255,7 @@ Decision tree:
 
 "Tracker available" is determined per `_shared/tracker-dispatch.md`: an MCP
 backend is available when its tools respond; a skill-based backend is available
-when its backend module SKILL.md is loadable in the current session.
+when its backend skill (`spwf-beadsify:tracker-backend`) is listed in the current session.
 
 Resolve the active tracker and `done_state` from `.spwf/tracker.yaml` (defaults
 documented in `_shared/tracker-dispatch.md`). Dispatch via that document.
