@@ -1,6 +1,8 @@
 {
   "name": "spwf-agents",
-  "description": "15 specialist subagents covering every phase of the SPWorkflow engineering cycle",
-  "version": "1.5.0",
-  "author": { "name": "Simon Potter" }
+  "description": "16 specialist subagents covering every phase of the SPWorkflow engineering cycle",
+  "version": "1.6.0",
+  "author": {
+    "name": "Simon Potter"
+  }
 }
