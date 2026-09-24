@@ -6,7 +6,7 @@
 # the READ → UNDERSTAND → VERIFY → EVALUATE → ACT loop, the forbidden-phrase list,
 # and the verify-before-implement posture are adapted concepts.
 name: address-review
-description: Phase 6.5 — Address Review. Turn review feedback into action. Sources feedback from either a local report file (e.g. {branch}-review.md from /spwf:pr-review or {branch}-self-review.md from /spwf:self-review) or fetched human comments on an open PR/MR. For each item runs READ → VERIFY → EVALUATE → implement-or-push-back, in priority order (blocking → important → nit). Forbids performative agreement ("you're absolutely right"). Use after pr-review, or whenever a reviewer leaves comments.
+description: Phase 6.5 — Address Review. Turn review feedback into action. Sources feedback from either a local report file (e.g. {branch}-review.md from /spwf:pr-review or {branch}-self-review.md from /spwf:simplify) or fetched human comments on an open PR/MR. For each item runs READ → VERIFY → EVALUATE → implement-or-push-back, in priority order (blocking → important → nit). Forbids performative agreement ("you're absolutely right"). Use after pr-review, or whenever a reviewer leaves comments.
 disable-model-invocation: true
 allowed-tools: [Read, Edit, Grep, Glob, Bash]
 ---

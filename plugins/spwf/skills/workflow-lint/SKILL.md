@@ -34,7 +34,7 @@ A step is exempt when **all** of the following hold:
    dispatch of work.
 3. It neither edits code nor determines what happens next.
 
-Currently exempt: **`brief`**.
+Currently exempt: **`brief`** and **`wfstatus`**.
 
 **Why this is a real exemption and not a backlog excuse.** A subagent exists to
 keep expensive context out of the main session. A teaching step's entire product
@@ -42,6 +42,12 @@ keep expensive context out of the main session. A teaching step's entire product
 subagent means the explanation either lands in a context nobody sees, or comes
 back compressed to a summary, which is the one thing a brief must not be. The
 agent would subtract capability rather than isolate cost.
+
+`wfstatus` is exempt on the same grounds. It reads git state, OpenSpec changes and the
+todo backlog, prints a dashboard, and returns; it gates nothing and decides nothing — the
+suggested next action is a suggestion the developer acts on or ignores. Routing it through a
+subagent would put the orienting picture in a context the developer never sees, which is the
+one thing an orientation step must not do.
 
 Contrast `enrich`, also optional and also skippable, which **is** agented: it
 reads widely, generates and discards variations, and returns a decision written

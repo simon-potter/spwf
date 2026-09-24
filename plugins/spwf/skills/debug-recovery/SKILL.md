@@ -1,6 +1,6 @@
 ---
 name: debug-recovery
-description: Phase 3/4 atomic — Diagnose a failing test or broken build, identify the root cause, apply a minimal fix, re-run to confirm recovery. Reports clearly if unable to resolve. Use after test-runner or build reports a failure.
+description: Phase 3/4 atomic — Diagnose a failing test or broken build, identify the root cause, apply a minimal fix, re-run to confirm recovery. Reports clearly if unable to resolve. Use after run-tests or build reports a failure.
 disable-model-invocation: true
 allowed-tools: [Read, Edit, Bash]
 ---
@@ -11,7 +11,7 @@ Diagnose the failure, fix the root cause with a minimal change, and confirm reco
 
 ## Step 1: Gather failure context
 
-Read the failure output. If it was produced by `test-runner` or `build`, the error should be in the conversation. If not:
+Read the failure output. If it was produced by `run-tests` or `build`, the error should be in the conversation. If not:
 
 ```bash
 {test command} 2>&1 | head -100

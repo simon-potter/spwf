@@ -424,6 +424,7 @@ Fifteen agents covering every workflow phase. Each is scoped to a single respons
 | `simplifier` | Simplify | Haiku |
 | `pr-creator` | PR Create | Haiku |
 | `reviewer` | PR Review | Haiku |
+| `address-reviewer` | Address Review | Sonnet |
 | `retrospector` | Post — Retrospective | Sonnet |
 | `research-scout` | Cross-cutting — codebase research; returns compact evidence to the ideation file | Haiku |
 | `php-code-simplifier` | On-demand — PHP safe refactor | Sonnet |
