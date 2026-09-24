@@ -1,7 +1,6 @@
 ---
 name: workflow-lint
-description: Cross-cutting coherence auditor — checks step↔skill coverage, agent coverage, cross-reference validity, stale names, attribution presence, orphaned skills/agents, and diagram↔table consistency across the full golden path. Outputs a P1/P2/P3 prioritised health report.
-disable-model-invocation: true
+description: Cross-cutting coherence auditor — checks step↔skill coverage, agent coverage, cross-reference validity, stale names, attribution presence, orphaned skills/agents, and diagram↔table consistency across the full golden path. Outputs a P1/P2/P3 prioritised health report. Called as a step by /spwf:retrospective (Part 4) and the retrospector agent, which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Glob, Grep, Bash]
 ---
 
@@ -21,7 +20,8 @@ Audit the coherence of the full golden path. Catch drift before it accumulates.
 | **Attribution presence** | All seeded skills carry the required attribution comment | P2 |
 | **Orphaned skills/agents** | Skills or agents not referenced in any README or golden path table | P2 |
 | **Diagram↔table consistency** | Workflow diagram in root README matches the golden path table | P2 |
-| **disable-model-invocation** | All spwf skills set `disable-model-invocation: true` | P2 |
+| **Blocked invocation** | No skill or agent tells Claude to invoke (or an agent to preload) a skill that sets `disable-model-invocation: true`. Claude Code blocks that call, and the calling flow stops partway through | P1 |
+| **Invocation policy** | Each skill's `disable-model-invocation` setting matches its role (see below) | P2 |
 | **Frontmatter completeness** | All SKILL.md and agent files have required frontmatter fields (name, description) | P3 |
 
 ### Exemption from Agent coverage — non-blocking teaching steps
@@ -56,6 +56,34 @@ already in context and prints.
 
 Do not report an exempt step as a P1. Report a step that *claims* exemption while
 failing any of the three conditions — particularly one that has started blocking.
+
+### Invocation policy — who may start a skill
+
+`disable-model-invocation: true` means **only the user** can start a skill.
+Claude Code blocks the Skill tool call and tells Claude not to reproduce the steps
+another way. Subagents cannot preload such skills either. So the flag belongs on
+skills with side effects whose timing the user should control, and nowhere else:
+
+| Role | Flag | Examples |
+|---|---|---|
+| Entry point that commits, pushes, branches, moves commits or changes the tracker | `true` | `capture`, `spec`, `approve-plan`, `build`, `simplify`, `pr-create`, `pr-review`, `address-review`, `close`, `branch-rescue`, `pause` |
+| Step called by another skill or agent | **absent** | `retrospective`, `learn-from-mistakes`, `doc-lint`, `workflow-lint`, `recap`, `understand`, `changelog`, `write-tests`, `run-tests`, `debug-recovery`, `enrich`, `php-code-quality-reviewer`, `php-code-simplifier` |
+
+A skill without the flag says who calls it in its description, and says not to
+start it unprompted.
+
+**How to check Blocked invocation.** List the skills whose frontmatter sets
+`disable-model-invocation: true`. Then search every SKILL.md body and agent file
+for instructions to invoke, delegate to, or preload one of them (`Invoke
+\`spwf:X\``, `Skill(spwf:X)`, `delegate to /spwf:X`, `skills: [X]`). A
+recommendation to the **user** ("Run `/spwf:X`", "Suggested next step:
+`/spwf:X`") is fine, because the user can run it. An instruction for Claude or a
+subagent to run it is a P1. Fix it by either:
+- removing the flag from the callee, if it has no side effects that need the
+  user's timing, or
+- having the caller follow the shared `_shared/*.md` procedure directly, as
+  `pr-create` does with `branch-management.md` §4 instead of calling
+  `branch-rescue`.
 
 ---
 

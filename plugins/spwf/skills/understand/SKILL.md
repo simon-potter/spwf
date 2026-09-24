@@ -9,8 +9,7 @@
 # Quiz-mode concepts from rohitg00/ai-engineering-from-scratch `check-understanding`
 # noted and deferred to a future --recall mode. No content reproduced verbatim.
 name: understand
-description: Post-ship — Teach the developer what a change did, so they know where to look when it breaks later. Works through 3-4 structural topics, and for each one explains before asking anything, then checks the explanation landed, then explains again by a different route if it didn't. Uncertainty is the trigger to teach, never a gap to record. Calibrated via .spwf/learner.md. Produces an orientation note of what the developer now knows. Companion to recap, which prints what and why; this teaches consequence and navigation. Retrospective Part 6; runnable standalone via /spwf:understand [change-id | todo path | branch].
-disable-model-invocation: true
+description: Post-ship — Teach the developer what a change did, so they know where to look when it breaks later. Works through 3-4 structural topics, and for each one explains before asking anything, then checks the explanation landed, then explains again by a different route if it didn't. Uncertainty is the trigger to teach, never a gap to record. Calibrated via .spwf/learner.md. Produces an orientation note of what the developer now knows. Companion to recap, which prints what and why; this teaches consequence and navigation. Retrospective Part 6; runnable standalone via /spwf:understand [change-id | todo path | branch]. Called as a step by /spwf:retrospective (Part 6), which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Glob, Grep, Bash, Write, Edit]
 ---
 

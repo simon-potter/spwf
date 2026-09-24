@@ -1,7 +1,6 @@
 ---
 name: php-code-quality-reviewer
-description: Analyse PHP code and flag bad practices with suggested fixes, grouped by risk category. Use before merging PHP changes, when reviewing a PR touching backend logic, or when auditing a legacy PHP codebase. Covers correctness, security, performance, maintainability, and modern PHP opportunities. Framework-aware (Laravel, Symfony, WordPress). Read-only — flags issues and suggests fixes, never applies them. Complement to security-scan (which covers OWASP/injection in depth) and php-code-simplifier (which applies safe refactors).
-disable-model-invocation: true
+description: Analyse PHP code and flag bad practices with suggested fixes, grouped by risk category. Use before merging PHP changes, when reviewing a PR touching backend logic, or when auditing a legacy PHP codebase. Covers correctness, security, performance, maintainability, and modern PHP opportunities. Framework-aware (Laravel, Symfony, WordPress). Read-only — flags issues and suggests fixes, never applies them. Complement to security-scan (which covers OWASP/injection in depth) and php-code-simplifier (which applies safe refactors). Called as a step by the php-code-quality-reviewer agent, which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Bash, Glob, Grep]
 ---
 

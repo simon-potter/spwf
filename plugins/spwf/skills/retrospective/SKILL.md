@@ -1,7 +1,6 @@
 ---
 name: retrospective
-description: Post-ship orchestrator — Seven-part retrospective after completing a change. (1) Extract learnings from commits via learn-from-mistakes. (2) Audit the current change's OpenSpec artefacts against what was actually built. (3) Broad doc-lint pass. (4) workflow-lint sweep. (5) Recap — teaching summary for the human (default on, one-key skip). (6) Understand — comprehension interview so you know where to look when it breaks later (default on, one-key skip). (7) Changelog — release notes (default off, opt-in for releases).
-disable-model-invocation: true
+description: Post-ship orchestrator — Seven-part retrospective after completing a change. (1) Extract learnings from commits via learn-from-mistakes. (2) Audit the current change's OpenSpec artefacts against what was actually built. (3) Broad doc-lint pass. (4) workflow-lint sweep. (5) Recap — teaching summary for the human (default on, one-key skip). (6) Understand — comprehension interview so you know where to look when it breaks later (default on, one-key skip). (7) Changelog — release notes (default off, opt-in for releases). Called as a step by /spwf:close, which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Glob, Grep, Bash, Edit, Write]
 ---
 
@@ -18,6 +17,34 @@ Part 5 → recap                   (teaching summary for the user; default on, o
 Part 6 → understand              (comprehension interview; default on, one-key skip)
 Part 7 → changelog               (release notes; default off, opt-in for releases)
 ```
+
+---
+
+## Step 0 — Resolve what is being reviewed
+
+Not all work goes through OpenSpec. A direct fix against a ticket, or a hotfix,
+still deserves a retrospective. **Never halt just because there is no OpenSpec
+change.** Work out the mode first:
+
+| Situation | Mode |
+|---|---|
+| `$ARGUMENTS` is a change-id, or one resolves from the branch or recent work | **Change mode**: all parts, as written below |
+| No OpenSpec change (direct fix, ticket key, hotfix branch) | **Commit-range mode** |
+
+In **commit-range mode**, resolve the range in this order: an explicit range or
+branch in `$ARGUMENTS`; the current branch against base; commits matching a
+ticket key (`git log --grep '{KEY}'`); otherwise ask. Then:
+
+| Part | Commit-range mode |
+|---|---|
+| 1 learn-from-mistakes | Run, with the range |
+| 2 change spec audit | Skip. Say: `No OpenSpec change — spec audit skipped.` |
+| 3 doc-lint, 4 workflow-lint | Run as normal |
+| 5 recap | Skip. recap needs a change-id. Say so in one line |
+| 6 understand | Offer as normal, passing the branch or commit range (understand accepts either) |
+| 7 changelog | Offer as normal |
+
+Head the report `## Retrospective: {ticket or branch} (no OpenSpec change)`.
 
 ---
 

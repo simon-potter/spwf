@@ -1,8 +1,7 @@
 ---
 # Copied from: ~/.claude/skills/doc-lint/ — Simon Potter (original inspired by an unattributed source, provenance not recoverable)
 name: doc-lint
-description: Cross-cutting — Validate project documentation against governance rules and naming conventions. Supports --fix mode for interactive fixes and --auto-fix for automatic safe fixes. Use when checking docs for naming violations, missing metadata, staleness, or structural issues.
-disable-model-invocation: true
+description: Cross-cutting — Validate project documentation against governance rules and naming conventions. Supports --fix mode for interactive fixes and --auto-fix for automatic safe fixes. Use when checking docs for naming violations, missing metadata, staleness, or structural issues. Called as a step by /spwf:retrospective (Part 3) and the retrospector agent, which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion]
 ---
 

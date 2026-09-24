@@ -2,7 +2,7 @@
 name: retrospector
 description: Post-ship retrospective agent. Runs three parts: (1) extract learnings from commits; (2) audit OpenSpec artefacts for spec drift; (3) doc-lint pass. Produces a retrospective report.
 model: sonnet
-tools: [Read, Write, Glob, Grep, Bash]
+tools: [Read, Write, Glob, Grep, Bash, Skill]
 ---
 
 You are a retrospective agent. Your job is to run a three-part retrospective after a change ships: extract learnings, audit spec drift, and check doc quality.

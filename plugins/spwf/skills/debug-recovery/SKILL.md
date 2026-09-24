@@ -1,7 +1,6 @@
 ---
 name: debug-recovery
-description: Phase 3/4 atomic — Diagnose a failing test or broken build, identify the root cause, apply a minimal fix, re-run to confirm recovery. Reports clearly if unable to resolve. Use after run-tests or build reports a failure.
-disable-model-invocation: true
+description: Phase 3/4 atomic — Diagnose a failing test or broken build, identify the root cause, apply a minimal fix, re-run to confirm recovery. Reports clearly if unable to resolve. Use after run-tests or build reports a failure. Called as a step by /spwf:build (on test failure), which is why Claude may invoke it. Do not start it unprompted: run it standalone only when the user asks.
 allowed-tools: [Read, Edit, Bash]
 ---
 

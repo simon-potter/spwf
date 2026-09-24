@@ -1,6 +1,6 @@
 {
   "name": "spwf",
   "description": "38 workflow skills covering the full engineering cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify (with pre-PR self-review), ship, peer review, address review, close, learn, recap, understand, pause, migrate-todo, tracker-comment, branch-rescue, config-check, and quality maintenance",
-  "version": "1.22.0",
+  "version": "1.23.0",
   "author": { "name": "Simon Potter" }
 }
