@@ -25,7 +25,7 @@
       "name": "spwf-beadsify",
       "source": "./plugins/spwf-beadsify",
       "description": "Optional add-on \u2014 Beads (bd) as a tracker-dispatch backend. Requires the Beads CLI. SPWF works without this plugin.",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ]
 }

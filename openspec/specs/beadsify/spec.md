@@ -46,7 +46,7 @@ When `.spwf/tracker.yaml` sets `tracker: beads` but `spwf-beadsify` is not insta
 #### Scenario: Beads configured without plugin
 
 - **WHEN** `.spwf/tracker.yaml` contains `tracker: beads`
-- **AND** the file `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` is not present in the loaded plugin set
+- **AND** the skill `spwf-beadsify:tracker-backend` is not available in the session
 - **THEN** the next tracker-dispatch invocation SHALL halt with: `tracker: beads requested but spwf-beadsify plugin not installed. Install: /plugin install spwf-beadsify@spwf. Or change tracker in .spwf/tracker.yaml.`
 - **AND** no files SHALL be modified
 

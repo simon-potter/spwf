@@ -113,7 +113,7 @@ is configured (see `_shared/tracker-dispatch.md`):
   in user settings, or set `tracker: none` in `.spwf/tracker.yaml` to skip tracker
   steps. (For an in-repo tracker, set `tracker: beads` and install spwf-beadsify.)"*
 - **Skill backend** (`tracker: beads` and similar): available iff the backend
-  module SKILL.md is loadable in this session. If `tracker: beads` is set but
+  skill (`spwf-beadsify:tracker-backend`) is listed in this session. If `tracker: beads` is set but
   `spwf-beadsify` is not installed, halt with the verbatim error from
   `_shared/tracker-dispatch.md` § "Configured-but-not-installed error".
 

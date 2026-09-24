@@ -67,7 +67,7 @@ skills with side effects whose timing the user should control, and nowhere else:
 | Role | Flag | Examples |
 |---|---|---|
 | Entry point that commits, pushes, branches, moves commits or changes the tracker | `true` | `capture`, `spec`, `approve-plan`, `build`, `simplify`, `pr-create`, `pr-review`, `address-review`, `close`, `branch-rescue`, `pause` |
-| Step called by another skill or agent | **absent** | `retrospective`, `learn-from-mistakes`, `doc-lint`, `workflow-lint`, `recap`, `understand`, `changelog`, `write-tests`, `run-tests`, `debug-recovery`, `enrich`, `php-code-quality-reviewer`, `php-code-simplifier` |
+| Step called by another skill or agent | **absent** | `retrospective`, `learn-from-mistakes`, `doc-lint`, `workflow-lint`, `recap`, `understand`, `changelog`, `write-tests`, `run-tests`, `debug-recovery`, `enrich`, `php-code-quality-reviewer`, `php-code-simplifier`, `spwf-beadsify:tracker-backend` |
 
 A skill without the flag says who calls it in its description, and says not to
 start it unprompted.

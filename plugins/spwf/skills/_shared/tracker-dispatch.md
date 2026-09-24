@@ -64,7 +64,7 @@ The dispatch supports two kinds of backend:
 | Backend type | How dispatch happens | Examples |
 |---|---|---|
 | **MCP** | Skills call an MCP tool name (e.g. `mcp__youtrack__*`). The tool is provided by an MCP server configured in user-level Claude Code settings. | YouTrack, Jira, future Linear |
-| **Skill** | Skills delegate the operation to a named SKILL.md inside another plugin. That skill invokes whatever CLI / API / store the tracker requires and returns the same five logical operations defined below. | Beads (via `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md`; opt-in plugin install) |
+| **Skill** | Skills delegate the operation to a named skill in another plugin, invoked through the Skill tool. That skill invokes whatever CLI / API / store the tracker requires and returns the same five logical operations defined below. | Beads (via the `spwf-beadsify:tracker-backend` skill; opt-in plugin install) |
 
 The two types are interchangeable from a skill's perspective — `capture` does not know
 which kind it's talking to. The dispatch resolves which backend to use, then routes
@@ -150,20 +150,27 @@ another plugin. Skills calling dispatch resolve to the backend module's path and
 delegate the operation there. The backend handles any CLI / DB / external-API work
 behind a uniform interface that returns the same five logical operations.
 
-| Tracker | Backend module path | Operations supported | Owning plugin (install required) |
+| Tracker | Backend skill | Operations supported | Owning plugin (install required) |
 |---|---|---|---|
-| `beads` | `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` | `get_issue`, `create_issue`, `set_state` (close only), `add_comment` (no `search_issues` in v1 — defer) | [`spwf-beadsify`](../../../../spwf-beadsify/README.md) — opt-in third plugin; install via `/plugin install spwf-beadsify@spwf` |
+| `beads` | `spwf-beadsify:tracker-backend` | `get_issue`, `create_issue`, `set_state` (close only), `add_comment` (no `search_issues` in v1 — defer) | [`spwf-beadsify`](../../../../spwf-beadsify/README.md) — opt-in third plugin; install via `/plugin install spwf-beadsify@spwf` |
 
 ### Routing rules
 
 When `.spwf/tracker.yaml` contains `tracker: beads`, dispatch:
 
-1. **Verify the backend module exists** at the path above. If the file is not
-   loadable (the spwf-beadsify plugin is not installed in this Claude Code session),
-   halt with the verbatim error in the next subsection. Do not silently fall back to
-   another tracker.
-2. **Delegate the operation** to the backend by reading its SKILL.md and following
-   the operation-specific instructions there. The backend invokes the bd CLI on the
+1. **Verify the backend skill is available**: `spwf-beadsify:tracker-backend` is
+   listed among this session's skills. If it is not (the spwf-beadsify plugin is
+   not installed), halt with the verbatim error in the next subsection. Do not
+   silently fall back to another tracker.
+
+   Resolve the backend by **skill name, never by file path**. Installed plugins
+   live in separate, versioned cache directories, so a path such as
+   `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` exists only inside the
+   SPWF source repo and resolves to nothing in a downstream project.
+2. **Delegate the operation** by invoking the `spwf-beadsify:tracker-backend`
+   skill through the Skill tool, passing the operation and its arguments (e.g.
+   `args: "add_comment spwf-a3f2dd"` with the body in the prompt that follows),
+   then follow the operation-specific instructions it loads. The backend invokes the bd CLI on the
    caller's behalf, handles input validation, and returns the result in the same
    shape the MCP backends would.
 3. **Surface the backend's stderr verbatim** on non-zero exit. The backend follows
@@ -172,7 +179,7 @@ When `.spwf/tracker.yaml` contains `tracker: beads`, dispatch:
 
 ### Configured-but-not-installed error (verbatim)
 
-When `tracker: beads` is set in `.spwf/tracker.yaml` but `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` is not loadable:
+When `tracker: beads` is set in `.spwf/tracker.yaml` but the `spwf-beadsify:tracker-backend` skill is not available in this session:
 
 ```
 tracker: beads requested but spwf-beadsify plugin not installed. Install: /plugin install spwf-beadsify@spwf. Or change tracker in .spwf/tracker.yaml.
