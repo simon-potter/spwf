@@ -408,9 +408,9 @@ Five hooks ship with the `spwf` plugin and register automatically on install. Al
 | `php-code-simplifier` | `/spwf:php-code-simplifier [path]` | On-demand — PHP safe refactor |
 | `php-code-quality-reviewer` | `/spwf:php-code-quality-reviewer [path]` | On-demand — PHP bad-practice analysis |
 
-### `spwf-agents` — 15 specialist subagents
+### `spwf-agents` — 16 specialist subagents
 
-Fifteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
+Sixteen agents covering every workflow phase. Each is scoped to a single responsibility and right-sized to a model that matches the cognitive demand. Appear in `/agents` after install.
 
 | Agent | Phase | Model |
 |---|---|---|
