@@ -62,12 +62,15 @@ failing any of the three conditions — particularly one that has started blocki
 `disable-model-invocation: true` means **only the user** can start a skill.
 Claude Code blocks the Skill tool call and tells Claude not to reproduce the steps
 another way. Subagents cannot preload such skills either. So the flag belongs on
-skills with side effects whose timing the user should control, and nowhere else:
+skills with side effects whose timing the user should control, and on user-run
+utilities that nothing else invokes. It never belongs on a skill another skill or
+agent calls:
 
 | Role | Flag | Examples |
 |---|---|---|
 | Entry point that commits, pushes, branches, moves commits or changes the tracker | `true` | `capture`, `spec`, `approve-plan`, `build`, `simplify`, `pr-create`, `pr-review`, `address-review`, `close`, `branch-rescue`, `pause` |
 | Step called by another skill or agent | **absent** | `retrospective`, `learn-from-mistakes`, `doc-lint`, `workflow-lint`, `recap`, `understand`, `changelog`, `write-tests`, `run-tests`, `debug-recovery`, `enrich`, `php-code-quality-reviewer`, `php-code-simplifier`, `spwf-beadsify:tracker-backend` |
+| User-run advisory utility — read-only, but slow, noisy or a phase gate the user should time | `true` allowed | `brief`, `wfstatus`, `config-check`, `workspace-health`, `security-scan`, `dep-audit`, `agent-optimise` |
 
 A skill without the flag says who calls it in its description, and says not to
 start it unprompted.

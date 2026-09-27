@@ -160,5 +160,5 @@ Tests passing: {count}/{count}
 Spec sign-off: ✓
 
 Recommended: /spwf:simplify (Refactor)
-Clean up the implementation while tests stay green, then /spwf:pr-review → /spwf:pr-create
+Clean up the implementation while tests stay green, then /spwf:pr-create → /spwf:pr-review
 ```
