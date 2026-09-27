@@ -1,6 +1,6 @@
 ---
 name: branch-rescue
-description: Recovery skill — moves commits that landed on the base branch onto a proper feature branch and resets local base, without touching origin. Resolves the active OpenSpec change, detects the pre-spec base commit (subject-line grep with manual-confirm fallback), performs three local-only safe git operations, and surfaces the force-push command for the user to run manually. Invoked standalone or by pr-create's rescue offer.
+description: Recovery skill — moves commits that landed on the base branch onto a proper feature branch and resets local base, without touching origin. Resolves the active OpenSpec change, detects the pre-spec base commit (subject-line grep with manual-confirm fallback), performs three local-only safe git operations, and surfaces the force-push command for the user to run manually. Run standalone; pr-create's rescue offer runs the same procedure inline (_shared/branch-management.md §4), because this skill is user-only.
 disable-model-invocation: true
 allowed-tools: [Read, Bash]
 ---
