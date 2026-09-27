@@ -35,7 +35,7 @@ tracker: beads
 
 ## Forbidden commands
 
-**Two `bd` commands are forbidden inside an SPWF project.** Both install Beads' own Claude Code integration, which conflicts with SPWorkflow's (32 skills, 13 agents, 5 hooks) — at best unpredictable interactions, at worst overwriting your `CLAUDE.md` and `AGENTS.md`.
+**Two `bd` commands are forbidden inside an SPWF project.** Both install Beads' own Claude Code integration, which conflicts with SPWorkflow's own skills, agents and hooks — at best unpredictable interactions, at worst overwriting your `CLAUDE.md` and `AGENTS.md`.
 
 | Command | What it does (verified against bd 1.0.4) | Use this instead |
 |---|---|---|
