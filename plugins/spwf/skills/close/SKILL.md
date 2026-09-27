@@ -290,8 +290,12 @@ Runs only after Step 6 has succeeded (or was skipped silently). If Step 6 report
 a failure, stop — do not archive.
 
 ```bash
-openspec archive --change "{change-id}"
+openspec archive "{change-id}" --yes
 ```
+
+The change id is **positional** — current openspec rejects `--change` with
+`error: unknown option '--change'`. `--yes` is required because the Bash tool
+has no TTY to answer openspec's confirmation prompt.
 
 If the archive command itself fails, report the error and stop — a failed archive
 leaves the change in `openspec/changes/` and is recoverable by re-running once the

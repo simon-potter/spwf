@@ -147,3 +147,22 @@ Use severity labels:
 - 🟡 `[important]` — should fix
 - 🟢 `[nit]` — nice to have, not blocking
 - 💡 `[suggestion]` — alternative approach
+
+## Step 6: Next step
+
+Always end with a **Next step** block matched to the verdict, so the golden path
+does not dead-end at the report:
+
+```
+── Next step ───────────────────────────────────────────────────
+🔄 Request changes / 💬 Comment →
+   Run /spwf:address-review {ref} to work each finding
+   (verify → implement or push back), then re-run /spwf:pr-review {ref}.
+
+✅ Approve →
+   Merge the {PR | MR}, then run /spwf:close to finish the change
+   (retrospective, archive, tracker transition, branch cleanup).
+```
+
+Print only the branch that matches the verdict. **Do not invoke either skill
+automatically** — both are user-only, and pr-review does not merge.
