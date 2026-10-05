@@ -56,7 +56,7 @@ every `bd` command failed with `no beads database found`. Ran
    json-output-probe, `spwf-ifu` stdin-body-test, `spwf-23p` "Test capture for Beadsify dispatch smoke"). They're
    leftovers from building the backend. Close them so `bd list` shows only real
    work.
-   Status: open.
+   Status: done 2026-10-05 (`bd close`, see finding 11).
 
 7. **Known: there's no "started" state.** The backend's `set_state` accepts
    only states that mean closed, so `capture`'s move to `start_state`
@@ -73,3 +73,19 @@ every `bd` command failed with `no beads database found`. Ran
    metrics** in the middle of command output. It's noise in skill transcripts.
    `bd metrics off` disables it. Consider mentioning it in the README.
    Status: open.
+
+10. **Auto-export to `issues.jsonl` is off by default.** After
+    `bd close` × 3 the file didn't change: `export.auto` was `false`. The
+    Beadsify README (Prerequisite 4) says bd re-exports after every write and
+    treats the file as the git audit trail, so it's wrong for 1.3.0. Fixed here
+    with `bd config set export.auto true` (committed in `.beads/config.yaml`)
+    and a one-off `bd export -o .beads/issues.jsonl`. Every Beadsify project
+    needs this, so the safe-init instructions should include it.
+    Status: open → README (and maybe the backend preflight).
+
+11. **No spwf path to close a stray ticket.** Closing the three test tickets
+    (finding 6) needed a plain `bd close <id> --reason …`. `close` only closes
+    the ticket linked to a change, and `tracker-comment` can't change state.
+    That's fine for cleanup. Note it in case it comes up for real work
+    (duplicates, won't-do).
+    Status: open. Finding 6 is now done.
