@@ -25,3 +25,7 @@
 # Pre-PR self-review reports written by /spwf:simplify Pass 2.
 # Working artefacts — they pin SHAs that stop meaning anything after merge.
 *-self-review.md
+
+# Beads / Dolt files (added by bd init)
+.beads/proxieddb/
+*.gate.lock*
