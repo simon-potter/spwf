@@ -89,3 +89,34 @@ every `bd` command failed with `no beads database found`. Ran
     That's fine for cleanup. Note it in case it comes up for real work
     (duplicates, won't-do).
     Status: open. Finding 6 is now done.
+
+12. **The backend's bash comes through broken when called with arguments.**
+    Invoking `spwf-beadsify:tracker-backend` with
+    `args: create_issue "" "<title>"` made Claude Code fill the `$1` / `$2` /
+    `${2:-}` placeholders in every operation's code block with those
+    arguments. `create_issue` came out as `title=""` (it would fail with
+    "requires a non-empty title"). `add_comment`'s body and `set_state`'s
+    state both became the ticket title. The model has to notice and rebuild
+    the intended command; a less careful pass would run the broken code or
+    report a bogus failure. Fix: don't use positional `$N` in SKILL.md code.
+    Name the inputs in prose and use placeholder variables the caller sets,
+    such as `{title}`, or move the code into `scripts/*.sh` called with
+    arguments.
+    Status: open (high — affects every Beads operation).
+
+13. **The argument order doesn't match between dispatch and backend.**
+    `tracker-dispatch.md` defines `create_issue(project, title, body)` and
+    capture says to pass `project` as an empty string for Beads, but the
+    backend reads its first argument as `title`. Even with finding 12 fixed,
+    capture's call would put `""` in the title slot. Line the two up: the
+    backend takes `project` first and ignores it, or the dispatch doc says
+    Beads takes `(title, body)`.
+    Status: open.
+
+14. **Entry 7 confirmed on first real use.** capture created `spwf-uyh`, then
+    `set_state("In Progress")` was rejected: "unsupported state 'In Progress'
+    (v1 supports close-equivalent states…)". The ticket stays `open` while work
+    is under way. The good news: `create_issue` with a 4.6k-character body via
+    stdin worked, and `issues.jsonl` re-exported by itself (the entry-10 fix
+    holds).
+    Status: → `todo/ticket-state-enforcement.md` (`spwf-uyh`).
