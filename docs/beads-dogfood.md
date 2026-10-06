@@ -135,3 +135,14 @@ every `bd` command failed with `no beads database found`. Ran
     backend, a second Skill call returned the old cached text. Testing a
     backend fix needs a reload in between, and only the user can run it.
     Status: noted (expected Claude Code behaviour; see CLAUDE.md dogfooding).
+
+16. **Auto-export is rate-limited, and skipped writes aren't caught up.**
+    `export.interval` defaults to 60s. Closing `spwf-fj2` didn't reach
+    `issues.jsonl` (still `"status":"open"`) although `export.auto` was true.
+    Skipped exports aren't retried later, so the committed file can quietly
+    disagree with the database. That's the same audit-trail failure as
+    entry 10. Fixed here with `bd config set export.interval 0s` plus a manual
+    `bd export`. The safe-init instructions should set both `export.auto true`
+    and `export.interval 0s`. A spwf step that commits after a Beads write
+    should run `bd export` first rather than trust auto-export.
+    Status: open → README + backend (export after each write).
