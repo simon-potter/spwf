@@ -102,7 +102,16 @@ every `bd` command failed with `no beads database found`. Ran
     Name the inputs in prose and use placeholder variables the caller sets,
     such as `{title}`, or move the code into `scripts/*.sh` called with
     arguments.
-    Status: open (high — affects every Beads operation).
+    Correction (2026-10-06): the numbering starts at zero. The first argument
+    fills `$0`, the second `$1`, and so on; placeholders with no matching
+    argument are left as written. That explains `title=""`: the second
+    argument was `""`.
+    Status: fixed in spwf-beadsify 0.1.2 (`spwf-fj2`). `args` now carries only
+    the operation name, inputs go into quoted heredocs, and the file has no
+    bare dollar-digit left. The same fix replaced `awk '{print $2}'` in
+    close / pr-create / branch-rescue, which would break once a skill gets 3+
+    arguments. **Lesson for all skills:** never write a `$` followed by a digit
+    in SKILL.md text.
 
 13. **The argument order doesn't match between dispatch and backend.**
     `tracker-dispatch.md` defines `create_issue(project, title, body)` and
@@ -111,7 +120,8 @@ every `bd` command failed with `no beads database found`. Ran
     capture's call would put `""` in the title slot. Line the two up: the
     backend takes `project` first and ignores it, or the dispatch doc says
     Beads takes `(title, body)`.
-    Status: open.
+    Status: fixed in 0.1.2 (`spwf-fj2`): the backend takes `project` and ignores
+    it, and the dispatch routing rule now says to pass inputs by name.
 
 14. **Entry 7 confirmed on first real use.** capture created `spwf-uyh`, then
     `set_state("In Progress")` was rejected: "unsupported state 'In Progress'
@@ -120,3 +130,8 @@ every `bd` command failed with `no beads database found`. Ran
     stdin worked, and `issues.jsonl` re-exported by itself (the entry-10 fix
     holds).
     Status: → `todo/ticket-state-enforcement.md` (`spwf-uyh`).
+
+15. **Edited skills don't load until `/reload-plugins`.** After editing the
+    backend, a second Skill call returned the old cached text. Testing a
+    backend fix needs a reload in between, and only the user can run it.
+    Status: noted (expected Claude Code behaviour; see CLAUDE.md dogfooding).

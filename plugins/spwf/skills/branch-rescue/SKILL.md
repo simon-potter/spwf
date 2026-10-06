@@ -27,8 +27,8 @@ absent) and the active OpenSpec change. See
 schema.
 
 ```bash
-prefix=$(grep -E '^prefix:' .spwf/branch.yaml 2>/dev/null | awk '{print $2}'); prefix=${prefix:-feature/}
-base=$(grep -E '^base:'    .spwf/branch.yaml 2>/dev/null | awk '{print $2}'); base=${base:-main}
+prefix=$(sed -n 's/^prefix:[[:space:]]*//p' .spwf/branch.yaml 2>/dev/null); prefix=${prefix:-feature/}
+base=$(sed -n 's/^base:[[:space:]]*//p'    .spwf/branch.yaml 2>/dev/null); base=${base:-main}
 change_id=$(openspec list --json 2>/dev/null | jq -r '.[0].name')
 ```
 

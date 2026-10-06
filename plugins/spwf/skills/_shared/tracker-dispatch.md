@@ -168,9 +168,13 @@ When `.spwf/tracker.yaml` contains `tracker: beads`, dispatch:
    `plugins/spwf-beadsify/skills/tracker-backend/SKILL.md` exists only inside the
    SPWF source repo and resolves to nothing in a downstream project.
 2. **Delegate the operation** by invoking the `spwf-beadsify:tracker-backend`
-   skill through the Skill tool, passing the operation and its arguments (e.g.
-   `args: "add_comment spwf-a3f2dd"` with the body in the prompt that follows),
-   then follow the operation-specific instructions it loads. The backend invokes the bd CLI on the
+   skill through the Skill tool with **only the operation name** in `args`
+   (e.g. `args: "add_comment"`). Then give the inputs by name (`id`, `title`,
+   `body`, `state`, and `project` for `create_issue`, which Beads ignores) and
+   follow the operation's instructions. Never put input values in `args`: Claude
+   Code splices Skill arguments into a skill's text wherever a `$` is followed by
+   a number, so they would rewrite the backend's code. The backend's "Calling
+   convention" section has the details. The backend invokes the bd CLI on the
    caller's behalf, handles input validation, and returns the result in the same
    shape the MCP backends would.
 3. **Surface the backend's stderr verbatim** on non-zero exit. The backend follows
