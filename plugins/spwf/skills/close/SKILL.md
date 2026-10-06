@@ -76,7 +76,7 @@ feature branch while its granular commit history is still reachable.
 Resolve the base from `.spwf/branch.yaml: base` (default `main`):
 
 ```bash
-BASE=$(grep -E '^base:' .spwf/branch.yaml 2>/dev/null | awk '{print $2}'); BASE=${BASE:-main}
+BASE=$(sed -n 's/^base:[[:space:]]*//p' .spwf/branch.yaml 2>/dev/null); BASE=${BASE:-main}
 CURRENT=$(git branch --show-current)
 ```
 

@@ -21,7 +21,7 @@ Run each check in order. If any blocking check fails, stop and report — do not
 
 ```bash
 # Resolve the base branch (.spwf/branch.yaml: base, else main)
-BASE=$(grep -E '^base:' .spwf/branch.yaml 2>/dev/null | awk '{print $2}'); BASE=${BASE:-main}
+BASE=$(sed -n 's/^base:[[:space:]]*//p' .spwf/branch.yaml 2>/dev/null); BASE=${BASE:-main}
 
 # Check 1: Not on base
 BRANCH=$(git branch --show-current)

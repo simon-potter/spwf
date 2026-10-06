@@ -13,7 +13,7 @@
       "name": "spwf",
       "source": "./plugins/spwf",
       "description": "38 workflow skills covering the full engineering cycle: capture, enrich, challenge, spec, brief, plan, build, test, simplify, ship, peer review, address review, close, learn, and quality maintenance",
-      "version": "1.23.2"
+      "version": "1.23.3"
     },
     {
       "name": "spwf-agents",
@@ -25,7 +25,7 @@
       "name": "spwf-beadsify",
       "source": "./plugins/spwf-beadsify",
       "description": "Optional add-on \u2014 Beads (bd) as a tracker-dispatch backend. Requires the Beads CLI. SPWF works without this plugin.",
-      "version": "0.1.1"
+      "version": "0.1.2"
     }
   ]
 }

@@ -23,6 +23,15 @@ This backend implements the four dispatch operations the spwf core skills need (
 
 **Out of scope for this skill:** `bd remember`, `bd init`, `bd setup *`, any command that installs Claude Code integration. See `plugins/spwf-beadsify/README.md` § "Forbidden commands" for why.
 
+## Calling convention
+
+Claude Code replaces every bare dollar-digit placeholder (a `$` followed directly by a number) in a skill's text with the arguments of the Skill call. Values passed in `args` would therefore be spliced into the code blocks below. So:
+
+- **`args` carries the operation name only**, e.g. `args: "create_issue"`. Never put an id, title, body or state in `args`.
+- **Give the inputs by name** in the text after the call, then fill the `{…}` placeholders in that operation's code block. Every input goes in a quoted heredoc (`<<'SPWF_EOF'`), which the shell never expands, so quotes, `$(…)` and backticks in a title or body stay inert. If a value contains a line that is exactly `SPWF_EOF`, stop and report it rather than editing the value.
+- **`create_issue` takes `(project, title, body)`**, the same as the dispatch contract. `project` is accepted and ignored: bd takes the id prefix from `bd init`, not per call.
+- **This file must contain no bare dollar-digit placeholder.** Use named variables; the braced form (`${name:-}`) is not substituted.
+
 ## Safe invocation pattern (mandatory)
 
 Every `bd` subprocess invocation in this skill MUST follow the rules below. These reproduce Decision 7 from `openspec/changes/add-beadsify-tracker/design.md` so they can be applied without leaving this file:
@@ -67,13 +76,19 @@ If the check fails (non-zero exit), the operation halts immediately and the erro
 
 ### Operation: create_issue
 
-**Inputs:** `title` (string from user), `body` (string, optional — may be empty for title-only stories or multi-line markdown for full ideation bodies). Matches the dispatch contract signature `create_issue(project, title, body)` in `_shared/tracker-dispatch.md`. (`project` is unused for Beads — bd derives the issue prefix from the project directory at `bd init` time, not per call.)
+**Inputs:** `project` (ignored), `title` (string from user), `body` (string, optional — may be empty for title-only stories or multi-line markdown for full ideation bodies). Matches the dispatch contract signature `create_issue(project, title, body)` in `_shared/tracker-dispatch.md`. (`project` is unused for Beads — bd derives the issue prefix from the project directory at `bd init` time, not per call.)
 
 **Behaviour:** invoke `bd create --silent` (with `--body-file -` piping `$body` via stdin if non-empty) and return the resulting `<prefix>-<hash>` id. `--silent` makes bd's stdout just the id.
 
 ```bash
-title="$1"
-body="${2:-}"
+title=$(cat <<'SPWF_EOF'
+{title}
+SPWF_EOF
+)
+body=$(cat <<'SPWF_EOF'
+{body — leave this line empty if there is no body}
+SPWF_EOF
+)
 
 # Validate: title must be non-empty.
 if [ -z "$title" ]; then
@@ -112,7 +127,10 @@ echo "$id"
 **Behaviour:** invoke `bd show <id> --json` and return structured JSON on stdout. Matches the dispatch contract which promises a payload containing `{id, title, description, type, state, labels, ...}`. Callers parse the JSON to extract fields — they do not pattern-match human-readable text. Issue not found is a non-zero bd exit and surfaces verbatim.
 
 ```bash
-id="$1"
+id=$(cat <<'SPWF_EOF'
+{id}
+SPWF_EOF
+)
 
 # Validate id format before any subprocess invocation. Decision 7 rule 3:
 # exact match or reject — no cleaning.
@@ -136,8 +154,14 @@ fi
 **Behaviour:** invoke `bd comment <id> --stdin` and pipe `body` in. Stdin is used (Decision 7 rule 4) so the body's content cannot accidentally re-enter the shell.
 
 ```bash
-id="$1"
-body="$2"
+id=$(cat <<'SPWF_EOF'
+{id}
+SPWF_EOF
+)
+body=$(cat <<'SPWF_EOF'
+{body}
+SPWF_EOF
+)
 
 if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
   echo "Error: invalid bd id format: $id" >&2
@@ -167,8 +191,14 @@ fi
 **Behaviour:** invoke `bd close <id>`. v1 accepts the close-equivalent state set so callers using different conventions (`close`, `Done`, etc., as set in `.spwf/tracker.yaml` `done_state:`) all reach the same outcome. Other states rejected until bd grows additional terminal states.
 
 ```bash
-id="$1"
-state="$2"
+id=$(cat <<'SPWF_EOF'
+{id}
+SPWF_EOF
+)
+state=$(cat <<'SPWF_EOF'
+{state}
+SPWF_EOF
+)
 
 if ! printf '%s' "$id" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)+$'; then
   echo "Error: invalid bd id format: $id" >&2
